@@ -11,6 +11,7 @@ import {
   TeamCountConfig,
 } from "@openfront/engine-api/Schemas";
 import { DoomsdayClockSpeed } from "@openfront/engine-lib/game/DoomsdayClock";
+import { MapAreaMultiplier } from "@openfront/engine-lib/game/MapMultiplier";
 import { GameEnv } from "@openfront/shared/configuration/Env";
 import { EventBus } from "@openfront/shared/EventBus";
 import {
@@ -63,6 +64,7 @@ import {
 @customElement("host-lobby-modal")
 export class HostLobbyModal extends BaseModal {
   @state() private selectedMap: GameMapType = GameMapType.World;
+  @state() private mapAreaMultiplier: MapAreaMultiplier = 1;
   @state() private selectedDifficulty: Difficulty = Difficulty.Easy;
   @state() private nations: number = 0;
   @state() private defaultNationCount: number = 0;
@@ -154,6 +156,7 @@ export class HostLobbyModal extends BaseModal {
   // or edited by the host before that arrived. Either way later broadcasts
   // don't snap the field back.
   private playerLimitLoadedFor: string | null = null;
+  private multiplierLoadedFor: string | null = null;
 
   private readonly handleLobbyInfo = (event: LobbyInfoEvent) => {
     const lobby = event.lobby;
@@ -172,6 +175,10 @@ export class HostLobbyModal extends BaseModal {
         this.playerLimit = true;
         this.playerLimitValue = maxPlayers;
       }
+    }
+    if (this.multiplierLoadedFor !== this.lobbyId) {
+      this.multiplierLoadedFor = this.lobbyId;
+      this.mapAreaMultiplier = lobby.gameConfig?.mapAreaMultiplier ?? 1;
     }
     if ("serverTime" in lobby && typeof lobby.serverTime === "number") {
       this.serverTimeOffset = calculateServerTimeOffset(lobby.serverTime);
@@ -643,6 +650,7 @@ export class HostLobbyModal extends BaseModal {
             .settings=${{
               map: {
                 selected: this.selectedMap,
+                multiplier: this.publiclyListed ? 1 : this.mapAreaMultiplier,
                 useRandom: this.useRandomMap,
                 randomMapDivider: true,
               },
@@ -746,6 +754,7 @@ export class HostLobbyModal extends BaseModal {
               },
             }}
             @map-selected=${this.handleConfigMapSelected}
+            @map-multiplier-selected=${this.handleConfigMapMultiplierSelected}
             @random-map-selected=${this.handleConfigRandomMapSelected}
             @difficulty-selected=${this.handleConfigDifficultySelected}
             @doomsday-clock-speed-selected=${this
@@ -1003,6 +1012,8 @@ export class HostLobbyModal extends BaseModal {
 
     // Reset all transient form state to ensure clean slate
     this.selectedMap = GameMapType.World;
+    this.mapAreaMultiplier = 1;
+    this.multiplierLoadedFor = null;
     this.selectedDifficulty = Difficulty.Easy;
     this.nations = 0;
     this.defaultNationCount = 0;
@@ -1082,6 +1093,13 @@ export class HostLobbyModal extends BaseModal {
   private handleConfigMapSelected = (e: Event) => {
     const customEvent = e as CustomEvent<{ map: GameMapType }>;
     void this.handleMapSelection(customEvent.detail.map);
+  };
+
+  private handleConfigMapMultiplierSelected = (e: Event) => {
+    if (this.publiclyListed) return;
+    const customEvent = e as CustomEvent<{ multiplier: MapAreaMultiplier }>;
+    this.mapAreaMultiplier = customEvent.detail.multiplier;
+    void this.putGameConfig();
   };
 
   private async handleDifficultySelection(value: Difficulty) {
@@ -1635,6 +1653,7 @@ export class HostLobbyModal extends BaseModal {
         detail: {
           config: {
             gameMap: this.selectedMap,
+            mapAreaMultiplier: this.publiclyListed ? 1 : this.mapAreaMultiplier,
             gameMapSize: this.compactMap
               ? GameMapSize.Compact
               : GameMapSize.Normal,
