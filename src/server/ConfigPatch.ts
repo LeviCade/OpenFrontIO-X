@@ -12,6 +12,7 @@ import { GameConfig, GameConfigPatch } from "@openfront/engine-api/Schemas";
 const COPIED_KEYS = [
   "gameMap",
   "gameMapSize",
+  "mapAreaMultiplier",
   "difficulty",
   "nations",
   "bots",
