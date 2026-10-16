@@ -33,6 +33,14 @@ This is the long-lived engineering memory for AI agents and human contributors.
 4. Verify 2x live gameplay and measure performance.
 5. Continue to selector, 3x-6x and compatibility.
 
+
+### GitHub preparation results
+- Branch `feature/map-multiplier` created from `main`.
+- Draft pull request created **inside our own repository**: https://github.com/LeviCade/OpenFrontIO-X/pull/1 (head `feature/map-multiplier`, base `main`).
+- GitHub Issues API returned HTTP 410 (`Issues has been disabled in this repository`). Until enabled, use ROADMAP checkboxes and draft PR for tracking.
+- Documentation created and verified accessible on development branch; original `main` not intentionally modified.
+- No runtime build, test, browser gameplay, benchmark or CI-success claim has been verified during scaffold preparation. Initial engineering session must execute those checks.
+
 ### Append future entries using this template
 
 ```
