@@ -9,6 +9,7 @@ import {
   UnitType,
 } from "@openfront/engine-api/game/GameTypes";
 import { TeamCountConfig } from "@openfront/engine-api/Schemas";
+import { MAP_AREA_MULTIPLIERS, MapAreaMultiplier } from "@openfront/engine-lib/game/MapMultiplier";
 import {
   DOOMSDAY_CLOCK_SPEEDS,
   DoomsdayClockSpeed,
@@ -193,6 +194,7 @@ export interface ToggleOptionConfig {
 export interface GameConfigSettingsData {
   map: {
     selected: GameMapType;
+    multiplier?: MapAreaMultiplier;
     useRandom: boolean;
     randomMapDivider?: boolean;
     showMedals?: boolean;
@@ -272,6 +274,10 @@ export class GameConfigSettings extends LitElement {
 
   private handleSelectRandom = () => {
     this.emit("random-map-selected", {});
+  };
+
+  private handleMapMultiplierSelected = (multiplier: MapAreaMultiplier) => {
+    this.emit("map-multiplier-selected", { multiplier });
   };
 
   private handleDifficultySelect = (difficulty: Difficulty) => {
@@ -448,7 +454,24 @@ export class GameConfigSettings extends LitElement {
             .onSelectMap=${this.handleSelectMap}
             .onSelectRandom=${this.handleSelectRandom}
             .searchQuery=${this.mapSearchQuery}
-          ></map-picker>`,
+          ></map-picker>
+          ${settings.map.multiplier !== undefined
+            ? html`<div class="mt-4 space-y-2">
+                <div class="text-xs font-bold uppercase tracking-wider text-white/70">
+                  Map area multiplier (experimental)
+                </div>
+                <div class="grid grid-cols-6 gap-2" role="group" aria-label="Map area multiplier">
+                  ${MAP_AREA_MULTIPLIERS.map((factor) =>
+                    renderTextCardButton(
+                      `${factor}×`,
+                      settings.map.multiplier === factor,
+                      () => this.handleMapMultiplierSelected(factor),
+                      "p-3 text-center",
+                    ),
+                  )}
+                </div>
+              </div>`
+            : nothing}`,
           undefined,
           this.renderMapSearchInput(),
         )}
