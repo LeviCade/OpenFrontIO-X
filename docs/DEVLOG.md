@@ -1,6 +1,6 @@
 # OpenFrontIO-X development log
 
-This is the long-lived engineering memory for AI agents and human contributors.
+This is the long-lived engineering memory for AI agents and human contributors. **For current cross-session status, see [ENGINEERING_STATUS.md](ENGINEERING_STATUS.md), update and PUSH that dashboard after each major checkpoint.**
 
 ## 2026-10-16: Engineering preparation
 
@@ -40,6 +40,11 @@ This is the long-lived engineering memory for AI agents and human contributors.
 - GitHub Issues API returned HTTP 410 (`Issues has been disabled in this repository`). Until enabled, use ROADMAP checkboxes and draft PR for tracking.
 - Documentation created and verified accessible on development branch; original `main` not intentionally modified.
 - No runtime build, test, browser gameplay, benchmark or CI-success claim has been verified during scaffold preparation. Initial engineering session must execute those checks.
+
+### Cross-session reporting addition
+- An engineering checkpoint board now exists at `docs/ENGINEERING_STATUS.md`.
+- Future engineers are required to update that board and this detailed dev log after each substantial milestone or new blocker, commit and push before moving to the next phase, and push a final checkpoint even if work remains unfinished.
+- The user plans to return in a separate ChatGPT session and ask it to inspect the GitHub repository, PR and status board.
 
 ### Append future entries using this template
 
