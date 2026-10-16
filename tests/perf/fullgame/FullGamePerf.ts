@@ -45,6 +45,7 @@ import {
 } from "@openfront/engine-api/game/GameUpdates";
 import { GameConfig, GameStartInfo } from "@openfront/engine-api/Schemas";
 import { loadTerrainMap } from "@openfront/engine-lib/game/TerrainMapLoader";
+import { assertMapAreaMultiplier, MapAreaMultiplier } from "@openfront/engine-lib/game/MapMultiplier";
 import { PseudoRandom } from "@openfront/engine-lib/PseudoRandom";
 import { simpleHash } from "@openfront/engine-lib/Util";
 import { EngineConfig } from "@openfront/engine/configuration/EngineConfig";
@@ -85,6 +86,7 @@ const MAX_SPAWN_TURNS = 1000;
 
 interface Options {
   map: GameMapType;
+  multiplier: MapAreaMultiplier;
   ticks: number;
   bots: number;
   nations: "default" | "disabled" | number;
@@ -116,6 +118,7 @@ function resolveMap(name: string): GameMapType {
 function parseArgs(argv: string[]): Options {
   const opts: Options = {
     map: GameMapType.World,
+    multiplier: 1,
     ticks: 1800,
     bots: 400,
     nations: "default",
@@ -141,6 +144,12 @@ function parseArgs(argv: string[]): Options {
       case "--map":
         opts.map = resolveMap(next());
         break;
+      case "--multiplier": {
+        const factor = Number(next());
+        assertMapAreaMultiplier(factor);
+        opts.multiplier = factor;
+        break;
+      }
       case "--ticks":
         opts.ticks = parseInt(next(), 10);
         break;
@@ -223,6 +232,7 @@ async function main(): Promise<void> {
   const gameConfig: GameConfig = {
     gameMap: opts.map,
     gameMapSize: GameMapSize.Normal,
+    mapAreaMultiplier: opts.multiplier,
     gameMode: GameMode.FFA,
     gameType: GameType.Public,
     difficulty: Difficulty.Medium,
@@ -244,7 +254,7 @@ async function main(): Promise<void> {
   };
 
   console.log(
-    `Loading map "${opts.map}" (bots=${opts.bots}, nations=${opts.nations}, ` +
+    `Loading map "${opts.map}" (area=${opts.multiplier}x, bots=${opts.bots}, nations=${opts.nations}, ` +
       `seed=${opts.seed}, ticks=${opts.ticks})...`,
   );
 
@@ -257,6 +267,7 @@ async function main(): Promise<void> {
   );
   const terrain = await loadTerrainMap(
     await loadMapFiles(mapLoader, gameConfig.gameMap, gameConfig.gameMapSize),
+    opts.multiplier,
   );
   const random = new PseudoRandom(simpleHash(gameStart.gameID));
   const nations = createNationsForGame(
