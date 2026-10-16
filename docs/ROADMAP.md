@@ -4,8 +4,8 @@ Status: **planning / branch scaffold**. The docs do not constitute a working fea
 
 ## v0.1 - Baseline and 2x proof (do first)
 
-- [ ] Confirm repo is independent and \`origin\` points ONLY to \`LeviCade/OpenFrontIO-X\`.
-- [ ] Run pristine baseline: environment, \`npm run inst\`, \`npm run typecheck\`, \`npm test\`, \`npm run dev\`; record results.
+- [ ] Confirm repo is independent and `origin` points ONLY to `LeviCade/OpenFrontIO-X`.
+- [ ] Run pristine baseline: environment, `npm run inst`, `npm run typecheck`, `npm test`, `npm run dev`; record results.
 - [ ] Inventory every terrain load path: client worker, server/headless, renderer cache, replay/save/snapshot.
 - [ ] Make a pure deterministic typed-array scaler and metadata/spawn transformer, without modifying source assets.
 - [ ] Add unit tests (1x identity, small known grid 2x, land/shore/ocean/impassable, compact, spawn areas, bounds).
@@ -54,7 +54,7 @@ Gate: one playable open-source build, documented limitations and repeatable test
 - 7x-10x and higher area multipliers.
 - More detailed shorelines/new geographic source data.
 - Chrome extension/userscript.
-- Submission of any PR to official \`openfrontio/OpenFrontIO\`.
+- Submission of any PR to official `openfrontio/OpenFrontIO`.
 
 ## Completion contract for the GPT-6 Sol engineering session
 
