@@ -73,3 +73,28 @@ This is the long-lived engineering memory for AI agents and human contributors. 
 - Legacy: factor omitted => 1; `loadTerrainMap(files)` retains old same-reference behavior for 1. Factor greater than 1 clones nation metadata before Compact coordinate adjustment. Renderer and worker separately derive from source map using same function.
 - Tested so far: source inspection and GitHub remote writes. **NO executable tests, typecheck, dev/gameplay, GPU or benchmark runs**. Node/npm versions wrong; Git clone blocked DNS; GitHub Actions query returned zero feature-branch workflows as of 19:01 UTC.
 - Remaining high risks: renderer full-size GPU textures, public/ranked enforcement, nation spawn accuracy, compact tests, hidden serialization concerns and gameplay performance.
+
+## 2026-10-16 19:13 UTC: Final implementation and audit report (UNVERIFIED CODE)
+
+### Additional pushes since 19:01 checkpoint
+- [`b00194f`](https://github.com/LeviCade/OpenFrontIO-X/commit/b00194f77afc87b87ab7a271b43be8c855cb5d98): force 1× on update for GameType.Public and listed games, and on setListed(true).
+- [`5065920`](https://github.com/LeviCade/OpenFrontIO-X/commit/5065920f2abfdcde7fdab0eefb6b443b8e72e819): enforce public 1× on initial game creation too (before any host patch).
+- [`98497c7`](https://github.com/LeviCade/OpenFrontIO-X/commit/98497c71ba9dcafc6abecf75fc88b407249a831a): synthetic terrain-loader tests, Normal and Compact, 2× land/shore, nation/team spawn coords, schema 1..6 and legacy absent factor. Not run.
+- [`9ef1388`](https://github.com/LeviCade/OpenFrontIO-X/commit/9ef1388fd86031b63c2bc8cd46f13cb50d0cec17): headless actual GameRunner smoke test constructs 64×64 source → 91×91 2×, mini46×46, 4 bot spawns, executes 24 turns, checks callback/ticks. Not run; NOT gameplay proof.
+- [`d88f45f`](https://github.com/LeviCade/OpenFrontIO-X/commit/d88f45f26aca9cb8cb4d12141948205998c5640e): added --multiplier CLI argument to fullgame perf harness; NOT MEASURED.
+- [`d3e46d3`](https://github.com/LeviCade/OpenFrontIO-X/commit/d3e46d376c2e6354c613d7e0de8f4e16621dc9ac): reject maps over GPU MAX_TEXTURE_SIZE when factor>1 before texture allocation. Not browser-tested.
+- [`b2a430a`](https://github.com/LeviCade/OpenFrontIO-X/commit/b2a430a097c12e78999f84767ecfecb3c6263e5e): repair positioned tribe coords for scaled grids; original 1× logic preserved. Maps.gen source table uses 1× world coordinates; game width/height invert scale via round(D/sqrt(f)).
+- [`121473d`](https://github.com/LeviCade/OpenFrontIO-X/commit/121473dd1cecb450bbb135b22512e78fff5a6f09): remove per-tile closure in coast adjacency loop; reduces unnecessary allocation pressure (performance benefit plausible, NOT benchmarked).
+- [`8c71a58`](https://github.com/LeviCade/OpenFrontIO-X/commit/8c71a588fab65c640b5c5337114076288b79f7eb): `docs/MAP_MULTIPLIER_TEST_PLAN.md` including exact commands, manual 2× game acceptance, and reproducible same-seed six-factor game benchmarks.
+
+### Actual test/benchmark outcome
+- Environment available: Node v22.16.0; npm v10.9.2, incompatible with repo's Node 24/npm 12; Git direct access DNS failure. GitHub connector only can read/write source. No local checkout, Vitest, TypeScript validation, format/lint, WebGL/browser session or `perf:game` execution occurred.
+- Queried GitHub REST `/repos/LeviCade/OpenFrontIO-X/actions/runs?per_page=10` after pushes: `total_count: 0`, `workflow_runs: []`. Commit combined status-check array: `[]`. No CI proof.
+- NO VERIFIED PASS. NO measured FPS/CPU/GPU/memory/startup values; numbers and area formulas are design, not observations.
+- Potential defects needing validation: new source uses TypeScript format but `oxfmt` not run; any runtime bot AI edge cases; browser layers and terrain overlay alignment; GPU memory on 5×–6× even below MAX_TEXTURE_SIZE; multiplayer wire/interoperability with unmodified clients (never run mixed clients); snapshot/replay checks; public/listed forced-1× regression. Headless smoke test with no humans must be executed and refined if bots/WinCheck semantics fail.
+- License/proprietary assets: policies inspected; no asset copies modified and no writes to upstream; full packaging/legal audit remains.
+
+### Commands for the next engineer
+See `docs/MAP_MULTIPLIER_TEST_PLAN.md`. Start by checking `git remote -v` for **LeviCade/OpenFrontIO-X ONLY**, then Node24/npm12 and `npm ci`, `npm run typecheck`, `npm run format:check`, `npm run lint`, `npm test -- tests/MapMultiplier.test.ts tests/MapMultiplierIntegration.test.ts tests/MapMultiplierGameplay.test.ts`, `npm run build-prod`; fix failures with evidence. Run an actual hosted 2× game before any claim of playable software; repeat 1× regression and >2 performance.
+### PR state
+- PR https://github.com/LeviCade/OpenFrontIO-X/pull/1 targeting own main; **draft**, no merges or actions submitted to official OpenFront. Last implementation commit: `121473d`.
