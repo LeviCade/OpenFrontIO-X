@@ -20,6 +20,16 @@ const SHORE = 0x40;
 const MAGNITUDE = 0x1f;
 const IMPASSABLE = 31;
 
+/** Count transitions to water or passable land, excluding impassable void. */
+function coastNeighbor(bytes: Uint8Array, index: number, land: boolean): boolean {
+  const tile = bytes[index];
+  const neighborLand = (tile & LAND) !== 0;
+  return (
+    neighborLand !== land &&
+    !(neighborLand && (tile & MAGNITUDE) === IMPASSABLE)
+  );
+}
+
 export function assertMapAreaMultiplier(
   value: number,
 ): asserts value is MapAreaMultiplier {
@@ -63,15 +73,19 @@ export function scaleTerrainGrid(
     );
   }
   if (multiplier === 1) {
-    if (dimensions !== undefined &&
-      (dimensions.width !== width || dimensions.height !== height)) {
+    if (
+      dimensions !== undefined &&
+      (dimensions.width !== width || dimensions.height !== height)
+    ) {
       throw new Error("Cannot override terrain dimensions at 1x");
     }
     return { bytes, metadata };
   }
 
-  const targetWidth = dimensions?.width ?? Math.max(1, Math.round(width * Math.sqrt(multiplier)));
-  const targetHeight = dimensions?.height ?? Math.max(1, Math.round(height * Math.sqrt(multiplier)));
+  const targetWidth =
+    dimensions?.width ?? Math.max(1, Math.round(width * Math.sqrt(multiplier)));
+  const targetHeight =
+    dimensions?.height ?? Math.max(1, Math.round(height * Math.sqrt(multiplier)));
   checkDimensions(targetWidth, targetHeight);
   if (targetWidth < width || targetHeight < height) {
     throw new Error("Map multiplier may not shrink terrain dimensions");
@@ -85,7 +99,8 @@ export function scaleTerrainGrid(
 
   let landTiles = 0;
   for (let y = 0; y < targetHeight; y++) {
-    const sourceRow = Math.min(height - 1, Math.floor((y * height) / targetHeight)) * width;
+    const sourceRow =
+      Math.min(height - 1, Math.floor((y * height) / targetHeight)) * width;
     const dstRow = y * targetWidth;
     for (let x = 0; x < targetWidth; x++) {
       const terrain = bytes[sourceRow + sourceX[x]];
@@ -106,17 +121,12 @@ export function scaleTerrainGrid(
       const terrain = scaled[index];
       const land = (terrain & LAND) !== 0;
       if (land && (terrain & MAGNITUDE) === IMPASSABLE) continue;
-      const adjacentOpposite = (neighbor: number) => {
-        const next = scaled[neighbor];
-        const nextLand = (next & LAND) !== 0;
-        return nextLand !== land &&
-          !(nextLand && (next & MAGNITUDE) === IMPASSABLE);
-      };
       if (
-        (x > 0 && adjacentOpposite(index - 1)) ||
-        (x + 1 < targetWidth && adjacentOpposite(index + 1)) ||
-        (y > 0 && adjacentOpposite(index - targetWidth)) ||
-        (y + 1 < targetHeight && adjacentOpposite(index + targetWidth))
+        (x > 0 && coastNeighbor(scaled, index - 1, land)) ||
+        (x + 1 < targetWidth && coastNeighbor(scaled, index + 1, land)) ||
+        (y > 0 && coastNeighbor(scaled, index - targetWidth, land)) ||
+        (y + 1 < targetHeight &&
+          coastNeighbor(scaled, index + targetWidth, land))
       ) {
         scaled[index] |= SHORE;
       }
@@ -125,7 +135,11 @@ export function scaleTerrainGrid(
 
   return {
     bytes: scaled,
-    metadata: { width: targetWidth, height: targetHeight, num_land_tiles: landTiles },
+    metadata: {
+      width: targetWidth,
+      height: targetHeight,
+      num_land_tiles: landTiles,
+    },
   };
 }
 
@@ -136,8 +150,20 @@ export function scaleTileCoordinate(
   target: Pick<MapMetadata, "width" | "height">,
 ): [number, number] {
   return [
-    Math.max(0, Math.min(target.width - 1, Math.floor(((coordinate[0] + 0.5) * target.width) / source.width))),
-    Math.max(0, Math.min(target.height - 1, Math.floor(((coordinate[1] + 0.5) * target.height) / source.height))),
+    Math.max(
+      0,
+      Math.min(
+        target.width - 1,
+        Math.floor(((coordinate[0] + 0.5) * target.width) / source.width),
+      ),
+    ),
+    Math.max(
+      0,
+      Math.min(
+        target.height - 1,
+        Math.floor(((coordinate[1] + 0.5) * target.height) / source.height),
+      ),
+    ),
   ];
 }
 
@@ -147,9 +173,26 @@ export function scaleSpawnArea(
   source: Pick<MapMetadata, "width" | "height">,
   target: Pick<MapMetadata, "width" | "height">,
 ): { x: number; y: number; width: number; height: number } {
-  const x = Math.max(0, Math.min(target.width - 1, Math.floor((area.x * target.width) / source.width)));
-  const y = Math.max(0, Math.min(target.height - 1, Math.floor((area.y * target.height) / source.height)));
-  const right = Math.min(target.width, Math.ceil(((area.x + area.width) * target.width) / source.width));
-  const bottom = Math.min(target.height, Math.ceil(((area.y + area.height) * target.height) / source.height));
-  return { x, y, width: Math.max(1, right - x), height: Math.max(1, bottom - y) };
+  const x = Math.max(
+    0,
+    Math.min(target.width - 1, Math.floor((area.x * target.width) / source.width)),
+  );
+  const y = Math.max(
+    0,
+    Math.min(target.height - 1, Math.floor((area.y * target.height) / source.height)),
+  );
+  const right = Math.min(
+    target.width,
+    Math.ceil(((area.x + area.width) * target.width) / source.width),
+  );
+  const bottom = Math.min(
+    target.height,
+    Math.ceil(((area.y + area.height) * target.height) / source.height),
+  );
+  return {
+    x,
+    y,
+    width: Math.max(1, right - x),
+    height: Math.max(1, bottom - y),
+  };
 }
