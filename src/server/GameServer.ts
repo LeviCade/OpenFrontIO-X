@@ -370,6 +370,12 @@ export class GameServer {
 
   public updateGameConfig(gameConfig: GameConfigPatch): void {
     applyGameConfigPatch(this.gameConfig, gameConfig);
+    // Matchmade/public and publicly listed games must remain compatible with
+    // unmodified OpenFront clients. Only private/unlisted or singleplayer
+    // games may use X-specific enlarged terrain.
+    if (this.gameConfig.gameType === GameType.Public || this.isListed()) {
+      this.gameConfig.mapAreaMultiplier = 1;
+    }
     // A lowered cap (the admin bot can set one) may already be met; without
     // this the lobby would wait for the next join to notice it is full.
     this.markFullIfAutoStarting();
@@ -1769,6 +1775,9 @@ export class GameServer {
   ): void {
     const wasListed = this.listing.isListed();
     this.listing.setListed(listed, options.autoStartMs);
+    if (listed) {
+      this.gameConfig.mapAreaMultiplier = 1;
+    }
     // Only on the transition: relisting must not change the cap players
     // joined under.
     if (listed && !wasListed && options.maxPlayers !== undefined) {
