@@ -13,8 +13,15 @@ You are working in **LeviCade/OpenFrontIO-X**, an independent, open-source exper
 1. Read [docs/ENGINEERING_BRIEF.md](docs/ENGINEERING_BRIEF.md) for requirements, architecture, edge cases and verification.
 2. Read [docs/ROADMAP.md](docs/ROADMAP.md) for ordered implementation and acceptance gates.
 3. Read [docs/UPSTREAM.md](docs/UPSTREAM.md) for safe update procedures.
-4. Maintain [docs/DEVLOG.md](docs/DEVLOG.md) as you work: branch/commit, implementation decisions, test results, obstacles and remaining work.
-5. The one-session engineering instructions are in [docs/HANDOFF_PROMPT.md](docs/HANDOFF_PROMPT.md).
+4. **Maintain and PUSH [docs/ENGINEERING_STATUS.md](docs/ENGINEERING_STATUS.md) at every substantive engineering checkpoint.** This is the cross-session status board the owner will ask another ChatGPT session to inspect. Update current task, phase, milestone statuses, tests, known blockers, commit links and next steps. A local-only change cannot be read in another session.
+5. Maintain [docs/DEVLOG.md](docs/DEVLOG.md) as the detailed chronological source of truth: branch/commit, implementation decisions, test results, obstacles and remaining work.
+6. The one-session engineering instructions are in [docs/HANDOFF_PROMPT.md](docs/HANDOFF_PROMPT.md).
+
+## Mandatory engineering reporting cadence
+- At the beginning: inspect the latest status board and record baseline verification or baseline blocker; commit and push that initial checkpoint.
+- As work advances: **after each significant completed milestone, meaningful failure, or design pivot**, update both `docs/ENGINEERING_STATUS.md` and `docs/DEVLOG.md`, then commit and push to the development branch. Include actual command outcomes, evidence, and commit/PR references. Avoid waiting until the very end.
+- Before ending, even if engineering is unfinished: push a final checkpoint clearly distinguishing **verified**, **implemented but untested**, **blocked**, and **not started**. The owner will return to a new ChatGPT conversation and ask it to evaluate your work.
+- Do not characterize GitHub file updates as continuous telemetry; they are visible only after successful pushes. Do not falsify progress or claim CI passed without evidence.
 
 ## Scope and invariants
 - **Area multiplier**, not per-axis multiplier: allowed values **1, 2, 3, 4, 5, 6**. A 6x choice means ~6x as many grid cells, and each axis approximately sqrt(6) times the original.
