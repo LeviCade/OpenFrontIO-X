@@ -9,6 +9,7 @@ import {
 } from "@openfront/engine-api/game/GameTypes";
 import { TeamCountConfig } from "@openfront/engine-api/Schemas";
 import { DoomsdayClockSpeed } from "@openfront/engine-lib/game/DoomsdayClock";
+import type { MapAreaMultiplier } from "@openfront/engine-lib/game/MapMultiplier";
 import { UserMeResponse } from "@openfront/shared/ApiSchemas";
 import { assetUrl } from "@openfront/shared/AssetUrls";
 import { generateID } from "@openfront/shared/SharedUtil";
@@ -97,6 +98,7 @@ type StartPreparation = {
 
 const DEFAULT_OPTIONS = {
   selectedMap: GameMapType.World,
+  mapAreaMultiplier: 1 as MapAreaMultiplier,
   selectedDifficulty: Difficulty.Easy,
   bots: 400,
   infiniteGold: false,
@@ -170,6 +172,7 @@ export class SinglePlayerModal extends BaseModal {
   protected routerName = "single-player";
 
   @state() private selectedMap: GameMapType = DEFAULT_OPTIONS.selectedMap;
+  @state() private mapAreaMultiplier: MapAreaMultiplier = DEFAULT_OPTIONS.mapAreaMultiplier;
   @state() private selectedDifficulty: Difficulty =
     DEFAULT_OPTIONS.selectedDifficulty;
   @state() private nations: number = 0;
@@ -498,6 +501,7 @@ export class SinglePlayerModal extends BaseModal {
             .settings=${{
               map: {
                 selected: this.selectedMap,
+                multiplier: this.mapAreaMultiplier,
                 useRandom: this.useRandomMap,
                 showMedals: this.showAchievements,
                 mapWins: this.mapWins,
@@ -564,6 +568,7 @@ export class SinglePlayerModal extends BaseModal {
               },
             }}
             @map-selected=${this.handleConfigMapSelected}
+            @map-multiplier-selected=${this.handleConfigMapMultiplierSelected}
             @random-map-selected=${this.handleConfigRandomMapSelected}
             @difficulty-selected=${this.handleConfigDifficultySelected}
             @doomsday-clock-speed-selected=${this
@@ -607,6 +612,7 @@ export class SinglePlayerModal extends BaseModal {
     return (
       this.nations !== this.defaultNationCount ||
       this.bots !== DEFAULT_OPTIONS.bots ||
+      this.mapAreaMultiplier !== DEFAULT_OPTIONS.mapAreaMultiplier ||
       this.infiniteGold !== DEFAULT_OPTIONS.infiniteGold ||
       this.infiniteTroops !== DEFAULT_OPTIONS.infiniteTroops ||
       this.compactMap !== DEFAULT_OPTIONS.compactMap ||
@@ -673,6 +679,7 @@ export class SinglePlayerModal extends BaseModal {
     // left the previous attempt in flight.
     this.starting = false;
     this.selectedMap = DEFAULT_OPTIONS.selectedMap;
+    this.mapAreaMultiplier = DEFAULT_OPTIONS.mapAreaMultiplier;
     this.selectedDifficulty = DEFAULT_OPTIONS.selectedDifficulty;
     this.gameMode = DEFAULT_OPTIONS.gameMode;
     this.useRandomMap = DEFAULT_OPTIONS.useRandomMap;
@@ -731,6 +738,11 @@ export class SinglePlayerModal extends BaseModal {
   private handleConfigMapSelected = (e: Event) => {
     const customEvent = e as CustomEvent<{ map: GameMapType }>;
     this.handleMapSelection(customEvent.detail.map);
+  };
+
+  private handleConfigMapMultiplierSelected = (e: Event) => {
+    const event = e as CustomEvent<{ multiplier: MapAreaMultiplier }>;
+    this.mapAreaMultiplier = event.detail.multiplier;
   };
 
   private handleDifficultySelection(value: Difficulty) {
@@ -1141,6 +1153,7 @@ export class SinglePlayerModal extends BaseModal {
               ],
               config: {
                 gameMap: this.selectedMap,
+                mapAreaMultiplier: this.mapAreaMultiplier,
                 gameMapSize: this.compactMap
                   ? GameMapSize.Compact
                   : GameMapSize.Normal,
