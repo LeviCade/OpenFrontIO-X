@@ -260,6 +260,19 @@ export class GPURenderer {
     this.mapW = mapW;
     this.mapH = mapH;
 
+    // An oversized multiplied map produces invalid full-map textures and
+    // silent black regions on WebGL2. Fail before any map-size allocations.
+    // Preserve the original warning/fallback behavior for legacy 1x maps.
+    const maxTextureSize = Number(gl.getParameter(gl.MAX_TEXTURE_SIZE));
+    if (
+      (config.gameConfig().mapAreaMultiplier ?? 1) > 1 &&
+      (mapW > maxTextureSize || mapH > maxTextureSize)
+    ) {
+      throw new Error(
+        `Map area multiplier requires ${mapW}x${mapH} textures, but this device supports at most ${maxTextureSize}px per axis. Use a smaller multiplier or map.`,
+      );
+    }
+
     this.camera = new Camera(mapW, mapH);
 
     // --- Terrain (static) ---
