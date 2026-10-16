@@ -6,17 +6,17 @@ This is the long-lived engineering memory for AI agents and human contributors.
 
 **Project:** Map Multiplier (area values 1x-6x).
 **Repository:** https://github.com/LeviCade/OpenFrontIO-X
-**Branch:** \`feature/map-multiplier\`
+**Branch:** `feature/map-multiplier`
 **Status:** scaffolding / no map multiplier implementation, runtime proof, CI pass or benchmark yet.
 
 ### Verified source observations
-- Map loading is centralized in \`packages/shared/src/GameMapLoader.ts\` and \`packages/engine-lib/src/game/TerrainMapLoader.ts\`.
-- \`packages/engine-lib/src/game/GameMapImpl.ts\` uses packed 8-bit terrain (land/shore/ocean/magnitude) and 16-bit owner/state.
-- \`packages/engine-api/src/Schemas.ts\` contains GameConfig schema.
-- \`src/client/WorkerClient.ts\` sends map files to the game worker.
-- \`src/client/TerrainMapFileLoader.ts\` currently caches by map and map size.
-- \`tests/perf/fullgame/FullGamePerf.ts\` supplies a deterministic headless performance harness.
-- The checked-in \`package.json\` requires Node 24.15.0+ <25 and npm 12.1.0+ <13.
+- Map loading is centralized in `packages/shared/src/GameMapLoader.ts` and `packages/engine-lib/src/game/TerrainMapLoader.ts`.
+- `packages/engine-lib/src/game/GameMapImpl.ts` uses packed 8-bit terrain (land/shore/ocean/magnitude) and 16-bit owner/state.
+- `packages/engine-api/src/Schemas.ts` contains GameConfig schema.
+- `src/client/WorkerClient.ts` sends map files to the game worker.
+- `src/client/TerrainMapFileLoader.ts` currently caches by map and map size.
+- `tests/perf/fullgame/FullGamePerf.ts` supplies a deterministic headless performance harness.
+- The checked-in `package.json` requires Node 24.15.0+ <25 and npm 12.1.0+ <13.
 
 ### Decisions
 - Keep the project independent; any PRs target only this repo.
@@ -35,7 +35,7 @@ This is the long-lived engineering memory for AI agents and human contributors.
 
 ### Append future entries using this template
 
-\`\`\`
+```
 ## YYYY-MM-DD: <short change>
 - Branch/commit/PR:
 - What changed (exact paths):
@@ -44,4 +44,4 @@ This is the long-lived engineering memory for AI agents and human contributors.
 - Measurements (map, factor, device, bots, FPS, p95 tick, peak memory):
 - Bugs, blockers and reproduction:
 - Next concrete steps:
-\`\`\`
+```
