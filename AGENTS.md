@@ -3,10 +3,10 @@
 You are working in **LeviCade/OpenFrontIO-X**, an independent, open-source experimental build of OpenFront. The immediate project is **Map Multiplier**, not a general game rewrite.
 
 ## Mandatory repository safety
-- All code changes, branches, issues and pull requests belong **only** to \`LeviCade/OpenFrontIO-X\`. Never open a pull request to \`openfrontio/OpenFrontIO\`. Never push to any \`upstream\` remote.
-- **Do not commit implementation straight to \`main\`.** Continue on \`feature/map-multiplier\` (or a child branch in this same repository), then use a PR targeting \`LeviCade/OpenFrontIO-X:main\`.
+- All code changes, branches, issues and pull requests belong **only** to `LeviCade/OpenFrontIO-X`. Never open a pull request to `openfrontio/OpenFrontIO`. Never push to any `upstream` remote.
+- **Do not commit implementation straight to `main`.** Continue on `feature/map-multiplier` (or a child branch in this same repository), then use a PR targeting `LeviCade/OpenFrontIO-X:main`.
 - Git upstream is for **read-only fetching** of new official OpenFront changes. Update deliberately; never auto-merge and publish untested updates.
-- Preserve official licenses, copyright notices and attribution. Code is AGPL-3.0; OpenFront's \`proprietary/\` assets are restricted. Audit asset usage before distributing independent builds. Do not assume everything in a public repository is redistributable.
+- Preserve official licenses, copyright notices and attribution. Code is AGPL-3.0; OpenFront's `proprietary/` assets are restricted. Audit asset usage before distributing independent builds. Do not assume everything in a public repository is redistributable.
 - Do not claim benchmarks, tests, gameplay, or compatibility passed unless actually executed.
 
 ## Start here
@@ -28,17 +28,17 @@ You are working in **LeviCade/OpenFrontIO-X**, an independent, open-source exper
 
 ## Environment (as verified in repository)
 - Node >=24.15.0 <25, npm >=12.1.0 <13.
-- Install: \`npm run inst\`. Local game: \`npm run dev\`.
-- Verification: \`npm run typecheck\`, \`npm test\`, \`npm run lint\`, \`npm run format:check\`, \`npm run build-prod\`.
-- Existing performance harness: \`npm run perf:game -- --map world --ticks 1800 --bots 400\`; adapt to the multiplier to compare 1x against larger maps and retain deterministic hashes.
+- Install: `npm run inst`. Local game: `npm run dev`.
+- Verification: `npm run typecheck`, `npm test`, `npm run lint`, `npm run format:check`, `npm run build-prod`.
+- Existing performance harness: `npm run perf:game -- --map world --ticks 1800 --bots 400`; adapt to the multiplier to compare 1x against larger maps and retain deterministic hashes.
 - Tests must be meaningful: run them when possible and record exact commands/results. If blocked, write the reason.
 
 ## Code landmarks (verified 2026-10-16)
-- \`packages/shared/src/GameMapLoader.ts\`: loads normal/compact map files.
-- \`packages/engine-api/src/game/MapFiles.ts\`: map metadata, manifests, binary-file contract.
-- \`packages/engine-lib/src/game/TerrainMapLoader.ts\`: builds terrain and minimap from binaries.
-- \`packages/engine-lib/src/game/GameMapImpl.ts\`: terrain bits and game-state grid.
-- \`packages/engine-api/src/Schemas.ts\`: authoritative GameConfig schema. Consider backward-compatible optional multiplier with 1x default.
-- \`src/client/WorkerClient.ts\`: sends loaded files into deterministic game worker.
-- \`src/client/TerrainMapFileLoader.ts\`: renderer-side terrain cache; cache key must include multiplier.
+- `packages/shared/src/GameMapLoader.ts`: loads normal/compact map files.
+- `packages/engine-api/src/game/MapFiles.ts`: map metadata, manifests, binary-file contract.
+- `packages/engine-lib/src/game/TerrainMapLoader.ts`: builds terrain and minimap from binaries.
+- `packages/engine-lib/src/game/GameMapImpl.ts`: terrain bits and game-state grid.
+- `packages/engine-api/src/Schemas.ts`: authoritative GameConfig schema. Consider backward-compatible optional multiplier with 1x default.
+- `src/client/WorkerClient.ts`: sends loaded files into deterministic game worker.
+- `src/client/TerrainMapFileLoader.ts`: renderer-side terrain cache; cache key must include multiplier.
 - Inspect server-side map loader, lobby UI, renderer, serialization, replay, snapshots, minimaps, nation creation and tests before changing them. These landmarks may move in future upstream versions.
