@@ -316,6 +316,11 @@ export class GameServer {
     this.id = opts.id;
     this.createdAt = opts.createdAt;
     this.gameConfig = opts.gameConfig;
+    // Public/matchmade sessions must never inherit a private multiplier from
+    // externally supplied initial GameConfig (no patch may arrive later).
+    if (this.gameConfig.gameType === GameType.Public) {
+      this.gameConfig.mapAreaMultiplier = 1;
+    }
     this.creatorPersistentID = opts.creatorPersistentID;
     this.startsAt = opts.startsAt;
     this.publicGameType = opts.publicGameType;
