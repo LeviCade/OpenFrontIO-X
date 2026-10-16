@@ -58,3 +58,10 @@ This is the long-lived engineering memory for AI agents and human contributors. 
 - Bugs, blockers and reproduction:
 - Next concrete steps:
 ```
+
+## 2026-10-16 19:00 UTC: Engineering session initial checkpoint
+- Branch: `feature/map-multiplier`; PR: https://github.com/LeviCade/OpenFrontIO-X/pull/1 (draft, own repo).
+- Inspected AGENTS.md, HANDOFF_PROMPT, ENGINEERING_BRIEF, ROADMAP, UPSTREAM, existing status, GameMapLoader, TerrainMapLoader, MapFiles, schema, repo tree.
+- Environment commands actually run: `node --version` => `v22.16.0`; `npm --version` => `10.9.2`; `git --version` => `2.47.3`; `git ls-remote https://github.com/LeviCade/OpenFrontIO-X.git refs/heads/feature/map-multiplier` => `fatal: Could not resolve host: github.com`.
+- Therefore no local checkout, npm install, typecheck, tests, live browser gameplay, or performance benchmarks are currently available. Do NOT claim these pass.
+- Connected GitHub app supports reads/writes; engineering will push via GitHub's contents/Git object APIs, with isolated pure tests where feasible. Next: trace loader dependencies and implement tested scaler.
