@@ -11,6 +11,12 @@ import {
   Nation,
 } from "@openfront/engine-api/game/MapFiles";
 import { GameMapImpl } from "./GameMapImpl";
+import {
+  MapAreaMultiplier,
+  scaleSpawnArea,
+  scaleTerrainGrid,
+  scaleTileCoordinate,
+} from "./MapMultiplier";
 
 export type TerrainMapData = {
   nations: Nation[];
@@ -27,31 +33,58 @@ export type TerrainMapData = {
  * the bins as their terrain and compact maps scale the manifest in place.
  * Pass files nothing else reads.
  */
-export async function loadTerrainMap(files: MapFiles): Promise<TerrainMapData> {
-  const { map, mapSize, manifest } = files;
+export async function loadTerrainMap(
+  files: MapFiles,
+  multiplier: MapAreaMultiplier = 1,
+): Promise<TerrainMapData> {
+  const { map, mapSize } = files;
+  // 1x intentionally follows the unmodified loader path, including its
+  // historic Compact manifest conversion. Larger games own a deep-enough
+  // manifest copy so cached source coordinates cannot be mutated.
+  const manifest =
+    multiplier === 1
+      ? files.manifest
+      : {
+          ...files.manifest,
+          nations: files.manifest.nations.map((nation) => ({
+            ...nation,
+            coordinates: nation.coordinates?.slice() as [number, number] | undefined,
+          })),
+          additionalNations: files.manifest.additionalNations?.map((nation) => ({
+            ...nation,
+            coordinates: nation.coordinates?.slice() as [number, number] | undefined,
+          })),
+        };
+  const sourceMain =
+    mapSize === GameMapSize.Normal ? manifest.map : manifest.map4x;
+  const sourceMini =
+    mapSize === GameMapSize.Normal ? manifest.map4x : manifest.map16x;
   const bin = (data: Uint8Array | undefined, name: string) => {
     if (data === undefined) throw new Error(`${name} of ${map} was not passed`);
     return data;
   };
 
-  const gameMap =
-    mapSize === GameMapSize.Normal
-      ? await genTerrainFromBin(manifest.map, bin(files.mapBin, "map.bin"))
-      : await genTerrainFromBin(
-          manifest.map4x,
-          bin(files.map4xBin, "map4x.bin"),
-        );
-
-  const miniMap =
-    mapSize === GameMapSize.Normal
-      ? await genTerrainFromBin(
-          manifest.map4x,
-          bin(files.map4xBin, "map4x.bin"),
-        )
-      : await genTerrainFromBin(
-          manifest.map16x,
-          bin(files.map16xBin, "map16x.bin"),
-        );
+  const originalMain = bin(
+    mapSize === GameMapSize.Normal ? files.mapBin : files.map4xBin,
+    mapSize === GameMapSize.Normal ? "map.bin" : "map4x.bin",
+  );
+  const originalMini = bin(
+    mapSize === GameMapSize.Normal ? files.map4xBin : files.map16xBin,
+    mapSize === GameMapSize.Normal ? "map4x.bin" : "map16x.bin",
+  );
+  const main = scaleTerrainGrid(originalMain, sourceMain, multiplier);
+  // The pathfinder's MiniMapTransformer divides coordinates by two.
+  // Scale the minimap too and use ceil(width / 2) so odd destination
+  // dimensions never produce an out-of-range minimap tile.
+  const mini =
+    multiplier === 1
+      ? { metadata: sourceMini, bytes: originalMini }
+      : scaleTerrainGrid(originalMini, sourceMini, multiplier, {
+          width: Math.ceil(main.metadata.width / 2),
+          height: Math.ceil(main.metadata.height / 2),
+        });
+  const gameMap = await genTerrainFromBin(main.metadata, main.bytes);
+  const miniMap = await genTerrainFromBin(mini.metadata, mini.bytes);
 
   if (mapSize === GameMapSize.Compact) {
     manifest.nations.forEach((nation) => {
@@ -85,6 +118,29 @@ export async function loadTerrainMap(files: MapFiles): Promise<TerrainMapData> {
       }));
     }
     teamGameSpawnAreas = scaled;
+  }
+
+  if (multiplier !== 1) {
+    // The Compact conversion above already divided coordinates / areas by
+    // two. Transform from that actual source grid into the new game grid.
+    for (const nation of [...manifest.nations, ...(manifest.additionalNations ?? [])]) {
+      if (nation.coordinates !== undefined) {
+        nation.coordinates = scaleTileCoordinate(
+          nation.coordinates,
+          sourceMain,
+          main.metadata,
+        );
+      }
+    }
+    if (teamGameSpawnAreas) {
+      const scaled: TeamGameSpawnAreas = {};
+      for (const [key, areas] of Object.entries(teamGameSpawnAreas)) {
+        scaled[key] = areas.map((area) =>
+          scaleSpawnArea(area, sourceMain, main.metadata),
+        );
+      }
+      teamGameSpawnAreas = scaled;
+    }
   }
 
   const layers = manifest.layers;

@@ -163,6 +163,7 @@ export function joinLobby(
   // debouncing avoids downloading (and permanently caching) a map that was
   // only shown transiently.
   const MAP_PRELOAD_DEBOUNCE_STREAK = 3;
+  let lastLobbyMultiplier: 1 | 2 | 3 | 4 | 5 | 6 = 1;
   // In-flight terrain loads keyed by `map:mapSize`, so re-requesting a map
   // that began loading earlier (even after another map superseded it) reuses
   // the original promise instead of starting a duplicate download/parse while
@@ -179,14 +180,15 @@ export function joinLobby(
   const requestTerrainLoad = (
     map: Parameters<typeof loadCachedTerrainMap>[0],
     mapSize: Parameters<typeof loadCachedTerrainMap>[1],
+    multiplier: 1 | 2 | 3 | 4 | 5 | 6 = 1,
   ): Promise<TerrainMapData> => {
-    const key = `${map}:${mapSize}`;
+    const key = `${map}:${mapSize}:${multiplier}`;
     const existing = terrainLoads.get(key);
     if (existing !== undefined) {
       terrainLoad = existing;
       return existing;
     }
-    const load = loadCachedTerrainMap(map, mapSize);
+    const load = loadCachedTerrainMap(map, mapSize, multiplier);
     terrainLoads.set(key, load);
     terrainLoad = load;
     void load.catch((e) => {
@@ -244,7 +246,8 @@ export function joinLobby(
         pendingPreloadKey = null;
         pendingPreloadStreak = 0;
       } else {
-        const key = `${gameConfig.gameMap}:${gameConfig.gameMapSize}`;
+        lastLobbyMultiplier = gameConfig.mapAreaMultiplier ?? 1;
+        const key = `${gameConfig.gameMap}:${gameConfig.gameMapSize}:${lastLobbyMultiplier}`;
         if (pendingPreloadKey === key) {
           pendingPreloadStreak++;
         } else {
@@ -252,7 +255,7 @@ export function joinLobby(
           pendingPreloadStreak = 1;
         }
         if (pendingPreloadStreak >= MAP_PRELOAD_DEBOUNCE_STREAK) {
-          requestTerrainLoad(gameConfig.gameMap, gameConfig.gameMapSize);
+          requestTerrainLoad(gameConfig.gameMap, gameConfig.gameMapSize, lastLobbyMultiplier);
         }
       }
       return;
@@ -261,7 +264,7 @@ export function joinLobby(
       console.log(
         `lobby: game prestarting: ${JSON.stringify(message, replacer)}`,
       );
-      requestTerrainLoad(message.gameMap, message.gameMapSize);
+      requestTerrainLoad(message.gameMap, message.gameMapSize, lastLobbyMultiplier);
       resolvePrestart();
     }
     if (message.type === "start") {
@@ -288,7 +291,13 @@ export function joinLobby(
         eventBus,
         transport,
         userSettings,
-        terrainLoad,
+        // The start packet is authoritative. A late host edit could
+        // invalidate the earlier lobby preload; select by all three fields.
+        requestTerrainLoad(
+          message.gameStartInfo.config.gameMap,
+          message.gameStartInfo.config.gameMapSize,
+          message.gameStartInfo.config.mapAreaMultiplier ?? 1,
+        ),
         terrainMapFileLoader,
       )
         .then((r) => {
@@ -701,6 +710,7 @@ async function createClientGame(
     gameMap = await loadCachedTerrainMap(
       lobbyConfig.gameStartInfo.config.gameMap,
       lobbyConfig.gameStartInfo.config.gameMapSize,
+      lobbyConfig.gameStartInfo.config.mapAreaMultiplier ?? 1,
     );
   }
   // Kick off the font-atlas fetch so it overlaps with worker init; the

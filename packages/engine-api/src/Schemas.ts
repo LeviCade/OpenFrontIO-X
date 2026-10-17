@@ -252,6 +252,11 @@ export const GameConfigSchema = z.object({
   gameMode: z.enum(GameMode),
   rankedType: z.enum(RankedType).optional(), // Only set for ranked games.
   gameMapSize: z.enum(GameMapSize),
+  // Optional on the wire: older games, replays and clients default to 1x.
+  mapAreaMultiplier: z.union([
+    z.literal(1), z.literal(2), z.literal(3),
+    z.literal(4), z.literal(5), z.literal(6),
+  ]).optional(),
   doomsdayClock: DoomsdayClockConfigSchema.optional(),
   overtime: OvertimeConfigSchema.optional(),
   publicGameModifiers: z

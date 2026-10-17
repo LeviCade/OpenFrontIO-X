@@ -12,6 +12,7 @@ import {
   resolveTribeNameData,
 } from "@openfront/engine-lib/execution/utils/TribeNames";
 import { PseudoRandom } from "@openfront/engine-lib/PseudoRandom";
+import { scaleTileCoordinate } from "@openfront/engine-lib/game/MapMultiplier";
 import { simpleHash } from "@openfront/engine-lib/Util";
 import { Game } from "../game/Game";
 import { SpawnExecution } from "./SpawnExecution";
@@ -103,8 +104,24 @@ export class TribeSpawner {
     const coords = ct.coordinates!;
     const isCompact =
       this.gs.config().gameConfig().gameMapSize === GameMapSize.Compact;
-    const x = isCompact ? Math.floor(coords[0] / 2) : coords[0];
-    const y = isCompact ? Math.floor(coords[1] / 2) : coords[1];
+    let x = isCompact ? Math.floor(coords[0] / 2) : coords[0];
+    let y = isCompact ? Math.floor(coords[1] / 2) : coords[1];
+    const multiplier = this.gs.config().gameConfig().mapAreaMultiplier ?? 1;
+    if (multiplier !== 1) {
+      // Map multiplier changes gameplay grid coordinates. The generated
+      // customTribes table still uses 1x source-map coordinates. Invert the
+      // deterministic round(n*sqrt(factor)) axis transform: round(D/sqrt(f))
+      // recovers its original integer source axis, for factors 2 through 6.
+      const scale = Math.sqrt(multiplier);
+      [x, y] = scaleTileCoordinate(
+        [x, y],
+        {
+          width: Math.round(this.gs.width() / scale),
+          height: Math.round(this.gs.height() / scale),
+        },
+        { width: this.gs.width(), height: this.gs.height() },
+      );
+    }
 
     if (!this.gs.isValidCoord(x, y)) {
       console.warn(
