@@ -140,10 +140,10 @@ export class WinCheckExecution implements Execution {
     const customSoloThreshold =
       this.mg.config().gameConfig().gameType === GameType.Singleplayer &&
       this.mg.config().gameConfig().winPercentage !== undefined;
-    // Solo's explicitly chosen threshold may need a very long game; the
-    // 170-minute watchdog was designed for hosted matches with a server cap.
+    // Solo without an explicit max timer must never inherit the hosted
+    // 170-minute watchdog, including at the legacy/default 80% threshold.
     if (
-      !customSoloThreshold &&
+      this.mg.config().gameConfig().gameType !== GameType.Singleplayer &&
       timeElapsed >= WinCheckExecution.HARD_TIME_LIMIT_SECONDS
     ) {
       return true;
