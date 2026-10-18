@@ -1,14 +1,16 @@
 import { MapMetadata } from "@openfront/engine-api/game/MapFiles";
 
 /** Total-area choices. Each axis grows by approximately sqrt(multiplier). */
-export type MapAreaMultiplier = 1 | 2 | 3 | 4 | 5 | 6;
+export type MapAreaMultiplier = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10;
 
 export const MAP_AREA_MULTIPLIERS: readonly MapAreaMultiplier[] = [
-  1, 2, 3, 4, 5, 6,
+  1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
 ];
 
 /** Cap deterministic CPU allocations before constructing the game state. */
-export const MAX_MULTIPLIED_MAP_TILES = 64_000_000;
+// 8x Giant World is ~64.02m tiles; preserve a strict guard just above it.
+// 9x/10x remain available on smaller maps, not Giant World, until profiled.
+export const MAX_MULTIPLIED_MAP_TILES = 64_100_000;
 
 export interface ScaledTerrain {
   metadata: MapMetadata;
@@ -33,8 +35,8 @@ function coastNeighbor(bytes: Uint8Array, index: number, land: boolean): boolean
 export function assertMapAreaMultiplier(
   value: number,
 ): asserts value is MapAreaMultiplier {
-  if (!Number.isInteger(value) || value < 1 || value > 6) {
-    throw new Error(`Map area multiplier must be an integer from 1 to 6: ${value}`);
+  if (!Number.isInteger(value) || value < 1 || value > 10) {
+    throw new Error(`Map area multiplier must be an integer from 1 to 10: ${value}`);
   }
 }
 
