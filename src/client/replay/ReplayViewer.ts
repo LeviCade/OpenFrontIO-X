@@ -715,7 +715,10 @@ export class ReplayViewer extends LitElement {
     ) {
       return;
     }
-    if (e.code === "Space") {
+    if (e.code === "KeyF" && e.shiftKey) {
+      e.preventDefault();
+      this.camera?.fit(window.innerWidth, window.innerHeight);
+    } else if (e.code === "Space") {
       e.preventDefault();
       this.togglePlay();
     } else if (e.code === "ArrowRight") {
@@ -819,6 +822,7 @@ export class ReplayViewer extends LitElement {
           @wheel=${this.onWheel}
           @dblclick=${this.onDoubleClick}
         ></div>
+        ${this.status === "ready" ? html`<button type="button" class="absolute top-3 right-3 z-10 rounded bg-black/80 border border-white/30 px-3 py-2 text-sm" aria-label="Zoom to fit whole map" @click=${() => this.camera?.fit(window.innerWidth, window.innerHeight)}>Fit map</button>` : nothing}
         ${this.status === "ready" ? this.renderStats() : nothing}
         ${this.status === "ready" && this.stoppedEarly !== ""
           ? this.renderStoppedEarly(loaded)
