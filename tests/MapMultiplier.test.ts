@@ -50,11 +50,11 @@ describe("Map Multiplier packed terrain", () => {
       { width: 2, height: 1, num_land_tiles: 0 },
       4,
     );
-    expect(Array.from(scaled.bytes)).toEqual([0x9f, 0x9f, 0x20, 0x20]);
+    expect(Array.from(scaled.bytes)).toEqual([0x9f, 0x9f, 0x20, 0x20, 0x9f, 0x9f, 0x20, 0x20]);
     expect(scaled.metadata.num_land_tiles).toBe(0);
   });
 
-  it.each([2, 3, 4, 5, 6] as const)("is deterministic and bounded at %ix", (factor) => {
+  it.each([2, 3, 4, 5, 6, 7, 8, 9, 10] as const)("is deterministic and bounded at %ix", (factor) => {
     const a = scaleTerrainGrid(terrain, metadata, factor);
     const b = scaleTerrainGrid(terrain, metadata, factor);
     expect(a.bytes).toEqual(b.bytes);
@@ -72,7 +72,7 @@ describe("Map Multiplier packed terrain", () => {
   });
 
   it("rejects invalid factors, malformed bins and excessive allocations", () => {
-    expect(() => assertMapAreaMultiplier(7)).toThrow("1 to 6");
+    expect(() => assertMapAreaMultiplier(11)).toThrow("1 to 10");
     expect(() => scaleTerrainGrid(new Uint8Array(1), metadata, 2)).toThrow("length");
     expect(() => scaleTerrainGrid(new Uint8Array(1), { width: 1, height: 1, num_land_tiles: 1 }, 6,
       { width: 1_000_000, height: 1_000_000 })).toThrow("budget");
