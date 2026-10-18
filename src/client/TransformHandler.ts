@@ -8,6 +8,9 @@ import {
 } from "./InputHandler";
 import { GameView, PlayerView, UnitView } from "./view";
 
+/** User-requested full-map overview, independent of current pan/zoom. */
+export class FitMapEvent implements GameEvent {}
+
 export class GoToPlayerEvent implements GameEvent {
   constructor(
     public player: PlayerView,
@@ -54,6 +57,7 @@ export class TransformHandler {
     this.eventBus.on(GoToPositionEvent, (e) => this.onGoToPosition(e));
     this.eventBus.on(GoToUnitEvent, (e) => this.onGoToUnit(e));
     this.eventBus.on(CenterCameraEvent, () => this.centerCamera());
+    this.eventBus.on(FitMapEvent, () => this.centerAll(0.9));
   }
 
   public updateCanvasBoundingRect() {
