@@ -266,7 +266,10 @@ export class LocalServer {
       this.allPlayersStats = clientMsg.allPlayersStats;
       this.soloJournal?.win(
         clientMsg.winner,
-        Math.max(0, this.turnsExecuted - 1),
+        // Solo queues at most one in-flight turn. The last issued turn
+        // identifies the winner update even when turnComplete has not yet
+        // arrived from the worker.
+        Math.max(0, this.turns.length - 1),
         clientMsg.allPlayersStats[this.clientID!],
       );
       if (!this.isReplay) {
