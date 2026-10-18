@@ -298,14 +298,24 @@ export class TransformHandler {
     this.changed = true;
   }
 
+  private minScale(): number {
+    const rect = this.boundingRect();
+    return Math.min(
+      0.2,
+      (rect.width / this.game.width()) * 0.9,
+      (rect.height / this.game.height()) * 0.9,
+    );
+  }
+
   onZoom(event: ZoomEvent) {
     this.clearTarget();
     const oldScale = this.scale;
     const zoomFactor = 1 + event.delta / ZOOM_DELTA_DIVISOR;
     this.scale /= zoomFactor;
 
-    // Clamp the scale to prevent extreme zooming
-    this.scale = Math.max(0.2, Math.min(20, this.scale));
+    // On giant maps 0.2 is too close: allow enough zoom to see the edges.
+    // On ordinary maps keep the historical 0.2 floor.
+    this.scale = Math.max(this.minScale(), Math.min(20, this.scale));
 
     const canvasCoords = this.screenToCanvasCoordinates(event.x, event.y);
 
