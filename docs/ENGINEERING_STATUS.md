@@ -1,5 +1,17 @@
 # OpenFrontIO-X engineering status
 
+## PR #2 ACTIVE ENGINEERING CHECKPOINT — 2026-10-18 05:01 UTC
+
+- **Branch:** `feature/extended-map-controls-solo-rules`, stacked on `feature/map-multiplier`, draft PR [#2](https://github.com/LeviCade/OpenFrontIO-X/pull/2). No merge or upstream write.
+- **Focus:** offline chunked Solo source-record storage, full replay viewing and post-victory capture; audit 1×–10×/Solo/zoom code.
+- **Preexisting code:** 1×–10× scale selector, 64.1M tile cap, zoom floor changes, Solo 1–100% winner threshold; **NOT reverified on this head**.
+- **Starting head inspected:** `a5951bd93d174260a6f84f0f0d1c742e1bf6e4a5`.
+- **Environment:** current agent runtime `node v22.16.0`, `npm v10.9.2`, `git ls-remote` => GitHub DNS unavailable; no local checkout/dependencies. Mac separate worktree saw Node v26.10.0 and npm 12.1.0 (incompatible). Do not change Mac or its worktrees remotely.
+- **Verification:** no targeted tests, full suite, build, real gameplay, or performance measurements yet. Need Node >=24.15.0 <25 and npm >=12.1.0 <13.
+- **Next:** implement bounded IndexedDB journal in source, integration, static review, tests, then real Node24/browser verification on compatible host. Track outcomes in DEVLOG.
+- **Previous PR #1 report remains below as historical baseline only.**
+
+
 > **Engineering checkpoint.** This file is the current, human-readable status board for OpenFrontIO-X. GPT-6 Sol (or any engineer) must maintain it during implementation. For chronological implementation details use [DEVLOG.md](DEVLOG.md).
 >
 > **Status updates become externally visible only after the engineer commits and pushes them to GitHub.** This is not an automatically streaming telemetry feed.
