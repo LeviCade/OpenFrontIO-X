@@ -52,6 +52,9 @@ export class LocalServer {
   // All turns from the game record on replay.
   private replayTurns: Turn[] = [];
 
+  // Sparse after live turns complete: absent indexes represent empty ticks.
+  // Array length remains the authoritative turn counter for pacing/rejoins,
+  // without retaining an empty Turn object for every post-win tick.
   private turns: Turn[] = [];
 
   private intents: StampedIntent[] = [];
@@ -188,7 +191,11 @@ export class LocalServer {
       this.clientMessage({
         type: "start",
         gameStartInfo: this.lobbyConfig.gameStartInfo!,
-        turns: this.turns,
+        // Only materialize the dense list for an explicit rejoin; a long
+        // Solo game otherwise retains only meaningful intents/hashes in RAM.
+        turns: Array.from({ length: this.turns.length }, (_, i) =>
+          this.turns[i] ?? { turnNumber: i, intents: [] },
+        ),
         lobbyCreatedAt: this.lobbyConfig.gameStartInfo!.lobbyCreatedAt,
         myClientID: this.lobbyConfig.gameRecord ? undefined : this.clientID,
       } satisfies ServerStartGameMessage);
@@ -224,9 +231,14 @@ export class LocalServer {
       if (!this.lobbyConfig.gameRecord) {
         if (clientMsg.turnNumber % 100 === 0) {
           // In singleplayer, only store hash every 100 turns to reduce size of game record.
-          const turn = this.turns[clientMsg.turnNumber];
-          if (turn) {
-            turn.hash = clientMsg.hash;
+          if (clientMsg.turnNumber < this.turns.length) {
+            const turn = this.turns[clientMsg.turnNumber];
+            if (turn) turn.hash = clientMsg.hash;
+            else this.turns[clientMsg.turnNumber] = {
+              turnNumber: clientMsg.turnNumber,
+              intents: [],
+              hash: clientMsg.hash,
+            };
             this.soloJournal?.hash(clientMsg.turnNumber, clientMsg.hash);
           }
         }
@@ -303,7 +315,8 @@ export class LocalServer {
       turnNumber: this.turns.length,
       intents: this.intents,
     };
-    this.turns.push(pastTurn);
+    this.turns.length = pastTurn.turnNumber + 1;
+    if (pastTurn.intents.length > 0) this.turns[pastTurn.turnNumber] = pastTurn;
     this.soloJournal?.append(pastTurn);
     this.intents = [];
     this.clientMessage({
