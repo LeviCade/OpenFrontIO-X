@@ -269,7 +269,7 @@ export class SoloRecordJournal {
       gameID: this.meta.gameID, turn, hash,
     }));
     this.pendingHashes.clear();
-    const last = batch.at(-1)?.turnNumber ?? this.committedTurn;
+    const last = batch[batch.length - 1]?.turnNumber ?? this.committedTurn;
     this.queue(batch, hashes, last);
     // Do not loop until empty in same call: callers run every 2s and the
     // next flush will advance, keeping input and IDB work bounded.
@@ -370,9 +370,10 @@ export async function importSoloRecord(
   backend: SoloRecordBackend = soloRecordBackend(),
   build: string = ClientEnv.gitCommit(),
 ): Promise<void> {
-  const wrapper = data && typeof data === "object" && "kind" in data &&
-    (data as { kind?: unknown }).kind === "openfront-solo-v1"
-      ? data as { record: unknown; wonAtTick: unknown }
+  const wrapper = data !== null && typeof data === "object" &&
+    "kind" in data && data.kind === "openfront-solo-v1" &&
+    "record" in data && "wonAtTick" in data
+      ? data
       : null;
   const record = GameRecordSchema.parse(wrapper ? wrapper.record : data);
   if (record.info.config.gameType !== GameType.Singleplayer) {
