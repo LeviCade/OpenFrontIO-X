@@ -1,5 +1,30 @@
 # OpenFrontIO-X engineering status
 
+## PR #2 FINAL ENGINEERING HANDOFF — 2026-10-18 05:40 UTC
+
+**Repo / branch / PR:** [LeviCade/OpenFrontIO-X](https://github.com/LeviCade/OpenFrontIO-X), `feature/extended-map-controls-solo-rules`, [draft PR #2](https://github.com/LeviCade/OpenFrontIO-X/pull/2) stacked on `feature/map-multiplier`. **NOT MERGED.** Last implementation commit before documentation: [`ea91ae3`](https://github.com/LeviCade/OpenFrontIO-X/commit/ea91ae3b170ca818b5de5a124be8273ea737659e).
+
+**Completion assessment:** Significant new offline Solo replay source implementation and UX, first-win preservation, continued post-win source recording, explicit map-fit action and Solo timer fix are **pushed, not independently executed**. Parent PR2 already implemented 1×–10× sizing and Solo 1–100%. No new code has a verified pass on this PR head; **do not merge or ship** based on these commits alone.
+
+| Feature | State | Source evidence / limitation |
+| --- | --- | --- |
+| 1×–10× area multiplier | Existing on PR2 / UNVERIFIED on this head | Deterministic 64.1M-tile cap; Normal Giant World 9×/10× are deliberately refused; smaller maps may qualify. Owner earlier reported actual Solo Giant World 6× working; not our tested 7×–10× evidence. |
+| Full-map zoom | Implemented / UNTESTED | Min zoom floors preexisting; Fit map event + game HUD button `8a76c57`, `3996fe9`; replay button and Shift+F `b295aae`. |
+| Solo victory 1–100% | Existing / UNVERIFIED | Default 80%, exact 100% support preexisting; no forced 170-min watchdog for untimed Solo `e8d7019`, test `88a0731`. |
+| Offline source recording | Implemented / UNTESTED | `src/client/replay/SoloRecordStore.ts`: new indexedDB DB, 64-turn chunks, separate hashes, first winner and winning tick, metadata watermark, 512 in-flight backlog, 2-second flush, browser-exit best-effort. |
+| Continue playing/record post-win | Implemented / UNTESTED | `LocalServer.ts` keeps simulation executing and persists post-win turns; first win retained. Sparse in-RAM tick array `aa44101`. Win-time remote archive deliberately remains original result, not an altered post-win archive. |
+| Replay library | Implemented / UNTESTED | `SoloReplayLibrary.ts`: Watch, gzip JSON Export/Import, Delete, quota display. `ReplayRecord.ts` local-source lookup; `ReplayViewer.ts` avoids stale cache; strict build compatibility. |
+| Offline replay regression tests | Written / **NOT RUN** | `tests/client/replay/SoloRecordStore.test.ts`: 1000 turns with later victory, delayed hash, export/import, build mismatch, offline source, quota error. |
+| Gameplay test, full suite, typecheck, formatting, lint, production build | **BLOCKED / NOT RUN** | Available runtime Node 22.16.0/npm 10.9.2; repository requires Node >=24.15 <25 and npm >=12.1 <13, git clone DNS inaccessible. Physical Mac Node v26.10 npm12.1 EBADENGINE documented in handoff. |
+| CI | **NO RUNS** | GitHub Actions `actions/runs?branch=feature%2Fextended-map-controls-solo-rules` reports `total_count: 0`; combined commit statuses `[]`. Presence of workflow file is NOT proof of execution. |
+| 7×–10× Giant World, GPU/CPU/FPS/replay determinism | **NOT VERIFIED** | No browser session, GPU MAX_TEXTURE_SIZE observations, tick benchmarks, crash recovery, or determinism hash playback run on target hardware. |
+
+**Outstanding risks:** TypeScript/lint/format failure possible; IndexedDB quota and partial-write recovery not tested; source-record import capped at 2,000,000 turns; export and replay processing reconstruct full records in RAM (requires benchmarking); pending writes can lose a few seconds on sudden tab close; existing processed replay library is deliberately kept distinct. UI new controls and Solo status labels must be exercised in browser. The full allocation cap does not establish safe memory on specific hardware.
+
+**Immediate acceptance work:** Set up isolated Node24/npm12 environment without modifying existing Mac worktrees; run `npm run inst`, `npm run format:check`, `npm run typecheck`, `npm run lint`, targeted and full `npm test`, `npm run build-prod`. Repair any failures on this branch. Run actual Solo offline: default/1%/50%/100%, win → Keep Playing 1000 turns → exit → Watch through end, export/import on same build, simulate quota/abrupt close. Run 1×–10× map and zoom, GPU and perf checks, including Giant 7×/8× and 9×/10× graceful refusal. Preserve PR #1/#2 drafts until independently verified.
+
+Previous PR2 checkpoints, PR1 historical board and full DEVLOG follow below.
+
 ## PR #2 SOURCE FEATURE CHECKPOINT — 2026-10-18 05:20 UTC
 
 | Deliverable | Current state | Evidence |
