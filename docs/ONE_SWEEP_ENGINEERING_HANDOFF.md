@@ -1,5 +1,19 @@
 # ENGINEERING SESSION — OpenFrontIO-X one-sweep implementation and verification
 
+## 2026-10-18 — Engineering follow-on state (READ FIRST)
+
+This handoff predates the source changes below. **PR #2 is still draft and unmerged**. The current branch must be read from GitHub before validation; do not assume the old starting SHA in this document is still head.
+
+- Offline Solo source journal is now implemented in `src/client/replay/SoloRecordStore.ts` and integrated with `LocalServer.ts`: 64-turn IndexedDB chunks and separate hash rows, winner tick, continued post-win recording, bounded pending buffers and sparse in-memory turns. `ReplayRecord.ts` and `ReplayViewer.ts` prefer that local source over win-time remote archives and derived cache.
+- Offline replay library `SoloReplayLibrary.ts` is exposed in Solo settings with Watch, compressed Export/Import, Delete and storage usage display. Source import has a 2-million-turn safety cap and same-build requirement.
+- A visible Fit map action has been added to the live-game sidebar and replay viewer (Shift+F supported in viewer). Solo no-timer games no longer auto-win at 170 minutes when using default 80% victory rules.
+- New tests exist in `tests/client/replay/SoloRecordStore.test.ts`; timeout regression exists in `tests/core/executions/WinCheckExecution.test.ts`. **NOT RUN**: no installed project checkout/dependencies/Node24 in engineering environment. Available agent Node22/npm10; Mac Node26 initially reported EBADENGINE. GitHub Actions returned zero runs on the feature branch. Therefore no typecheck, lint, format, build, 7×–10× hardware/gameplay, or extended replay determinism PASS exists.
+- Prior Mac worktrees and any upstream OpenFront repositories were left untouched. Do not merge or declare release ready. Read the latest `docs/ENGINEERING_STATUS.md`, `docs/DEVLOG.md` and updated `docs/EXTENDED_MAP_AND_SOLO_REPLAY_PLAN.md` for exact commits, test expectations and remaining risks.
+- Next operator/engineer: isolate Node >=24.15 <25 and npm >=12.1 <13 in a NEW worktree, execute full acceptance commands from below, fix all real failures, then prove offline Solo win→Keep Playing→close→watch to last tick and 7×–10× resource behavior.
+
+---
+
+
 **Mandate:** Complete and verify the owner's next release of **LeviCade/OpenFrontIO-X** as one coordinated engineering effort. Do not ask the owner to babysit routine terminal commands. Engineer, test, document, and push work. Preserve separation from official upstream OpenFront.
 
 ## Live starting point and user's evidence
