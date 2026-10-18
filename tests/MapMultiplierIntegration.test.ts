@@ -74,11 +74,16 @@ describe("Map Multiplier terrain-loader integration", () => {
 
   it("parses optional area factor in old and new game patches", () => {
     expect(GameConfigPatchSchema.parse({}).mapAreaMultiplier).toBeUndefined();
-    for (const multiplier of [1, 2, 3, 4, 5, 6]) {
+    for (const multiplier of [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]) {
       expect(GameConfigPatchSchema.parse({ mapAreaMultiplier: multiplier }).mapAreaMultiplier).toBe(multiplier);
     }
     expect(GameConfigPatchSchema.safeParse({ mapAreaMultiplier: 0 }).success).toBe(false);
-    expect(GameConfigPatchSchema.safeParse({ mapAreaMultiplier: 7 }).success).toBe(false);
+    expect(GameConfigPatchSchema.safeParse({ mapAreaMultiplier: 11 }).success).toBe(false);
     expect(GameConfigPatchSchema.safeParse({ mapAreaMultiplier: 2.5 }).success).toBe(false);
+    expect(GameConfigPatchSchema.parse({ winPercentage: 100 }).winPercentage).toBe(100);
+    expect(GameConfigPatchSchema.parse({ winPercentage: 1 }).winPercentage).toBe(1);
+    expect(GameConfigPatchSchema.safeParse({ winPercentage: 0 }).success).toBe(false);
+    expect(GameConfigPatchSchema.safeParse({ winPercentage: 101 }).success).toBe(false);
+    expect(GameConfigPatchSchema.safeParse({ winPercentage: 50.5 }).success).toBe(false);
   });
 });
