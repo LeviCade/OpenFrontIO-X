@@ -103,3 +103,12 @@ See `docs/MAP_MULTIPLIER_TEST_PLAN.md`. Start by checking `git remote -v` for **
 - Read AGENTS.md, docs/ONE_SWEEP_ENGINEERING_HANDOFF.md, docs/EXTENDED_MAP_AND_SOLO_REPLAY_PLAN.md, existing PR metadata and replay/LocalServer architecture. PR #2 draft and stacked on same-repo feature/map-multiplier.
 - Verified current runtime node v22.16.0/npm v10.9.2; git ls-remote failure `Could not resolve host: github.com`. No dependencies or executable tests available; user Mac Node 26 engine error is separate and remains untouched.
 - Starting head a5951bd93d174260a6f84f0f0d1c742e1bf6e4a5; implementing source-only offline record journal next. No replay or map acceptance claimed.
+
+## 2026-10-18 05:20 UTC — PR #2 substantial source milestone
+- Implemented `src/client/replay/SoloRecordStore.ts` (commits `60cdea0`, `9059d56`, `c3a85bf`, `703e13f`, `aed237f`): separate IndexedDB source DB, 64-turn chunks, separate delayed hashes, serial atomic writes, bounded 512-turn queued backlog, 2s save cadence, visibility/pagehide best-effort flush, original first winner tick/identity, source reconstruction and schema validation, local import/export envelope; no silent fallback into temporary processed replay cache.
+- Connected `src/client/LocalServer.ts` (`8ee7079`, `84eb399`) to record all Solo turns and hashes; victory checkpoints do not stop recording, win-time remote archive remains unchanged; missing IndexedDB warns via red UI toast and does not prevent game launch.
+- `src/client/replay/ReplayRecord.ts` (`e46f2db`), `ReplayViewer.ts` (`6e940e6`) check local source before remote API and cached processed frames; strict other-build refusal for local-origin source rather than redirecting away from IndexedDB.
+- `SoloReplayLibrary.ts` (`4370430`) and `SinglePlayerModal.ts` (`88a19b6`) expose list/watch/gzip export/import/delete and site quota estimate in Solo menu. Memory-heavy export/import and 1M+ turns need benchmarks.
+- Fixed default Solo timeout `WinCheckExecution.ts` `e8d7019`; new regression `88a0731`; explicit timer still applies.
+- Added full-map fit live event HUD and replay viewer button / Shift+F (`8a76c57`, `3996fe9`, `b295aae`). Source-level only, no browser pass.
+- New source-journal regression tests `tests/client/replay/SoloRecordStore.test.ts` (`5861392`, `4104079`) written, NOT EXECUTED. Real checks blocked by Node22/npm10 and no git checkout/DNS. No performance data or actual 7×–10× gameplay observed here.
