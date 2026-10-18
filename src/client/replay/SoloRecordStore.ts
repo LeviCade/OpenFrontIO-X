@@ -347,12 +347,29 @@ export async function deleteSoloRecord(
 ): Promise<void> {
   await backend.remove(gameID);
 }
+export async function exportSoloRecord(
+  gameID: string,
+  backend: SoloRecordBackend = soloRecordBackend(),
+): Promise<{ kind: "openfront-solo-v1"; wonAtTick: number | null; record: GameRecord }> {
+  const snapshot = await backend.read(gameID);
+  if (!snapshot) throw new Error("Solo replay not found");
+  return { kind: "openfront-solo-v1", wonAtTick: snapshot.meta.wonAtTick, record: recordFromSnapshot(snapshot) };
+}
+
 export async function importSoloRecord(
   data: unknown,
   backend: SoloRecordBackend = soloRecordBackend(),
   build: string = ClientEnv.gitCommit(),
 ): Promise<void> {
-  const record = GameRecordSchema.parse(data);
+  const wrapper = data && typeof data === "object" && "kind" in data &&
+    (data as { kind?: unknown }).kind === "openfront-solo-v1"
+      ? data as { record: unknown; wonAtTick: unknown }
+      : null;
+  const record = GameRecordSchema.parse(wrapper ? wrapper.record : data);
+  const wonAtTick = wrapper && Number.isSafeInteger(wrapper.wonAtTick) &&
+    Number(wrapper.wonAtTick) >= 0 &&
+    Number(wrapper.wonAtTick) < record.info.num_turns
+      ? Number(wrapper.wonAtTick) : null;
   if (build !== "DEV" && record.gitCommit !== build) {
     throw new Error("This replay needs the original game build; import rejected");
   }
@@ -367,19 +384,30 @@ export async function importSoloRecord(
     },
     gitCommit: record.gitCommit, startedAt, updatedAt,
     lastRecordedTurn: record.info.num_turns - 1,
-    wonAtTick: null, winner: record.info.winner,
+    wonAtTick, winner: record.info.winner,
     finished: true, failed: false, stats: record.info.players[0]?.stats,
   };
-  const chunks: SoloChunk[] = [];
-  const sorted = [...record.turns].sort((a, b) => a.turnNumber - b.turnNumber);
-  for (let first = 0; first < record.info.num_turns; first += SOLO_JOURNAL_CHUNK_TURNS) {
-    chunks.push({
-      gameID, first, last: Math.min(first + SOLO_JOURNAL_CHUNK_TURNS - 1, record.info.num_turns - 1),
-      turns: sorted.filter((t) => t.turnNumber >= first && t.turnNumber < first + SOLO_JOURNAL_CHUNK_TURNS),
-    });
+  const chunks = new Map<number, SoloChunk>();
+  for (const turn of record.turns) {
+    if (turn.turnNumber >= record.info.num_turns) {
+      throw new Error("Imported replay contains a turn past its declared length");
+    }
+    const first = Math.floor(turn.turnNumber / SOLO_JOURNAL_CHUNK_TURNS) * SOLO_JOURNAL_CHUNK_TURNS;
+    let chunk = chunks.get(first);
+    if (!chunk) {
+      chunk = { gameID, first, last: Math.min(first + SOLO_JOURNAL_CHUNK_TURNS - 1, record.info.num_turns - 1), turns: [] };
+      chunks.set(first, chunk);
+    }
+    if (chunk.turns.some((previous) => previous.turnNumber === turn.turnNumber))
+      throw new Error("Imported replay contains duplicate turns");
+    chunk.turns.push(turn);
   }
-  // Each source imported in bounded transactions; a failed import is
-  // explicitly marked incomplete rather than silently claiming success.
-  for (const chunk of chunks) await backend.write({ ...meta, finished: false }, [chunk], []);
+  // Metadata watermark only advances with committed source chunks, so an
+  // interrupted import remains visibly incomplete instead of looking valid.
+  for (let first = 0; first < record.info.num_turns; first += SOLO_JOURNAL_CHUNK_TURNS) {
+    const last = Math.min(first + SOLO_JOURNAL_CHUNK_TURNS - 1, record.info.num_turns - 1);
+    await backend.write({ ...meta, lastRecordedTurn: last, finished: false },
+      [chunks.get(first) ?? { gameID, first, last, turns: [] }], []);
+  }
   await backend.write(meta, [], []);
 }
