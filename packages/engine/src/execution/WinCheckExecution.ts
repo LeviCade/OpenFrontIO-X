@@ -143,11 +143,17 @@ export class WinCheckExecution implements Execution {
       this.mg.numLandTiles() - this.mg.numTilesWithFallout();
     // Cross-multiplied: the threshold is a whole percentage, so this is
     // exact integer math.
-    return (
-      tilesOwned * 100 >
-      numTilesWithoutFallout *
-        this.mg.config().percentageTilesOwnedToWin(timeElapsed)
-    );
+    const threshold = this.mg.config().percentageTilesOwnedToWin(timeElapsed);
+    const ownedPercentNumerator = tilesOwned * 100;
+    const requiredNumerator = numTilesWithoutFallout * threshold;
+    // The legacy rule is strictly greater than the threshold. An explicit
+    // Solo value of 100% must be achievable at exactly 100% of the land.
+    const customSoloThreshold =
+      this.mg.config().gameConfig().gameType === GameType.Singleplayer &&
+      this.mg.config().gameConfig().winPercentage !== undefined;
+    return customSoloThreshold
+      ? numTilesWithoutFallout > 0 && ownedPercentNumerator >= requiredNumerator
+      : ownedPercentNumerator > requiredNumerator;
   }
 
   checkWinnerTeam(): void {
