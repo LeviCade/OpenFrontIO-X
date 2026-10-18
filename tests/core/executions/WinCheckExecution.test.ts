@@ -121,6 +121,26 @@ describe("WinCheckExecution", () => {
     expect(mg.setWinner).not.toHaveBeenCalled();
   });
 
+  it("does not force an opt-in Solo threshold at the hosted 170-minute cutoff", () => {
+    const player = {
+      numTilesOwned: vi.fn(() => 40),
+      name: vi.fn(() => "P1"),
+    };
+    mg.players = vi.fn(() => [player]);
+    mg.numLandTiles = vi.fn(() => 100);
+    mg.numTilesWithFallout = vi.fn(() => 0);
+    mg.elapsedGameSeconds = vi.fn(() => 170 * 60);
+    mg.config = vi.fn(() => ({
+      gameConfig: () => ({
+        gameType: GameType.Singleplayer,
+        winPercentage: 100,
+      }),
+      percentageTilesOwnedToWin: () => 100,
+    }));
+    winCheck.checkWinnerFFA();
+    expect(mg.setWinner).not.toHaveBeenCalled();
+  });
+
   it("should return false for activeDuringSpawnPhase", () => {
     expect(winCheck.activeDuringSpawnPhase()).toBe(false);
   });
