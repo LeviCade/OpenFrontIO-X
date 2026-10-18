@@ -1,6 +1,7 @@
 import {
   ColoredTeams,
   GameMode,
+  GameType,
   PlayerType,
   RankedType,
   Team,
@@ -136,7 +137,15 @@ export class WinCheckExecution implements Execution {
     ) {
       return true;
     }
-    if (timeElapsed >= WinCheckExecution.HARD_TIME_LIMIT_SECONDS) {
+    const customSoloThreshold =
+      this.mg.config().gameConfig().gameType === GameType.Singleplayer &&
+      this.mg.config().gameConfig().winPercentage !== undefined;
+    // Solo's explicitly chosen threshold may need a very long game; the
+    // 170-minute watchdog was designed for hosted matches with a server cap.
+    if (
+      !customSoloThreshold &&
+      timeElapsed >= WinCheckExecution.HARD_TIME_LIMIT_SECONDS
+    ) {
       return true;
     }
     const numTilesWithoutFallout =
@@ -148,9 +157,6 @@ export class WinCheckExecution implements Execution {
     const requiredNumerator = numTilesWithoutFallout * threshold;
     // The legacy rule is strictly greater than the threshold. An explicit
     // Solo value of 100% must be achievable at exactly 100% of the land.
-    const customSoloThreshold =
-      this.mg.config().gameConfig().gameType === GameType.Singleplayer &&
-      this.mg.config().gameConfig().winPercentage !== undefined;
     return customSoloThreshold
       ? numTilesWithoutFallout > 0 && ownedPercentNumerator >= requiredNumerator
       : ownedPercentNumerator > requiredNumerator;
