@@ -162,7 +162,9 @@ export class LocalServer {
         undefined,
         (error) => {
           console.error("Solo replay persistence unavailable:", error);
-          showToast("Offline replay saving failed. Check browser storage.", "red", 8000);
+          if (typeof window !== "undefined") {
+            showToast("Offline replay saving failed. Check browser storage.", "red", 8000);
+          }
         },
       );
       this.soloJournal.begin();
