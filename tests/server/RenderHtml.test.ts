@@ -11,6 +11,7 @@ import {
   setAppShellCacheHeaders,
 } from "../../src/server/RenderHtml";
 import { ServerEnv } from "../../src/server/ServerEnv";
+import { getRuntimeAssetManifest } from "../../src/server/RuntimeAssetManifest";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -347,12 +348,13 @@ describe("RenderHtml environment-only render", () => {
   // indentation, same trailing commas.
   it("still emits every guarded line, in place, when the locals are supplied", async () => {
     const html = await renderHtmlContent(REAL_TEMPLATE);
+    const assetManifest = await getRuntimeAssetManifest();
 
     expect(html).toContain(
       [
         "      window.BOOTSTRAP_CONFIG = {",
         '        gitCommit: "abc",',
-        "        assetManifest: {},",
+        `        assetManifest: ${JSON.stringify(assetManifest)},`,
         '        cdnBase: "",',
         `        gameEnv: ${JSON.stringify(ServerEnv.gameEnvName())},`,
         `        cluster: ${JSON.stringify(ServerEnv.cluster())},`,

@@ -45,7 +45,10 @@ import {
 } from "@openfront/engine-api/game/GameUpdates";
 import { GameConfig, GameStartInfo } from "@openfront/engine-api/Schemas";
 import { loadTerrainMap } from "@openfront/engine-lib/game/TerrainMapLoader";
-import { assertMapAreaMultiplier, MapAreaMultiplier } from "@openfront/engine-lib/game/MapMultiplier";
+import {
+  assertMapAreaMultiplier,
+  MapAreaMultiplier,
+} from "@openfront/engine-lib/game/MapMultiplier";
 import { PseudoRandom } from "@openfront/engine-lib/PseudoRandom";
 import { simpleHash } from "@openfront/engine-lib/Util";
 import { EngineConfig } from "@openfront/engine/configuration/EngineConfig";

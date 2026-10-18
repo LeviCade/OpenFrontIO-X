@@ -74,7 +74,10 @@ describe("multiplied map real game runner", () => {
     });
 
     expect([runner.game.width(), runner.game.height()]).toEqual([91, 91]);
-    expect([runner.game.miniMap().width(), runner.game.miniMap().height()]).toEqual([46, 46]);
+    expect([
+      runner.game.miniMap().width(),
+      runner.game.miniMap().height(),
+    ]).toEqual([46, 46]);
     expect(runner.game.map().numLandTiles()).toBe(91 * 91);
     for (let turnNumber = 0; turnNumber < 24; turnNumber++) {
       runner.addTurn({ turnNumber, intents: [] });

@@ -291,7 +291,11 @@ export class Config {
   }
 
   percentageTilesOwnedToWin(elapsedGameSeconds: number): number {
-    const base = PERCENT_TILES_OWNED_TO_WIN;
+    // Never let a Solo setting change public or ranked victory rules.
+    const base =
+      this._gameConfig.gameType === GameType.Singleplayer
+        ? (this._gameConfig.winPercentage ?? PERCENT_TILES_OWNED_TO_WIN)
+        : PERCENT_TILES_OWNED_TO_WIN;
     const sd = this.overtimeConfig();
     if (!sd.enabled) {
       return base;

@@ -9,7 +9,10 @@ import {
   UnitType,
 } from "@openfront/engine-api/game/GameTypes";
 import { TeamCountConfig } from "@openfront/engine-api/Schemas";
-import { MAP_AREA_MULTIPLIERS, MapAreaMultiplier } from "@openfront/engine-lib/game/MapMultiplier";
+import {
+  MAP_AREA_MULTIPLIERS,
+  MapAreaMultiplier,
+} from "@openfront/engine-lib/game/MapMultiplier";
 import {
   DOOMSDAY_CLOCK_SPEEDS,
   DoomsdayClockSpeed,
@@ -446,32 +449,38 @@ export class GameConfigSettings extends LitElement {
           "bg-malibu-blue/20",
           "map.map",
           html`<map-picker
-            .selectedMap=${settings.map.selected}
-            .useRandomMap=${settings.map.useRandom}
-            .randomMapDivider=${settings.map.randomMapDivider ?? false}
-            .showMedals=${settings.map.showMedals ?? false}
-            .mapWins=${settings.map.mapWins ?? new Map()}
-            .onSelectMap=${this.handleSelectMap}
-            .onSelectRandom=${this.handleSelectRandom}
-            .searchQuery=${this.mapSearchQuery}
-          ></map-picker>
-          ${settings.map.multiplier !== undefined
-            ? html`<div class="mt-4 space-y-2">
-                <div class="text-xs font-bold uppercase tracking-wider text-white/70">
-                  Map area multiplier (experimental)
-                </div>
-                <div class="grid grid-cols-6 gap-2" role="group" aria-label="Map area multiplier">
-                  ${MAP_AREA_MULTIPLIERS.map((factor) =>
-                    renderTextCardButton(
-                      `${factor}×`,
-                      settings.map.multiplier === factor,
-                      () => this.handleMapMultiplierSelected(factor),
-                      "p-3 text-center",
-                    ),
-                  )}
-                </div>
-              </div>`
-            : nothing}`,
+              .selectedMap=${settings.map.selected}
+              .useRandomMap=${settings.map.useRandom}
+              .randomMapDivider=${settings.map.randomMapDivider ?? false}
+              .showMedals=${settings.map.showMedals ?? false}
+              .mapWins=${settings.map.mapWins ?? new Map()}
+              .onSelectMap=${this.handleSelectMap}
+              .onSelectRandom=${this.handleSelectRandom}
+              .searchQuery=${this.mapSearchQuery}
+            ></map-picker>
+            ${settings.map.multiplier !== undefined
+              ? html`<div class="mt-4 space-y-2">
+                  <div
+                    class="text-xs font-bold uppercase tracking-wider text-white/70"
+                  >
+                    Map area multiplier (experimental)
+                  </div>
+                  <div
+                    class="grid grid-cols-5 md:grid-cols-10 gap-2"
+                    role="group"
+                    aria-label="Map area multiplier"
+                  >
+                    ${MAP_AREA_MULTIPLIERS.map((factor) =>
+                      renderTextCardButton(
+                        `${factor}×`,
+                        settings.map.multiplier === factor,
+                        () => this.handleMapMultiplierSelected(factor),
+                        "p-3 text-center",
+                      ),
+                    )}
+                  </div>
+                </div>`
+              : nothing}`,
           undefined,
           this.renderMapSearchInput(),
         )}

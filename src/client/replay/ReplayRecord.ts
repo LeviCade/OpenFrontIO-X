@@ -11,11 +11,12 @@
 import { GameRecord, GameRecordSchema } from "@openfront/shared/WireSchemas";
 import { getApiBase } from "../ApiBase";
 import { ClientEnv } from "../ClientEnv";
+import { getSoloRecord, hasSoloRecord } from "./SoloRecordStore";
 
 export type RecordResult =
-  | { kind: "record"; record: GameRecord }
+  | { kind: "record"; record: GameRecord; local?: boolean }
   /** Played on another build (or under another record schema). */
-  | { kind: "other_build" }
+  | { kind: "other_build"; local?: boolean }
   | { kind: "not_found" }
   | { kind: "unreachable" };
 
@@ -35,6 +36,7 @@ export async function fetchReplayRecord(
     apiBase?: string;
     ownCommit?: string;
     fetchFn?: typeof fetch;
+    localSource?: (id: string) => Promise<GameRecord | undefined>;
   } = {},
 ): Promise<RecordResult> {
   if (handedOver?.gameID === gameID) {
@@ -42,8 +44,30 @@ export async function fetchReplayRecord(
     handedOver = null;
     return { kind: "record", record };
   }
-  const apiBase = opts.apiBase ?? getApiBase();
   const ownCommit = opts.ownCommit ?? ClientEnv.gitCommit();
+  // Local source turns are authoritative over remote win-time archives and
+  // derived processed caches; they include post-victory turns.
+  if (
+    opts.localSource ||
+    (opts.fetchFn === undefined && typeof indexedDB !== "undefined")
+  ) {
+    try {
+      const local = opts.localSource
+        ? await opts.localSource(gameID)
+        : (await hasSoloRecord(gameID))
+          ? await getSoloRecord(gameID)
+          : undefined;
+      if (local) {
+        if (ownCommit !== "DEV" && local.gitCommit !== ownCommit)
+          return { kind: "other_build", local: true };
+        return { kind: "record", record: local, local: true };
+      }
+    } catch (error) {
+      console.error("Local Solo replay source unreadable:", error);
+      return { kind: "unreachable" };
+    }
+  }
+  const apiBase = opts.apiBase ?? getApiBase();
   const fetchFn = opts.fetchFn ?? fetch;
   let res: Response;
   try {

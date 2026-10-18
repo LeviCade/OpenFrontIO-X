@@ -9,7 +9,10 @@ import {
 } from "@openfront/engine-api/game/GameTypes";
 import { TeamCountConfig } from "@openfront/engine-api/Schemas";
 import { DoomsdayClockSpeed } from "@openfront/engine-lib/game/DoomsdayClock";
-import type { MapAreaMultiplier } from "@openfront/engine-lib/game/MapMultiplier";
+import {
+  MAX_MULTIPLIED_MAP_TILES,
+  type MapAreaMultiplier,
+} from "@openfront/engine-lib/game/MapMultiplier";
 import { UserMeResponse } from "@openfront/shared/ApiSchemas";
 import { assetUrl } from "@openfront/shared/AssetUrls";
 import { generateID } from "@openfront/shared/SharedUtil";
@@ -28,6 +31,7 @@ import { modalHeader } from "./components/ui/ModalHeader";
 import { getPlayerCosmetics, prewarmCosmetics } from "./Cosmetics";
 import { gamePortal } from "./GamePortal";
 import { GameStartingModal } from "./GameStartingModal";
+import "./replay/SoloReplayLibrary";
 import { showInGameAlert } from "./InGameModal";
 import { JoinLobbyEvent } from "./Main";
 import { fallbackPlayerName, ResolvedPlayerName } from "./PlayerName";
@@ -99,6 +103,7 @@ type StartPreparation = {
 const DEFAULT_OPTIONS = {
   selectedMap: GameMapType.World,
   mapAreaMultiplier: 1 as MapAreaMultiplier,
+  winPercentage: 80,
   selectedDifficulty: Difficulty.Easy,
   bots: 400,
   infiniteGold: false,
@@ -172,7 +177,9 @@ export class SinglePlayerModal extends BaseModal {
   protected routerName = "single-player";
 
   @state() private selectedMap: GameMapType = DEFAULT_OPTIONS.selectedMap;
-  @state() private mapAreaMultiplier: MapAreaMultiplier = DEFAULT_OPTIONS.mapAreaMultiplier;
+  @state() private mapAreaMultiplier: MapAreaMultiplier =
+    DEFAULT_OPTIONS.mapAreaMultiplier;
+  @state() private winPercentage: number = DEFAULT_OPTIONS.winPercentage;
   @state() private selectedDifficulty: Difficulty =
     DEFAULT_OPTIONS.selectedDifficulty;
   @state() private nations: number = 0;
@@ -580,8 +587,35 @@ export class SinglePlayerModal extends BaseModal {
             @option-toggle-changed=${this.handleConfigOptionToggleChanged}
             @unit-toggle-changed=${this.handleConfigUnitToggleChanged}
           ></game-config-settings>
+          <div
+            class="mt-4 rounded-xl border border-white/20 bg-white/5 px-4 py-3"
+          >
+            <label
+              for="solo-win-percentage"
+              class="block text-sm font-semibold text-white"
+            >
+              Territory required to win (1–100%)
+            </label>
+            <div class="mt-2 flex items-center gap-3">
+              <input
+                id="solo-win-percentage"
+                type="number"
+                min="1"
+                max="100"
+                step="1"
+                .value=${String(this.winPercentage)}
+                @change=${this.handleWinPercentageChange}
+                class="w-28 rounded-lg border border-white/20 bg-black/40 px-3 py-2 text-white"
+              />
+              <span class="text-xs text-white/60"
+                >Default 80%. Solo games only.</span
+              >
+            </div>
+          </div>
         </div>
 
+        <!-- Local-only source recordings are independent of the remote API. -->
+        <div class="px-6"><solo-replay-library></solo-replay-library></div>
         <!-- Footer Action -->
         <div class="p-6 border-t border-white/10 bg-black/20 shrink-0">
           ${responseHasLinkedIdentity(this.userMeResponse) &&
@@ -613,6 +647,7 @@ export class SinglePlayerModal extends BaseModal {
       this.nations !== this.defaultNationCount ||
       this.bots !== DEFAULT_OPTIONS.bots ||
       this.mapAreaMultiplier !== DEFAULT_OPTIONS.mapAreaMultiplier ||
+      this.winPercentage !== DEFAULT_OPTIONS.winPercentage ||
       this.infiniteGold !== DEFAULT_OPTIONS.infiniteGold ||
       this.infiniteTroops !== DEFAULT_OPTIONS.infiniteTroops ||
       this.compactMap !== DEFAULT_OPTIONS.compactMap ||
@@ -680,6 +715,7 @@ export class SinglePlayerModal extends BaseModal {
     this.starting = false;
     this.selectedMap = DEFAULT_OPTIONS.selectedMap;
     this.mapAreaMultiplier = DEFAULT_OPTIONS.mapAreaMultiplier;
+    this.winPercentage = DEFAULT_OPTIONS.winPercentage;
     this.selectedDifficulty = DEFAULT_OPTIONS.selectedDifficulty;
     this.gameMode = DEFAULT_OPTIONS.gameMode;
     this.useRandomMap = DEFAULT_OPTIONS.useRandomMap;
@@ -743,6 +779,16 @@ export class SinglePlayerModal extends BaseModal {
   private handleConfigMapMultiplierSelected = (e: Event) => {
     const event = e as CustomEvent<{ multiplier: MapAreaMultiplier }>;
     this.mapAreaMultiplier = event.detail.multiplier;
+  };
+
+  private handleWinPercentageChange = (e: Event) => {
+    const input = e.target as HTMLInputElement;
+    const candidate = Number(input.value);
+    if (!Number.isInteger(candidate) || candidate < 1 || candidate > 100) {
+      input.value = String(this.winPercentage);
+      return;
+    }
+    this.winPercentage = candidate;
   };
 
   private handleDifficultySelection(value: Difficulty) {
@@ -1100,6 +1146,28 @@ export class SinglePlayerModal extends BaseModal {
       console.log(
         `Starting single player game with map: ${GameMapType[this.selectedMap as keyof typeof GameMapType]}${this.useRandomMap ? " (Randomly selected)" : ""}`,
       );
+      // Give a readable limit warning before allocating a giant map.
+      if (this.mapAreaMultiplier > 1) {
+        const manifest = await this.mapLoader
+          .getMapData(this.selectedMap)
+          .manifest();
+        if (attempt !== this.startAttempt) return;
+        const source = this.compactMap ? manifest.map4x : manifest.map;
+        const targetWidth = Math.round(
+          source.width * Math.sqrt(this.mapAreaMultiplier),
+        );
+        const targetHeight = Math.round(
+          source.height * Math.sqrt(this.mapAreaMultiplier),
+        );
+        if (targetWidth * targetHeight > MAX_MULTIPLIED_MAP_TILES) {
+          overlay?.hide();
+          this.overlayAttempt = 0;
+          await showInGameAlert(
+            `${this.mapAreaMultiplier}× would require ${targetWidth.toLocaleString()} × ${targetHeight.toLocaleString()} tiles, above the current ${MAX_MULTIPLIED_MAP_TILES.toLocaleString()}-tile safety budget. Choose a smaller multiplier, Compact mode, or a smaller map.`,
+          );
+          return;
+        }
+      }
       const clientID = generateID();
       const gameID = generateID();
 
@@ -1154,6 +1222,9 @@ export class SinglePlayerModal extends BaseModal {
               config: {
                 gameMap: this.selectedMap,
                 mapAreaMultiplier: this.mapAreaMultiplier,
+                ...(this.winPercentage !== DEFAULT_OPTIONS.winPercentage
+                  ? { winPercentage: this.winPercentage }
+                  : {}),
                 gameMapSize: this.compactMap
                   ? GameMapSize.Compact
                   : GameMapSize.Normal,

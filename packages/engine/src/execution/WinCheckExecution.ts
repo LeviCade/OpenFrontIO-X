@@ -1,6 +1,7 @@
 import {
   ColoredTeams,
   GameMode,
+  GameType,
   PlayerType,
   RankedType,
   Team,
@@ -136,18 +137,29 @@ export class WinCheckExecution implements Execution {
     ) {
       return true;
     }
-    if (timeElapsed >= WinCheckExecution.HARD_TIME_LIMIT_SECONDS) {
+    const customSoloThreshold =
+      this.mg.config().gameConfig().gameType === GameType.Singleplayer &&
+      this.mg.config().gameConfig().winPercentage !== undefined;
+    // Solo without an explicit max timer must never inherit the hosted
+    // 170-minute watchdog, including at the legacy/default 80% threshold.
+    if (
+      this.mg.config().gameConfig().gameType !== GameType.Singleplayer &&
+      timeElapsed >= WinCheckExecution.HARD_TIME_LIMIT_SECONDS
+    ) {
       return true;
     }
     const numTilesWithoutFallout =
       this.mg.numLandTiles() - this.mg.numTilesWithFallout();
     // Cross-multiplied: the threshold is a whole percentage, so this is
     // exact integer math.
-    return (
-      tilesOwned * 100 >
-      numTilesWithoutFallout *
-        this.mg.config().percentageTilesOwnedToWin(timeElapsed)
-    );
+    const threshold = this.mg.config().percentageTilesOwnedToWin(timeElapsed);
+    const ownedPercentNumerator = tilesOwned * 100;
+    const requiredNumerator = numTilesWithoutFallout * threshold;
+    // The legacy rule is strictly greater than the threshold. An explicit
+    // Solo value of 100% must be achievable at exactly 100% of the land.
+    return customSoloThreshold
+      ? numTilesWithoutFallout > 0 && ownedPercentNumerator >= requiredNumerator
+      : ownedPercentNumerator > requiredNumerator;
   }
 
   checkWinnerTeam(): void {

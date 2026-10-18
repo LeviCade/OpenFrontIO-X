@@ -14,6 +14,7 @@ import {
 } from "@openfront/engine-api/game/GameUpdates";
 import { findClosestBy } from "@openfront/engine-lib/Util";
 import { Config } from "@openfront/engine-lib/configuration/Config";
+import type { MapAreaMultiplier } from "@openfront/engine-lib/game/MapMultiplier";
 import { TerrainMapData } from "@openfront/engine-lib/game/TerrainMapLoader";
 import { EventBus } from "@openfront/shared/EventBus";
 import { GameMapLoader } from "@openfront/shared/GameMapLoader";
@@ -163,7 +164,7 @@ export function joinLobby(
   // debouncing avoids downloading (and permanently caching) a map that was
   // only shown transiently.
   const MAP_PRELOAD_DEBOUNCE_STREAK = 3;
-  let lastLobbyMultiplier: 1 | 2 | 3 | 4 | 5 | 6 = 1;
+  let lastLobbyMultiplier: MapAreaMultiplier = 1;
   // In-flight terrain loads keyed by `map:mapSize`, so re-requesting a map
   // that began loading earlier (even after another map superseded it) reuses
   // the original promise instead of starting a duplicate download/parse while
@@ -180,7 +181,7 @@ export function joinLobby(
   const requestTerrainLoad = (
     map: Parameters<typeof loadCachedTerrainMap>[0],
     mapSize: Parameters<typeof loadCachedTerrainMap>[1],
-    multiplier: 1 | 2 | 3 | 4 | 5 | 6 = 1,
+    multiplier: MapAreaMultiplier = 1,
   ): Promise<TerrainMapData> => {
     const key = `${map}:${mapSize}:${multiplier}`;
     const existing = terrainLoads.get(key);
@@ -255,7 +256,11 @@ export function joinLobby(
           pendingPreloadStreak = 1;
         }
         if (pendingPreloadStreak >= MAP_PRELOAD_DEBOUNCE_STREAK) {
-          requestTerrainLoad(gameConfig.gameMap, gameConfig.gameMapSize, lastLobbyMultiplier);
+          requestTerrainLoad(
+            gameConfig.gameMap,
+            gameConfig.gameMapSize,
+            lastLobbyMultiplier,
+          );
         }
       }
       return;
@@ -264,7 +269,11 @@ export function joinLobby(
       console.log(
         `lobby: game prestarting: ${JSON.stringify(message, replacer)}`,
       );
-      requestTerrainLoad(message.gameMap, message.gameMapSize, lastLobbyMultiplier);
+      requestTerrainLoad(
+        message.gameMap,
+        message.gameMapSize,
+        lastLobbyMultiplier,
+      );
       resolvePrestart();
     }
     if (message.type === "start") {
@@ -293,11 +302,16 @@ export function joinLobby(
         userSettings,
         // The start packet is authoritative. A late host edit could
         // invalidate the earlier lobby preload; select by all three fields.
-        requestTerrainLoad(
-          message.gameStartInfo.config.gameMap,
-          message.gameStartInfo.config.gameMapSize,
-          message.gameStartInfo.config.mapAreaMultiplier ?? 1,
-        ),
+        // A malformed start packet must still reach createClientGame's
+        // asynchronous "missing gameStartInfo" error handler instead of
+        // throwing synchronously while computing the preload arguments.
+        message.gameStartInfo
+          ? requestTerrainLoad(
+              message.gameStartInfo.config.gameMap,
+              message.gameStartInfo.config.gameMapSize,
+              message.gameStartInfo.config.mapAreaMultiplier ?? 1,
+            )
+          : null,
         terrainMapFileLoader,
       )
         .then((r) => {

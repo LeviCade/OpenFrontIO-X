@@ -23,6 +23,8 @@ import { ClientEnv } from "src/client/ClientEnv";
 import { z } from "zod";
 import { getApiBase } from "./Api";
 import { getAuthHeader, getPersistentID } from "./Auth";
+import { SoloRecordJournal } from "./replay/SoloRecordStore";
+import { showToast } from "./Utils";
 import { LobbyConfig } from "./ClientGameRunner";
 import {
   GameSpeedDownIntentEvent,
@@ -50,6 +52,9 @@ export class LocalServer {
   // All turns from the game record on replay.
   private replayTurns: Turn[] = [];
 
+  // Sparse after live turns complete: absent indexes represent empty ticks.
+  // Array length remains the authoritative turn counter for pacing/rejoins,
+  // without retaining an empty Turn object for every post-win tick.
   private turns: Turn[] = [];
 
   private intents: StampedIntent[] = [];
@@ -65,6 +70,8 @@ export class LocalServer {
   // skipped win-time uploads during teardown.
   private archived = false;
   private archiveInFlight = false;
+  /** Independent local-only journal; never stopped by winning the game. */
+  private soloJournal: SoloRecordJournal | null = null;
 
   private turnsExecuted = 0;
   private turnStartTime = 0;
@@ -149,6 +156,23 @@ export class LocalServer {
     if (!this.clientID) {
       throw new Error("missing clientID");
     }
+    if (!this.isReplay) {
+      this.soloJournal = new SoloRecordJournal(
+        this.lobbyConfig.gameStartInfo,
+        undefined,
+        (error) => {
+          console.error("Solo replay persistence unavailable:", error);
+          if (typeof window !== "undefined") {
+            showToast(
+              "Offline replay saving failed. Check browser storage.",
+              "red",
+              8000,
+            );
+          }
+        },
+      );
+      this.soloJournal.begin();
+    }
     this.clientMessage({
       type: "start",
       gameStartInfo: this.lobbyConfig.gameStartInfo,
@@ -173,7 +197,12 @@ export class LocalServer {
       this.clientMessage({
         type: "start",
         gameStartInfo: this.lobbyConfig.gameStartInfo!,
-        turns: this.turns,
+        // Only materialize the dense list for an explicit rejoin; a long
+        // Solo game otherwise retains only meaningful intents/hashes in RAM.
+        turns: Array.from(
+          { length: this.turns.length },
+          (_, i) => this.turns[i] ?? { turnNumber: i, intents: [] },
+        ),
         lobbyCreatedAt: this.lobbyConfig.gameStartInfo!.lobbyCreatedAt,
         myClientID: this.lobbyConfig.gameRecord ? undefined : this.clientID,
       } satisfies ServerStartGameMessage);
@@ -209,9 +238,16 @@ export class LocalServer {
       if (!this.lobbyConfig.gameRecord) {
         if (clientMsg.turnNumber % 100 === 0) {
           // In singleplayer, only store hash every 100 turns to reduce size of game record.
-          const turn = this.turns[clientMsg.turnNumber];
-          if (turn) {
-            turn.hash = clientMsg.hash;
+          if (clientMsg.turnNumber < this.turns.length) {
+            const turn = this.turns[clientMsg.turnNumber];
+            if (turn) turn.hash = clientMsg.hash;
+            else
+              this.turns[clientMsg.turnNumber] = {
+                turnNumber: clientMsg.turnNumber,
+                intents: [],
+                hash: clientMsg.hash,
+              };
+            this.soloJournal?.hash(clientMsg.turnNumber, clientMsg.hash);
           }
         }
         return;
@@ -243,8 +279,19 @@ export class LocalServer {
       }
     }
     if (clientMsg.type === "winner") {
+      // Keep the first authoritative result stable when the player chooses
+      // Keep Playing; later turns continue accumulating in the local journal.
+      if (this.winner !== null) return;
       this.winner = clientMsg;
       this.allPlayersStats = clientMsg.allPlayersStats;
+      this.soloJournal?.win(
+        clientMsg.winner,
+        // Solo queues at most one in-flight turn. The last issued turn
+        // identifies the winner update even when turnComplete has not yet
+        // arrived from the worker.
+        Math.max(0, this.turns.length - 1),
+        clientMsg.allPlayersStats[this.clientID!],
+      );
       if (!this.isReplay) {
         // Archive as soon as the game is decided: endGame() only runs during
         // page teardown, where the auth refresh and upload race document
@@ -276,7 +323,9 @@ export class LocalServer {
       turnNumber: this.turns.length,
       intents: this.intents,
     };
-    this.turns.push(pastTurn);
+    this.turns.length = pastTurn.turnNumber + 1;
+    if (pastTurn.intents.length > 0) this.turns[pastTurn.turnNumber] = pastTurn;
+    this.soloJournal?.append(pastTurn);
     this.intents = [];
     this.clientMessage({
       type: "turn",
@@ -289,6 +338,9 @@ export class LocalServer {
     clearInterval(this.turnCheckInterval);
     this.stopHeartbeat?.();
     this.stopHeartbeat = null;
+    // Async flush is best-effort on unload; periodic commits already protect
+    // earlier turns against abrupt browser exit.
+    void this.soloJournal?.finish();
     if (this.isReplay) {
       return;
     }
