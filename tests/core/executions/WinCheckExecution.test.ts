@@ -1,6 +1,7 @@
 import {
   ColoredTeams,
   GameMode,
+  GameType,
   PlayerInfo,
   PlayerType,
   RankedType,
@@ -78,6 +79,44 @@ describe("WinCheckExecution", () => {
 
   it("should not set winner if no players", () => {
     mg.players = vi.fn(() => []);
+    winCheck.checkWinnerFFA();
+    expect(mg.setWinner).not.toHaveBeenCalled();
+  });
+
+  it("accepts exactly 100% owned land with an explicit Solo win percentage", () => {
+    const player = {
+      numTilesOwned: vi.fn(() => 100),
+      name: vi.fn(() => "P1"),
+    };
+    mg.players = vi.fn(() => [player]);
+    mg.numLandTiles = vi.fn(() => 100);
+    mg.numTilesWithFallout = vi.fn(() => 0);
+    mg.config = vi.fn(() => ({
+      gameConfig: () => ({
+        gameType: GameType.Singleplayer,
+        winPercentage: 100,
+      }),
+      percentageTilesOwnedToWin: () => 100,
+    }));
+    winCheck.checkWinnerFFA();
+    expect(mg.setWinner).toHaveBeenCalledWith(player, expect.anything());
+  });
+
+  it("preserves the old strict greater-than threshold without a Solo override", () => {
+    const player = {
+      numTilesOwned: vi.fn(() => 80),
+      name: vi.fn(() => "P1"),
+    };
+    mg.players = vi.fn(() => [player]);
+    mg.numLandTiles = vi.fn(() => 100);
+    mg.numTilesWithFallout = vi.fn(() => 0);
+    mg.config = vi.fn(() => ({
+      gameConfig: () => ({
+        gameType: GameType.Singleplayer,
+        winPercentage: undefined,
+      }),
+      percentageTilesOwnedToWin: () => 80,
+    }));
     winCheck.checkWinnerFFA();
     expect(mg.setWinner).not.toHaveBeenCalled();
   });
