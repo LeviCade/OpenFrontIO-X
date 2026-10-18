@@ -28,6 +28,7 @@ import { modalHeader } from "./components/ui/ModalHeader";
 import { getPlayerCosmetics, prewarmCosmetics } from "./Cosmetics";
 import { gamePortal } from "./GamePortal";
 import { GameStartingModal } from "./GameStartingModal";
+import "./replay/SoloReplayLibrary";
 import { showInGameAlert } from "./InGameModal";
 import { JoinLobbyEvent } from "./Main";
 import { fallbackPlayerName, ResolvedPlayerName } from "./PlayerName";
@@ -602,6 +603,8 @@ export class SinglePlayerModal extends BaseModal {
           </div>
         </div>
 
+        <!-- Local-only source recordings are independent of the remote API. -->
+        <div class="px-6"><solo-replay-library></solo-replay-library></div>
         <!-- Footer Action -->
         <div class="p-6 border-t border-white/10 bg-black/20 shrink-0">
           ${responseHasLinkedIdentity(this.userMeResponse) &&
