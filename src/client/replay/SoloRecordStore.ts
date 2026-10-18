@@ -7,12 +7,15 @@
  * small row. A win updates metadata without closing the recording.
  */
 import type { Turn, Winner } from "@openfront/engine-api/Schemas";
+import { GameType } from "@openfront/engine-api/game/GameTypes";
 import type { WireGameStartInfo, GameRecord, PlayerRecord } from "@openfront/shared/WireSchemas";
 import { GameRecordSchema } from "@openfront/shared/WireSchemas";
 import { ClientEnv } from "../ClientEnv";
 
 export const SOLO_JOURNAL_CHUNK_TURNS = 64;
 const MAX_PENDING_TURNS = 512;
+/** Import guards: decode would otherwise allocate an attacker-chosen turn span. */
+const MAX_IMPORTED_TURNS = 2_000_000;
 const DB_NAME = "openfront-solo-source-records";
 const DB_VERSION = 1;
 const GAMES = "games";
@@ -371,6 +374,13 @@ export async function importSoloRecord(
       ? data as { record: unknown; wonAtTick: unknown }
       : null;
   const record = GameRecordSchema.parse(wrapper ? wrapper.record : data);
+  if (record.info.config.gameType !== GameType.Singleplayer) {
+    throw new Error("Only Solo game records can be imported into the local library");
+  }
+  if (!Number.isSafeInteger(record.info.num_turns) ||
+      record.info.num_turns < 1 || record.info.num_turns > MAX_IMPORTED_TURNS) {
+    throw new Error("Imported replay turn count exceeds the supported safety limit");
+  }
   const wonAtTick = wrapper && Number.isSafeInteger(wrapper.wonAtTick) &&
     Number(wrapper.wonAtTick) >= 0 &&
     Number(wrapper.wonAtTick) < record.info.num_turns
