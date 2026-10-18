@@ -23,7 +23,11 @@ const MAGNITUDE = 0x1f;
 const IMPASSABLE = 31;
 
 /** Count transitions to water or passable land, excluding impassable void. */
-function coastNeighbor(bytes: Uint8Array, index: number, land: boolean): boolean {
+function coastNeighbor(
+  bytes: Uint8Array,
+  index: number,
+  land: boolean,
+): boolean {
   const tile = bytes[index];
   const neighborLand = (tile & LAND) !== 0;
   return (
@@ -36,7 +40,9 @@ export function assertMapAreaMultiplier(
   value: number,
 ): asserts value is MapAreaMultiplier {
   if (!Number.isInteger(value) || value < 1 || value > 10) {
-    throw new Error(`Map area multiplier must be an integer from 1 to 10: ${value}`);
+    throw new Error(
+      `Map area multiplier must be an integer from 1 to 10: ${value}`,
+    );
   }
 }
 
@@ -87,7 +93,8 @@ export function scaleTerrainGrid(
   const targetWidth =
     dimensions?.width ?? Math.max(1, Math.round(width * Math.sqrt(multiplier)));
   const targetHeight =
-    dimensions?.height ?? Math.max(1, Math.round(height * Math.sqrt(multiplier)));
+    dimensions?.height ??
+    Math.max(1, Math.round(height * Math.sqrt(multiplier)));
   checkDimensions(targetWidth, targetHeight);
   if (targetWidth < width || targetHeight < height) {
     throw new Error("Map multiplier may not shrink terrain dimensions");
@@ -177,11 +184,17 @@ export function scaleSpawnArea(
 ): { x: number; y: number; width: number; height: number } {
   const x = Math.max(
     0,
-    Math.min(target.width - 1, Math.floor((area.x * target.width) / source.width)),
+    Math.min(
+      target.width - 1,
+      Math.floor((area.x * target.width) / source.width),
+    ),
   );
   const y = Math.max(
     0,
-    Math.min(target.height - 1, Math.floor((area.y * target.height) / source.height)),
+    Math.min(
+      target.height - 1,
+      Math.floor((area.y * target.height) / source.height),
+    ),
   );
   const right = Math.min(
     target.width,

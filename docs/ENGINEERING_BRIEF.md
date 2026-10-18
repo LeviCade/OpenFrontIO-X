@@ -12,16 +12,17 @@ A map-selection UI exposes **Map Multiplier: 1x | 2x | 3x | 4x | 5x | 6x**, defa
 **Important math:** For source dimensions W,H and area factor F, take axis multiplier approximately `sqrt(F)`. Deterministically round dimensions to integer grid cells (e.g., `max(1, round(W*sqrt(F)))` and matching H). Actual area is therefore approximately, not exactly, F times original. Document exact rounding and use the same algorithm everywhere. Verify bounds for every map. Do not interpret 6x area as 6x width and 6x height (that would be 36x area).
 
 Illustrative baseline from Giant World manifest (as inspected 2026-10-16):
+
 - 1x: 4108 x 1948 = 8,002,384 cells
 - 2x: approximately 16 million cells
 - 6x: approximately 48 million cells
-Other maps have different dimensions; the feature should be generic.
+  Other maps have different dimensions; the feature should be generic.
 
 ## Verified code path
 
 - `packages/shared/src/GameMapLoader.ts`: `loadMapFiles()` prepares normal map.bin/map4x.bin or compact map4x.bin/map16x.bin.
 - `packages/engine-api/src/game/MapFiles.ts`: `MapFiles` and `MapManifest` definitions.
-- `packages/engine-lib/src/game/TerrainMapLoader.ts`: `loadTerrainMap()` and `genTerrainFromBin()` expect length = width * height; creates main map and miniMap; transforms spawn points for Compact.
+- `packages/engine-lib/src/game/TerrainMapLoader.ts`: `loadTerrainMap()` and `genTerrainFromBin()` expect length = width \* height; creates main map and miniMap; transforms spawn points for Compact.
 - `packages/engine-lib/src/game/GameMapImpl.ts`: Uint8Array for immutable-ish terrain, Uint16Array for ownership/state, Int32Array row offsets. Terrain byte bits: land bit 7, shoreline bit 6, ocean bit 5, lower five bits magnitude (31 on land is impassable).
 - `packages/engine-api/src/Schemas.ts`: `GameConfigSchema` includes gameMapSize; match/replay compatibility must be designed.
 - `src/client/WorkerClient.ts`: receives GameStartInfo, loads map and transfers buffers to worker.
@@ -45,17 +46,17 @@ Do not implement by enlarging only the browser image. Simulation occupancy, spaw
 
 ## Verification matrix
 
-| Suite | Must pass |
-| --- | --- |
-| Source grid | 1x bit-for-bit identity, original map files never overwritten; deterministic non-integer axis scaling |
-| Terrain | land/water/impassable/magnitude; coast adjacency; ocean versus lakes; exact land count |
-| Spawn | every nation spawn and team area valid on both normal and compact |
-| Minimap/layers | terrain, click positions, viewport, overlays, optional layers remain aligned |
-| Simulation | bots spawn, expand, move, fight; win condition completes with fixed seed |
-| UI | all factors 1..6, default 1, persistence in match settings without mismatch |
-| Serialization | config, snapshot restore, replay, client/worker/server agree |
-| Safety | unsupported maps/hardware fail gracefully; official upstream not changed |
-| Performance | 1x/2x/3x/4x/5x/6x load time, peak process memory, p50/p95 tick, FPS at representative zooms |
+| Suite          | Must pass                                                                                             |
+| -------------- | ----------------------------------------------------------------------------------------------------- |
+| Source grid    | 1x bit-for-bit identity, original map files never overwritten; deterministic non-integer axis scaling |
+| Terrain        | land/water/impassable/magnitude; coast adjacency; ocean versus lakes; exact land count                |
+| Spawn          | every nation spawn and team area valid on both normal and compact                                     |
+| Minimap/layers | terrain, click positions, viewport, overlays, optional layers remain aligned                          |
+| Simulation     | bots spawn, expand, move, fight; win condition completes with fixed seed                              |
+| UI             | all factors 1..6, default 1, persistence in match settings without mismatch                           |
+| Serialization  | config, snapshot restore, replay, client/worker/server agree                                          |
+| Safety         | unsupported maps/hardware fail gracefully; official upstream not changed                              |
+| Performance    | 1x/2x/3x/4x/5x/6x load time, peak process memory, p50/p95 tick, FPS at representative zooms           |
 
 **Performance:** Compare on the same hardware/map/seed/bot count. Record actual measurements in DEVLOG. 2x starts as a small-map test, then Giant World after budget verification. Gradually advance 3x..6x; do not call a multiplier supported until it passes acceptance.
 

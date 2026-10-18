@@ -48,12 +48,18 @@ export async function loadTerrainMap(
           ...files.manifest,
           nations: files.manifest.nations.map((nation) => ({
             ...nation,
-            coordinates: nation.coordinates?.slice() as [number, number] | undefined,
+            coordinates: nation.coordinates?.slice() as
+              | [number, number]
+              | undefined,
           })),
-          additionalNations: files.manifest.additionalNations?.map((nation) => ({
-            ...nation,
-            coordinates: nation.coordinates?.slice() as [number, number] | undefined,
-          })),
+          additionalNations: files.manifest.additionalNations?.map(
+            (nation) => ({
+              ...nation,
+              coordinates: nation.coordinates?.slice() as
+                | [number, number]
+                | undefined,
+            }),
+          ),
         };
   const sourceMain =
     mapSize === GameMapSize.Normal ? manifest.map : manifest.map4x;
@@ -123,7 +129,10 @@ export async function loadTerrainMap(
   if (multiplier !== 1) {
     // The Compact conversion above already divided coordinates / areas by
     // two. Transform from that actual source grid into the new game grid.
-    for (const nation of [...manifest.nations, ...(manifest.additionalNations ?? [])]) {
+    for (const nation of [
+      ...manifest.nations,
+      ...(manifest.additionalNations ?? []),
+    ]) {
       if (nation.coordinates !== undefined) {
         nation.coordinates = scaleTileCoordinate(
           nation.coordinates,

@@ -17,12 +17,12 @@ Status (2026-10-18): **Offline Solo source recording code added, but NO Node 24 
 Original map: 4108×1948 = 8,002,384 tiles.
 
 | Area multiplier | Expanded dimensions | Expanded tiles | 64.1M cap |
-| --- | --- | --- | --- |
-| 6x | 10063×4772 | 48,020,636 | Within |
-| 7x | 10869×5154 | 56,018,826 | Within |
-| 8x | 11619×5510 | 64,020,690 | Within |
-| 9x | 12324×5844 | 72,021,456 | Exceeds |
-| 10x | 12991×6160 | 80,024,560 | Exceeds |
+| --------------- | ------------------- | -------------- | --------- |
+| 6x              | 10063×4772          | 48,020,636     | Within    |
+| 7x              | 10869×5154          | 56,018,826     | Within    |
+| 8x              | 11619×5510          | 64,020,690     | Within    |
+| 9x              | 12324×5844          | 72,021,456     | Exceeds   |
+| 10x             | 12991×6160          | 80,024,560     | Exceeds   |
 
 **This does not establish that even 8x performs acceptably on any specific GPU or that 9x–10x Giant World is safe.** 9x and 10x are offered for smaller source maps (or Compact) that remain below the cap. They must not be enabled for Giant World Normal without measured memory/GPU budgets and a deliberate allocation redesign. MAX_TEXTURE_SIZE is a separate per-axis GPU gate.
 
@@ -55,10 +55,9 @@ Original map: 4108×1948 = 8,002,384 tiles.
 
 ### Original proposed acceptance contract (open and unverified)
 
-
 - Add a separate `SoloRecordStore` in IndexedDB for validated, versioned **source turn logs**, with bounded batches/chunks and periodic checkpoints while playing; retain game start/config, seed, player identity/cosmetics, hashes, win event/win tick and end/last-processed tick.
 - At victory, mark an outcome/checkpoint **without freezing or deleting the turn log**. Keep simulation running if the player chooses Keep Playing; all subsequent turns must remain replayable until the player exits/closes the tab. Preserve the original winner and tick as the result, even when the replay extends past it.
-- Save incrementally *before* tab closure; `pagehide`/`visibilitychange` can request a best-effort last flush but are **not guaranteed** to finish. Make crash recovery, partial chunks, quota errors and idle pause explicit.
+- Save incrementally _before_ tab closure; `pagehide`/`visibilitychange` can request a best-effort last flush but are **not guaranteed** to finish. Make crash recovery, partial chunks, quota errors and idle pause explicit.
 - Teach replay record loading to check this local store before attempting the API. Make local replays discoverable, exportable (portable compressed file), importable, deletable, and clearly distinguish local-only from remotely archived games. Respect replay/version compatibility and hash validation.
 - Maintain separate `wonAtTick` / `lastRecordedTick` semantics; a win should not automatically terminate gameplay or recording; do not submit altered extended matches to ranked/public archives. Revisit the win-time API upload vs. final on-exit record lifecycle to avoid duplicate or misleading remote records.
 - Specify quotas for multi-hour 8x matches and avoid an unbounded turn array in RAM. Test no backend, browser/tab exit, refresh/crash, resumed viewing, quota full, replay beyond victory, 1x compatibility, cross-build rejection, server availability restoration and correct deletion/export.

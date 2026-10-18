@@ -376,7 +376,15 @@ export class GameRightSidebar extends LitElement implements Controller {
         <!-- Buttons -->
         ${this.maybeRenderReplayButtons()}
 
-        <button type="button" class="cursor-pointer text-xs text-white font-semibold px-1" title="Zoom to fit whole map" aria-label="Zoom to fit whole map" @click=${() => this.eventBus.emit(new FitMapEvent())}>Fit map</button>
+        <button
+          type="button"
+          class="cursor-pointer text-xs text-white font-semibold px-1"
+          title="Zoom to fit whole map"
+          aria-label="Zoom to fit whole map"
+          @click=${() => this.eventBus.emit(new FitMapEvent())}
+        >
+          Fit map
+        </button>
         <div class="cursor-pointer" @click=${this.onSettingsButtonClick}>
           <img src=${settingsIcon} alt="settings" width="20" height="20" />
         </div>

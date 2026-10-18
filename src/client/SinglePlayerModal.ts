@@ -9,7 +9,10 @@ import {
 } from "@openfront/engine-api/game/GameTypes";
 import { TeamCountConfig } from "@openfront/engine-api/Schemas";
 import { DoomsdayClockSpeed } from "@openfront/engine-lib/game/DoomsdayClock";
-import { MAX_MULTIPLIED_MAP_TILES, type MapAreaMultiplier } from "@openfront/engine-lib/game/MapMultiplier";
+import {
+  MAX_MULTIPLIED_MAP_TILES,
+  type MapAreaMultiplier,
+} from "@openfront/engine-lib/game/MapMultiplier";
 import { UserMeResponse } from "@openfront/shared/ApiSchemas";
 import { assetUrl } from "@openfront/shared/AssetUrls";
 import { generateID } from "@openfront/shared/SharedUtil";
@@ -174,7 +177,8 @@ export class SinglePlayerModal extends BaseModal {
   protected routerName = "single-player";
 
   @state() private selectedMap: GameMapType = DEFAULT_OPTIONS.selectedMap;
-  @state() private mapAreaMultiplier: MapAreaMultiplier = DEFAULT_OPTIONS.mapAreaMultiplier;
+  @state() private mapAreaMultiplier: MapAreaMultiplier =
+    DEFAULT_OPTIONS.mapAreaMultiplier;
   @state() private winPercentage: number = DEFAULT_OPTIONS.winPercentage;
   @state() private selectedDifficulty: Difficulty =
     DEFAULT_OPTIONS.selectedDifficulty;
@@ -583,8 +587,13 @@ export class SinglePlayerModal extends BaseModal {
             @option-toggle-changed=${this.handleConfigOptionToggleChanged}
             @unit-toggle-changed=${this.handleConfigUnitToggleChanged}
           ></game-config-settings>
-          <div class="mt-4 rounded-xl border border-white/20 bg-white/5 px-4 py-3">
-            <label for="solo-win-percentage" class="block text-sm font-semibold text-white">
+          <div
+            class="mt-4 rounded-xl border border-white/20 bg-white/5 px-4 py-3"
+          >
+            <label
+              for="solo-win-percentage"
+              class="block text-sm font-semibold text-white"
+            >
               Territory required to win (1–100%)
             </label>
             <div class="mt-2 flex items-center gap-3">
@@ -598,7 +607,9 @@ export class SinglePlayerModal extends BaseModal {
                 @change=${this.handleWinPercentageChange}
                 class="w-28 rounded-lg border border-white/20 bg-black/40 px-3 py-2 text-white"
               />
-              <span class="text-xs text-white/60">Default 80%. Solo games only.</span>
+              <span class="text-xs text-white/60"
+                >Default 80%. Solo games only.</span
+              >
             </div>
           </div>
         </div>
@@ -1137,11 +1148,17 @@ export class SinglePlayerModal extends BaseModal {
       );
       // Give a readable limit warning before allocating a giant map.
       if (this.mapAreaMultiplier > 1) {
-        const manifest = await this.mapLoader.getMapData(this.selectedMap).manifest();
+        const manifest = await this.mapLoader
+          .getMapData(this.selectedMap)
+          .manifest();
         if (attempt !== this.startAttempt) return;
         const source = this.compactMap ? manifest.map4x : manifest.map;
-        const targetWidth = Math.round(source.width * Math.sqrt(this.mapAreaMultiplier));
-        const targetHeight = Math.round(source.height * Math.sqrt(this.mapAreaMultiplier));
+        const targetWidth = Math.round(
+          source.width * Math.sqrt(this.mapAreaMultiplier),
+        );
+        const targetHeight = Math.round(
+          source.height * Math.sqrt(this.mapAreaMultiplier),
+        );
         if (targetWidth * targetHeight > MAX_MULTIPLIED_MAP_TILES) {
           overlay?.hide();
           this.overlayAttempt = 0;

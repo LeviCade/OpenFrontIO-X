@@ -13,7 +13,6 @@ This handoff predates the source changes below. **PR #2 is still draft and unmer
 
 ---
 
-
 **Mandate:** Complete and verify the owner's next release of **LeviCade/OpenFrontIO-X** as one coordinated engineering effort. Do not ask the owner to babysit routine terminal commands. Engineer, test, document, and push work. Preserve separation from official upstream OpenFront.
 
 ## Live starting point and user's evidence
@@ -29,11 +28,13 @@ This handoff predates the source changes below. **PR #2 is still draft and unmer
 ## Recent operator-terminal blocker: environment only
 
 The owner ran the following successfully on their Mac:
+
 ```sh
 git fetch origin
 git worktree add --detach ../OpenFrontIO-X-extended origin/feature/extended-map-controls-solo-rules
 cd ../OpenFrontIO-X-extended
 ```
+
 Their local new worktree is at detached `2c6f6de0`. It is not a tracked feature branch. They then ran `npm run inst`, which invoked `npm ci --ignore-scripts` and failed **EBADENGINE**, reporting:
 
 - Required: `node >=24.15.0 <25`; `npm >=12.1.0 <13`.

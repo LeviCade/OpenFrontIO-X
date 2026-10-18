@@ -47,11 +47,16 @@ export async function fetchReplayRecord(
   const ownCommit = opts.ownCommit ?? ClientEnv.gitCommit();
   // Local source turns are authoritative over remote win-time archives and
   // derived processed caches; they include post-victory turns.
-  if (opts.localSource || (opts.fetchFn === undefined && typeof indexedDB !== "undefined")) {
+  if (
+    opts.localSource ||
+    (opts.fetchFn === undefined && typeof indexedDB !== "undefined")
+  ) {
     try {
       const local = opts.localSource
         ? await opts.localSource(gameID)
-        : (await hasSoloRecord(gameID)) ? await getSoloRecord(gameID) : undefined;
+        : (await hasSoloRecord(gameID))
+          ? await getSoloRecord(gameID)
+          : undefined;
       if (local) {
         if (ownCommit !== "DEV" && local.gitCommit !== ownCommit)
           return { kind: "other_build", local: true };

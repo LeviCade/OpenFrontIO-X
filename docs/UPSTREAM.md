@@ -23,7 +23,7 @@ git fetch origin
 git switch feature/map-multiplier
 ```
 
-The above command configures a read-only *intention*, not a security boundary: `git push upstream` is still possible for someone who has upstream write access. For hard protection on a local machine, set the upstream push URL to a deliberate invalid destination and verify it using `git remote -v`:
+The above command configures a read-only _intention_, not a security boundary: `git push upstream` is still possible for someone who has upstream write access. For hard protection on a local machine, set the upstream push URL to a deliberate invalid destination and verify it using `git remote -v`:
 
 ```bash
 git remote set-url --push upstream DISABLED_DO_NOT_PUSH

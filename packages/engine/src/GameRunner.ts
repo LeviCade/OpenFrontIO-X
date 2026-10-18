@@ -97,7 +97,10 @@ export async function createGameRunner(
 
 /** The game's maps, from its map's files (which the game takes over). */
 function loadGameMap(
-  config: Pick<GameStartInfo["config"], "gameMap" | "gameMapSize" | "mapAreaMultiplier">,
+  config: Pick<
+    GameStartInfo["config"],
+    "gameMap" | "gameMapSize" | "mapAreaMultiplier"
+  >,
   map: MapFiles,
 ) {
   if (map.map !== config.gameMap || map.mapSize !== config.gameMapSize) {

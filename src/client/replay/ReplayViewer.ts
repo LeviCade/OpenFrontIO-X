@@ -206,9 +206,12 @@ export class ReplayViewer extends LitElement {
    * redirected to that build's versioned shell.
    */
   private async open(): Promise<void> {
-    this.localSource = typeof indexedDB !== "undefined" &&
-      await hasSoloRecord(this.gameID).catch(() => false);
-    const stored = this.localSource ? undefined : await replayStore.get(this.gameID);
+    this.localSource =
+      typeof indexedDB !== "undefined" &&
+      (await hasSoloRecord(this.gameID).catch(() => false));
+    const stored = this.localSource
+      ? undefined
+      : await replayStore.get(this.gameID);
     if (this.abort.signal.aborted) return;
     if (stored !== undefined) {
       this.fromStore = true;
@@ -233,7 +236,9 @@ export class ReplayViewer extends LitElement {
         // IndexedDB is origin-local: redirecting a local replay to another
         // build/host would lose its source. Report a build mismatch instead.
         if (result.local) {
-          this.fail("This local Solo replay requires the build it was recorded with.");
+          this.fail(
+            "This local Solo replay requires the build it was recorded with.",
+          );
           return;
         }
         const url = await versionedViewerUrl(this.gameID);
@@ -338,7 +343,9 @@ export class ReplayViewer extends LitElement {
   private store(playback: ReplayPlayback): Promise<void> {
     // Source may keep growing until the browser exits. Derived cached frames
     // would otherwise hide newly recorded turns on next watch.
-    return this.localSource ? Promise.resolve() : replayStore.put(this.gameID, playback.data());
+    return this.localSource
+      ? Promise.resolve()
+      : replayStore.put(this.gameID, playback.data());
   }
 
   /** Show an error and offer the client-side replay. */
@@ -822,7 +829,17 @@ export class ReplayViewer extends LitElement {
           @wheel=${this.onWheel}
           @dblclick=${this.onDoubleClick}
         ></div>
-        ${this.status === "ready" ? html`<button type="button" class="absolute top-3 right-3 z-10 rounded bg-black/80 border border-white/30 px-3 py-2 text-sm" aria-label="Zoom to fit whole map" @click=${() => this.camera?.fit(window.innerWidth, window.innerHeight)}>Fit map</button>` : nothing}
+        ${this.status === "ready"
+          ? html`<button
+              type="button"
+              class="absolute top-3 right-3 z-10 rounded bg-black/80 border border-white/30 px-3 py-2 text-sm"
+              aria-label="Zoom to fit whole map"
+              @click=${() =>
+                this.camera?.fit(window.innerWidth, window.innerHeight)}
+            >
+              Fit map
+            </button>`
+          : nothing}
         ${this.status === "ready" ? this.renderStats() : nothing}
         ${this.status === "ready" && this.stoppedEarly !== ""
           ? this.renderStoppedEarly(loaded)

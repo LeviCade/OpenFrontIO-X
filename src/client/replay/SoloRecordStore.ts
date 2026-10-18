@@ -8,7 +8,11 @@
  */
 import type { Turn, Winner } from "@openfront/engine-api/Schemas";
 import { GameType } from "@openfront/engine-api/game/GameTypes";
-import type { WireGameStartInfo, GameRecord, PlayerRecord } from "@openfront/shared/WireSchemas";
+import type {
+  WireGameStartInfo,
+  GameRecord,
+  PlayerRecord,
+} from "@openfront/shared/WireSchemas";
 import { GameRecordSchema } from "@openfront/shared/WireSchemas";
 import { ClientEnv } from "../ClientEnv";
 
@@ -53,7 +57,11 @@ export interface SoloRecordSnapshot {
   hashes: SoloHash[];
 }
 export interface SoloRecordBackend {
-  write(meta: SoloRecordMeta, chunks: SoloChunk[], hashes: SoloHash[]): Promise<void>;
+  write(
+    meta: SoloRecordMeta,
+    chunks: SoloChunk[],
+    hashes: SoloHash[],
+  ): Promise<void>;
   read(gameID: string): Promise<SoloRecordSnapshot | undefined>;
   meta(gameID: string): Promise<SoloRecordMeta | undefined>;
   list(): Promise<SoloRecordMeta[]>;
@@ -78,9 +86,12 @@ function openDatabase(factory: IDBFactory): Promise<IDBDatabase> {
     const req = factory.open(DB_NAME, DB_VERSION);
     req.onupgradeneeded = () => {
       const db = req.result;
-      if (!db.objectStoreNames.contains(GAMES)) db.createObjectStore(GAMES, { keyPath: "gameID" });
-      if (!db.objectStoreNames.contains(CHUNKS)) db.createObjectStore(CHUNKS, { keyPath: ["gameID", "first"] });
-      if (!db.objectStoreNames.contains(HASHES)) db.createObjectStore(HASHES, { keyPath: ["gameID", "turn"] });
+      if (!db.objectStoreNames.contains(GAMES))
+        db.createObjectStore(GAMES, { keyPath: "gameID" });
+      if (!db.objectStoreNames.contains(CHUNKS))
+        db.createObjectStore(CHUNKS, { keyPath: ["gameID", "first"] });
+      if (!db.objectStoreNames.contains(HASHES))
+        db.createObjectStore(HASHES, { keyPath: ["gameID", "turn"] });
     };
     req.onsuccess = () => {
       const db = req.result;
@@ -88,87 +99,120 @@ function openDatabase(factory: IDBFactory): Promise<IDBDatabase> {
       resolve(db);
     };
     req.onerror = () => reject(req.error);
-    req.onblocked = () => reject(new Error("Solo replay database upgrade blocked by another tab"));
+    req.onblocked = () =>
+      reject(new Error("Solo replay database upgrade blocked by another tab"));
   });
 }
 function range(gameID: string): IDBKeyRange {
   return IDBKeyRange.bound([gameID, 0], [gameID, Number.MAX_SAFE_INTEGER]);
 }
 /** Separate database; never upgrade or evict the processed ReplayStore. */
-export function createIndexedSoloBackend(factory: IDBFactory | undefined = globalThis.indexedDB): SoloRecordBackend {
+export function createIndexedSoloBackend(
+  factory: IDBFactory | undefined = globalThis.indexedDB,
+): SoloRecordBackend {
   const withDb = async <T>(fn: (db: IDBDatabase) => Promise<T>): Promise<T> => {
-    if (!factory) throw new Error("IndexedDB is unavailable: Solo cannot save offline replays");
+    if (!factory)
+      throw new Error(
+        "IndexedDB is unavailable: Solo cannot save offline replays",
+      );
     const db = await openDatabase(factory);
-    try { return await fn(db); } finally { db.close(); }
+    try {
+      return await fn(db);
+    } finally {
+      db.close();
+    }
   };
   return {
-    write: (meta, chunks, hashes) => withDb(async (db) => {
-      const tx = db.transaction([GAMES, CHUNKS, HASHES], "readwrite");
-      const done = complete(tx);
-      tx.objectStore(GAMES).put(meta);
-      for (const chunk of chunks) tx.objectStore(CHUNKS).put(chunk);
-      for (const hash of hashes) tx.objectStore(HASHES).put(hash);
-      await done;
-    }),
-    read: (gameID) => withDb(async (db) => {
-      const tx = db.transaction([GAMES, CHUNKS, HASHES], "readonly");
-      const meta = await request(tx.objectStore(GAMES).get(gameID)) as SoloRecordMeta | undefined;
-      if (!meta) return undefined;
-      const [chunks, hashes] = await Promise.all([
-        request(tx.objectStore(CHUNKS).getAll(range(gameID))) as Promise<SoloChunk[]>,
-        request(tx.objectStore(HASHES).getAll(range(gameID))) as Promise<SoloHash[]>,
-      ]);
-      return { meta, chunks, hashes };
-    }),
-    meta: (gameID) => withDb(async (db) => {
-      const tx = db.transaction(GAMES, "readonly");
-      return await request(tx.objectStore(GAMES).get(gameID)) as SoloRecordMeta | undefined;
-    }),
-    list: () => withDb(async (db) => {
-      const tx = db.transaction(GAMES, "readonly");
-      return await request(tx.objectStore(GAMES).getAll()) as SoloRecordMeta[];
-    }),
-    remove: (gameID) => withDb(async (db) => {
-      const tx = db.transaction([GAMES, CHUNKS, HASHES], "readwrite");
-      const done = complete(tx);
-      tx.objectStore(GAMES).delete(gameID);
-      // A bounded per-game cursor, not a getAll of potentially huge chunks.
-      const clear = (name: string) => new Promise<void>((resolve, reject) => {
-        const store = tx.objectStore(name);
-        const cursor = store.openKeyCursor(range(gameID));
-        cursor.onerror = () => reject(cursor.error);
-        cursor.onsuccess = () => {
-          const current = cursor.result;
-          if (!current) return resolve();
-          store.delete(current.primaryKey);
-          current.continue();
-        };
-      });
-      await Promise.all([clear(CHUNKS), clear(HASHES)]);
-      await done;
-    }),
+    write: (meta, chunks, hashes) =>
+      withDb(async (db) => {
+        const tx = db.transaction([GAMES, CHUNKS, HASHES], "readwrite");
+        const done = complete(tx);
+        tx.objectStore(GAMES).put(meta);
+        for (const chunk of chunks) tx.objectStore(CHUNKS).put(chunk);
+        for (const hash of hashes) tx.objectStore(HASHES).put(hash);
+        await done;
+      }),
+    read: (gameID) =>
+      withDb(async (db) => {
+        const tx = db.transaction([GAMES, CHUNKS, HASHES], "readonly");
+        const meta = (await request(tx.objectStore(GAMES).get(gameID))) as
+          | SoloRecordMeta
+          | undefined;
+        if (!meta) return undefined;
+        const [chunks, hashes] = await Promise.all([
+          request(tx.objectStore(CHUNKS).getAll(range(gameID))) as Promise<
+            SoloChunk[]
+          >,
+          request(tx.objectStore(HASHES).getAll(range(gameID))) as Promise<
+            SoloHash[]
+          >,
+        ]);
+        return { meta, chunks, hashes };
+      }),
+    meta: (gameID) =>
+      withDb(async (db) => {
+        const tx = db.transaction(GAMES, "readonly");
+        return (await request(tx.objectStore(GAMES).get(gameID))) as
+          | SoloRecordMeta
+          | undefined;
+      }),
+    list: () =>
+      withDb(async (db) => {
+        const tx = db.transaction(GAMES, "readonly");
+        return (await request(
+          tx.objectStore(GAMES).getAll(),
+        )) as SoloRecordMeta[];
+      }),
+    remove: (gameID) =>
+      withDb(async (db) => {
+        const tx = db.transaction([GAMES, CHUNKS, HASHES], "readwrite");
+        const done = complete(tx);
+        tx.objectStore(GAMES).delete(gameID);
+        // A bounded per-game cursor, not a getAll of potentially huge chunks.
+        const clear = (name: string) =>
+          new Promise<void>((resolve, reject) => {
+            const store = tx.objectStore(name);
+            const cursor = store.openKeyCursor(range(gameID));
+            cursor.onerror = () => reject(cursor.error);
+            cursor.onsuccess = () => {
+              const current = cursor.result;
+              if (!current) return resolve();
+              store.delete(current.primaryKey);
+              current.continue();
+            };
+          });
+        await Promise.all([clear(CHUNKS), clear(HASHES)]);
+        await done;
+      }),
   };
 }
 
 let defaultBackend: SoloRecordBackend | undefined;
 export function soloRecordBackend(): SoloRecordBackend {
-  return defaultBackend ??= createIndexedSoloBackend();
+  return (defaultBackend ??= createIndexedSoloBackend());
 }
 
 export function recordFromSnapshot(snapshot: SoloRecordSnapshot): GameRecord {
   const { meta, chunks, hashes } = snapshot;
   const turns = new Map<number, Turn>();
-  for (const chunk of chunks) for (const turn of chunk.turns) {
-    if (turn.turnNumber > meta.lastRecordedTurn) continue;
-    turns.set(turn.turnNumber, turn);
-  }
+  for (const chunk of chunks)
+    for (const turn of chunk.turns) {
+      if (turn.turnNumber > meta.lastRecordedTurn) continue;
+      turns.set(turn.turnNumber, turn);
+    }
   for (const entry of hashes) {
     if (entry.turn > meta.lastRecordedTurn) continue;
     const existing = turns.get(entry.turn);
-    turns.set(entry.turn, { turnNumber: entry.turn, intents: existing?.intents ?? [], hash: entry.hash });
+    turns.set(entry.turn, {
+      turnNumber: entry.turn,
+      intents: existing?.intents ?? [],
+      hash: entry.hash,
+    });
   }
   const players: PlayerRecord[] = meta.startInfo.players.map((player) => ({
-    ...player, persistentID: null, stats: meta.stats,
+    ...player,
+    persistentID: null,
+    stats: meta.stats,
   }));
   const record = {
     gitCommit: meta.gitCommit,
@@ -178,12 +222,16 @@ export function recordFromSnapshot(snapshot: SoloRecordSnapshot): GameRecord {
       players,
       start: meta.startedAt,
       end: meta.updatedAt,
-      duration: Math.max(0, Math.floor((meta.updatedAt - meta.startedAt) / 1000)),
+      duration: Math.max(
+        0,
+        Math.floor((meta.updatedAt - meta.startedAt) / 1000),
+      ),
       num_turns: meta.lastRecordedTurn + 1,
       winner: meta.winner,
       lobbyFillTime: 0,
     },
-    turns: [...turns.values()].filter((t) => t.intents.length || t.hash !== undefined)
+    turns: [...turns.values()]
+      .filter((t) => t.intents.length || t.hash !== undefined)
       .sort((a, b) => a.turnNumber - b.turnNumber),
   };
   return GameRecordSchema.parse(record);
@@ -202,12 +250,15 @@ export class SoloRecordJournal {
   private readonly onVisibility = () => {
     if (document.visibilityState === "hidden") void this.flush();
   };
-  private readonly onPageHide = () => { void this.flush(); };
+  private readonly onPageHide = () => {
+    void this.flush();
+  };
 
   constructor(
     startInfo: WireGameStartInfo,
     private backend: SoloRecordBackend = soloRecordBackend(),
-    private onError: (error: Error) => void = (e) => console.error("Solo replay storage failed", e),
+    private onError: (error: Error) => void = (e) =>
+      console.error("Solo replay storage failed", e),
     now: () => number = Date.now,
     build: () => string = () => ClientEnv.gitCommit(),
   ) {
@@ -216,15 +267,21 @@ export class SoloRecordJournal {
       gameID: startInfo.gameID,
       startInfo,
       gitCommit: build(),
-      startedAt: now(), updatedAt: now(), lastRecordedTurn: -1,
-      wonAtTick: null, finished: false, failed: false,
+      startedAt: now(),
+      updatedAt: now(),
+      lastRecordedTurn: -1,
+      wonAtTick: null,
+      finished: false,
+      failed: false,
     };
   }
   private readonly now: () => number;
 
   begin(): void {
     this.queue([], [], -1);
-    this.timer = setInterval(() => { void this.flush(); }, 2000);
+    this.timer = setInterval(() => {
+      void this.flush();
+    }, 2000);
     if (typeof document !== "undefined") {
       document.addEventListener("visibilitychange", this.onVisibility);
       window.addEventListener("pagehide", this.onPageHide);
@@ -234,7 +291,11 @@ export class SoloRecordJournal {
   append(turn: Turn): void {
     if (this.stopped || this.failed) return;
     if (this.pending.length + this.queuedTurns >= MAX_PENDING_TURNS) {
-      this.fail(new Error("Offline replay writer is stalled; bounded turn buffer exhausted"));
+      this.fail(
+        new Error(
+          "Offline replay writer is stalled; bounded turn buffer exhausted",
+        ),
+      );
       return;
     }
     // Keep only non-empty turns. Other ticks are represented by the last-turn
@@ -266,7 +327,9 @@ export class SoloRecordJournal {
     if (this.failed) return;
     const batch = this.pending.splice(0, SOLO_JOURNAL_CHUNK_TURNS);
     const hashes = [...this.pendingHashes].map(([turn, hash]) => ({
-      gameID: this.meta.gameID, turn, hash,
+      gameID: this.meta.gameID,
+      turn,
+      hash,
     }));
     this.pendingHashes.clear();
     const last = batch[batch.length - 1]?.turnNumber ?? this.committedTurn;
@@ -287,21 +350,30 @@ export class SoloRecordJournal {
     this.meta.finished = true;
     while (this.pending.length > 0 && !this.failed) await this.flush();
     if (!this.failed) {
-      this.queue([], [...this.pendingHashes].map(([turn, hash]) => ({
-        gameID: this.meta.gameID, turn, hash,
-      })), this.committedTurn);
+      this.queue(
+        [],
+        [...this.pendingHashes].map(([turn, hash]) => ({
+          gameID: this.meta.gameID,
+          turn,
+          hash,
+        })),
+        this.committedTurn,
+      );
       this.pendingHashes.clear();
     }
     await this.serial;
   }
 
-  get error(): Error | null { return this.failed; }
+  get error(): Error | null {
+    return this.failed;
+  }
 
   private queue(batch: Turn[], hashes: SoloHash[], last: number): void {
     const chunks: SoloChunk[] = [];
     if (batch.length > 0) {
       chunks.push({
-        gameID: this.meta.gameID, first: batch[0].turnNumber,
+        gameID: this.meta.gameID,
+        first: batch[0].turnNumber,
         last: batch[batch.length - 1].turnNumber,
         turns: batch.filter((t) => t.intents.length > 0),
       });
@@ -311,7 +383,8 @@ export class SoloRecordJournal {
       if (this.failed) return;
       const committedTurn = Math.max(this.committedTurn, last);
       const nextMeta = {
-        ...this.meta, updatedAt: this.now(),
+        ...this.meta,
+        updatedAt: this.now(),
         lastRecordedTurn: committedTurn,
       };
       try {
@@ -339,8 +412,9 @@ export async function hasSoloRecord(
   return (await backend.meta(gameID)) !== undefined;
 }
 
-export async function listSoloRecords(backend: SoloRecordBackend = soloRecordBackend()):
-  Promise<SoloRecordMeta[]> {
+export async function listSoloRecords(
+  backend: SoloRecordBackend = soloRecordBackend(),
+): Promise<SoloRecordMeta[]> {
   return (await backend.list()).sort((a, b) => b.startedAt - a.startedAt);
 }
 export async function getSoloRecord(
@@ -359,10 +433,18 @@ export async function deleteSoloRecord(
 export async function exportSoloRecord(
   gameID: string,
   backend: SoloRecordBackend = soloRecordBackend(),
-): Promise<{ kind: "openfront-solo-v1"; wonAtTick: number | null; record: GameRecord }> {
+): Promise<{
+  kind: "openfront-solo-v1";
+  wonAtTick: number | null;
+  record: GameRecord;
+}> {
   const snapshot = await backend.read(gameID);
   if (!snapshot) throw new Error("Solo replay not found");
-  return { kind: "openfront-solo-v1", wonAtTick: snapshot.meta.wonAtTick, record: recordFromSnapshot(snapshot) };
+  return {
+    kind: "openfront-solo-v1",
+    wonAtTick: snapshot.meta.wonAtTick,
+    record: recordFromSnapshot(snapshot),
+  };
 }
 
 export async function importSoloRecord(
@@ -370,49 +452,88 @@ export async function importSoloRecord(
   backend: SoloRecordBackend = soloRecordBackend(),
   build: string = ClientEnv.gitCommit(),
 ): Promise<void> {
-  const wrapper = data !== null && typeof data === "object" &&
-    "kind" in data && data.kind === "openfront-solo-v1" &&
-    "record" in data && "wonAtTick" in data
+  const wrapper =
+    data !== null &&
+    typeof data === "object" &&
+    "kind" in data &&
+    data.kind === "openfront-solo-v1" &&
+    "record" in data &&
+    "wonAtTick" in data
       ? data
       : null;
   const record = GameRecordSchema.parse(wrapper ? wrapper.record : data);
   if (record.info.config.gameType !== GameType.Singleplayer) {
-    throw new Error("Only Solo game records can be imported into the local library");
+    throw new Error(
+      "Only Solo game records can be imported into the local library",
+    );
   }
-  if (!Number.isSafeInteger(record.info.num_turns) ||
-      record.info.num_turns < 1 || record.info.num_turns > MAX_IMPORTED_TURNS) {
-    throw new Error("Imported replay turn count exceeds the supported safety limit");
+  if (
+    !Number.isSafeInteger(record.info.num_turns) ||
+    record.info.num_turns < 1 ||
+    record.info.num_turns > MAX_IMPORTED_TURNS
+  ) {
+    throw new Error(
+      "Imported replay turn count exceeds the supported safety limit",
+    );
   }
-  const wonAtTick = wrapper && Number.isSafeInteger(wrapper.wonAtTick) &&
+  const wonAtTick =
+    wrapper &&
+    Number.isSafeInteger(wrapper.wonAtTick) &&
     Number(wrapper.wonAtTick) >= 0 &&
     Number(wrapper.wonAtTick) < record.info.num_turns
-      ? Number(wrapper.wonAtTick) : null;
+      ? Number(wrapper.wonAtTick)
+      : null;
   if (build !== "DEV" && record.gitCommit !== build) {
-    throw new Error("This replay needs the original game build; import rejected");
+    throw new Error(
+      "This replay needs the original game build; import rejected",
+    );
   }
   const gameID = record.info.gameID;
-  if (await backend.read(gameID)) throw new Error("This Solo replay already exists");
-  const startedAt = record.info.start, updatedAt = record.info.end;
+  if (await backend.read(gameID))
+    throw new Error("This Solo replay already exists");
+  const startedAt = record.info.start,
+    updatedAt = record.info.end;
   const meta: SoloRecordMeta = {
     gameID,
     startInfo: {
-      gameID, lobbyCreatedAt: record.info.lobbyCreatedAt,
-      config: record.info.config, players: record.info.players.map(({ persistentID: _id, stats: _stats, ...p }) => p),
+      gameID,
+      lobbyCreatedAt: record.info.lobbyCreatedAt,
+      config: record.info.config,
+      players: record.info.players.map(
+        ({ persistentID: _id, stats: _stats, ...p }) => p,
+      ),
     },
-    gitCommit: record.gitCommit, startedAt, updatedAt,
+    gitCommit: record.gitCommit,
+    startedAt,
+    updatedAt,
     lastRecordedTurn: record.info.num_turns - 1,
-    wonAtTick, winner: record.info.winner,
-    finished: true, failed: false, stats: record.info.players[0]?.stats,
+    wonAtTick,
+    winner: record.info.winner,
+    finished: true,
+    failed: false,
+    stats: record.info.players[0]?.stats,
   };
   const chunks = new Map<number, SoloChunk>();
   for (const turn of record.turns) {
     if (turn.turnNumber >= record.info.num_turns) {
-      throw new Error("Imported replay contains a turn past its declared length");
+      throw new Error(
+        "Imported replay contains a turn past its declared length",
+      );
     }
-    const first = Math.floor(turn.turnNumber / SOLO_JOURNAL_CHUNK_TURNS) * SOLO_JOURNAL_CHUNK_TURNS;
+    const first =
+      Math.floor(turn.turnNumber / SOLO_JOURNAL_CHUNK_TURNS) *
+      SOLO_JOURNAL_CHUNK_TURNS;
     let chunk = chunks.get(first);
     if (!chunk) {
-      chunk = { gameID, first, last: Math.min(first + SOLO_JOURNAL_CHUNK_TURNS - 1, record.info.num_turns - 1), turns: [] };
+      chunk = {
+        gameID,
+        first,
+        last: Math.min(
+          first + SOLO_JOURNAL_CHUNK_TURNS - 1,
+          record.info.num_turns - 1,
+        ),
+        turns: [],
+      };
       chunks.set(first, chunk);
     }
     if (chunk.turns.some((previous) => previous.turnNumber === turn.turnNumber))
@@ -421,10 +542,20 @@ export async function importSoloRecord(
   }
   // Metadata watermark only advances with committed source chunks, so an
   // interrupted import remains visibly incomplete instead of looking valid.
-  for (let first = 0; first < record.info.num_turns; first += SOLO_JOURNAL_CHUNK_TURNS) {
-    const last = Math.min(first + SOLO_JOURNAL_CHUNK_TURNS - 1, record.info.num_turns - 1);
-    await backend.write({ ...meta, lastRecordedTurn: last, finished: false },
-      [chunks.get(first) ?? { gameID, first, last, turns: [] }], []);
+  for (
+    let first = 0;
+    first < record.info.num_turns;
+    first += SOLO_JOURNAL_CHUNK_TURNS
+  ) {
+    const last = Math.min(
+      first + SOLO_JOURNAL_CHUNK_TURNS - 1,
+      record.info.num_turns - 1,
+    );
+    await backend.write(
+      { ...meta, lastRecordedTurn: last, finished: false },
+      [chunks.get(first) ?? { gameID, first, last, turns: [] }],
+      [],
+    );
   }
   await backend.write(meta, [], []);
 }

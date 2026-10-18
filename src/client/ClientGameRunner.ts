@@ -256,7 +256,11 @@ export function joinLobby(
           pendingPreloadStreak = 1;
         }
         if (pendingPreloadStreak >= MAP_PRELOAD_DEBOUNCE_STREAK) {
-          requestTerrainLoad(gameConfig.gameMap, gameConfig.gameMapSize, lastLobbyMultiplier);
+          requestTerrainLoad(
+            gameConfig.gameMap,
+            gameConfig.gameMapSize,
+            lastLobbyMultiplier,
+          );
         }
       }
       return;
@@ -265,7 +269,11 @@ export function joinLobby(
       console.log(
         `lobby: game prestarting: ${JSON.stringify(message, replacer)}`,
       );
-      requestTerrainLoad(message.gameMap, message.gameMapSize, lastLobbyMultiplier);
+      requestTerrainLoad(
+        message.gameMap,
+        message.gameMapSize,
+        lastLobbyMultiplier,
+      );
       resolvePrestart();
     }
     if (message.type === "start") {

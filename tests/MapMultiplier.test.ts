@@ -32,7 +32,11 @@ describe("Map Multiplier packed terrain", () => {
 
   it("corrects stale shore bits on stretched land and water", () => {
     const source = new Uint8Array([0xc1, 0x60, 0xc1, 0x60]);
-    const scaled = scaleTerrainGrid(source, { width: 2, height: 2, num_land_tiles: 2 }, 4);
+    const scaled = scaleTerrainGrid(
+      source,
+      { width: 2, height: 2, num_land_tiles: 2 },
+      4,
+    );
     expect(scaled.metadata.width).toBe(4);
     expect(scaled.metadata.height).toBe(4);
     expect(scaled.bytes[0] & 0x40).toBe(0); // inland at x=0
@@ -50,31 +54,49 @@ describe("Map Multiplier packed terrain", () => {
       { width: 2, height: 1, num_land_tiles: 0 },
       4,
     );
-    expect(Array.from(scaled.bytes)).toEqual([0x9f, 0x9f, 0x20, 0x20, 0x9f, 0x9f, 0x20, 0x20]);
+    expect(Array.from(scaled.bytes)).toEqual([
+      0x9f, 0x9f, 0x20, 0x20, 0x9f, 0x9f, 0x20, 0x20,
+    ]);
     expect(scaled.metadata.num_land_tiles).toBe(0);
   });
 
-  it.each([2, 3, 4, 5, 6, 7, 8, 9, 10] as const)("is deterministic and bounded at %ix", (factor) => {
-    const a = scaleTerrainGrid(terrain, metadata, factor);
-    const b = scaleTerrainGrid(terrain, metadata, factor);
-    expect(a.bytes).toEqual(b.bytes);
-    expect(a.metadata).toEqual(b.metadata);
-    expect(a.metadata.width * a.metadata.height).toBe(a.bytes.length);
-  });
+  it.each([2, 3, 4, 5, 6, 7, 8, 9, 10] as const)(
+    "is deterministic and bounded at %ix",
+    (factor) => {
+      const a = scaleTerrainGrid(terrain, metadata, factor);
+      const b = scaleTerrainGrid(terrain, metadata, factor);
+      expect(a.bytes).toEqual(b.bytes);
+      expect(a.metadata).toEqual(b.metadata);
+      expect(a.metadata.width * a.metadata.height).toBe(a.bytes.length);
+    },
+  );
 
   it("scales coordinates and spawn rectangles within map boundaries", () => {
     const a = { width: 100, height: 50 };
     const b = { width: 245, height: 122 };
     expect(scaleTileCoordinate([99, 49], a, b)).toEqual([243, 120]);
-    expect(scaleSpawnArea({ x: 90, y: 40, width: 10, height: 10 }, a, b)).toEqual({
-      x: 220, y: 97, width: 25, height: 25,
+    expect(
+      scaleSpawnArea({ x: 90, y: 40, width: 10, height: 10 }, a, b),
+    ).toEqual({
+      x: 220,
+      y: 97,
+      width: 25,
+      height: 25,
     });
   });
 
   it("rejects invalid factors, malformed bins and excessive allocations", () => {
     expect(() => assertMapAreaMultiplier(11)).toThrow("1 to 10");
-    expect(() => scaleTerrainGrid(new Uint8Array(1), metadata, 2)).toThrow("length");
-    expect(() => scaleTerrainGrid(new Uint8Array(1), { width: 1, height: 1, num_land_tiles: 1 }, 6,
-      { width: 1_000_000, height: 1_000_000 })).toThrow("budget");
+    expect(() => scaleTerrainGrid(new Uint8Array(1), metadata, 2)).toThrow(
+      "length",
+    );
+    expect(() =>
+      scaleTerrainGrid(
+        new Uint8Array(1),
+        { width: 1, height: 1, num_land_tiles: 1 },
+        6,
+        { width: 1_000_000, height: 1_000_000 },
+      ),
+    ).toThrow("budget");
   });
 });

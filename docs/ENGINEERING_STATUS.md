@@ -20,18 +20,18 @@ Detailed validation evidence is captured in the PR #2 comments. All previous sou
 
 **Completion assessment:** Significant new offline Solo replay source implementation and UX, first-win preservation, continued post-win source recording, explicit map-fit action and Solo timer fix are **pushed, not independently executed**. Parent PR2 already implemented 1×–10× sizing and Solo 1–100%. No new code has a verified pass on this PR head; **do not merge or ship** based on these commits alone.
 
-| Feature | State | Source evidence / limitation |
-| --- | --- | --- |
-| 1×–10× area multiplier | Existing on PR2 / UNVERIFIED on this head | Deterministic 64.1M-tile cap; Normal Giant World 9×/10× are deliberately refused; smaller maps may qualify. Owner earlier reported actual Solo Giant World 6× working; not our tested 7×–10× evidence. |
-| Full-map zoom | Implemented / UNTESTED | Min zoom floors preexisting; Fit map event + game HUD button `8a76c57`, `3996fe9`; replay button and Shift+F `b295aae`. |
-| Solo victory 1–100% | Existing / UNVERIFIED | Default 80%, exact 100% support preexisting; no forced 170-min watchdog for untimed Solo `e8d7019`, test `88a0731`. |
-| Offline source recording | Implemented / UNTESTED | `src/client/replay/SoloRecordStore.ts`: new indexedDB DB, 64-turn chunks, separate hashes, first winner and winning tick, metadata watermark, 512 in-flight backlog, 2-second flush, browser-exit best-effort. |
-| Continue playing/record post-win | Implemented / UNTESTED | `LocalServer.ts` keeps simulation executing and persists post-win turns; first win retained. Sparse in-RAM tick array `aa44101`. Win-time remote archive deliberately remains original result, not an altered post-win archive. |
-| Replay library | Implemented / UNTESTED | `SoloReplayLibrary.ts`: Watch, gzip JSON Export/Import, Delete, quota display. `ReplayRecord.ts` local-source lookup; `ReplayViewer.ts` avoids stale cache; strict build compatibility. |
-| Offline replay regression tests | Written / **NOT RUN** | `tests/client/replay/SoloRecordStore.test.ts`: 1000 turns with later victory, delayed hash, export/import, build mismatch, offline source, quota error. |
-| Gameplay test, full suite, typecheck, formatting, lint, production build | **BLOCKED / NOT RUN** | Available runtime Node 22.16.0/npm 10.9.2; repository requires Node >=24.15 <25 and npm >=12.1 <13, git clone DNS inaccessible. Physical Mac Node v26.10 npm12.1 EBADENGINE documented in handoff. |
-| CI | **NO RUNS** | GitHub Actions `actions/runs?branch=feature%2Fextended-map-controls-solo-rules` reports `total_count: 0`; combined commit statuses `[]`. Presence of workflow file is NOT proof of execution. |
-| 7×–10× Giant World, GPU/CPU/FPS/replay determinism | **NOT VERIFIED** | No browser session, GPU MAX_TEXTURE_SIZE observations, tick benchmarks, crash recovery, or determinism hash playback run on target hardware. |
+| Feature                                                                  | State                                     | Source evidence / limitation                                                                                                                                                                                                    |
+| ------------------------------------------------------------------------ | ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1×–10× area multiplier                                                   | Existing on PR2 / UNVERIFIED on this head | Deterministic 64.1M-tile cap; Normal Giant World 9×/10× are deliberately refused; smaller maps may qualify. Owner earlier reported actual Solo Giant World 6× working; not our tested 7×–10× evidence.                          |
+| Full-map zoom                                                            | Implemented / UNTESTED                    | Min zoom floors preexisting; Fit map event + game HUD button `8a76c57`, `3996fe9`; replay button and Shift+F `b295aae`.                                                                                                         |
+| Solo victory 1–100%                                                      | Existing / UNVERIFIED                     | Default 80%, exact 100% support preexisting; no forced 170-min watchdog for untimed Solo `e8d7019`, test `88a0731`.                                                                                                             |
+| Offline source recording                                                 | Implemented / UNTESTED                    | `src/client/replay/SoloRecordStore.ts`: new indexedDB DB, 64-turn chunks, separate hashes, first winner and winning tick, metadata watermark, 512 in-flight backlog, 2-second flush, browser-exit best-effort.                  |
+| Continue playing/record post-win                                         | Implemented / UNTESTED                    | `LocalServer.ts` keeps simulation executing and persists post-win turns; first win retained. Sparse in-RAM tick array `aa44101`. Win-time remote archive deliberately remains original result, not an altered post-win archive. |
+| Replay library                                                           | Implemented / UNTESTED                    | `SoloReplayLibrary.ts`: Watch, gzip JSON Export/Import, Delete, quota display. `ReplayRecord.ts` local-source lookup; `ReplayViewer.ts` avoids stale cache; strict build compatibility.                                         |
+| Offline replay regression tests                                          | Written / **NOT RUN**                     | `tests/client/replay/SoloRecordStore.test.ts`: 1000 turns with later victory, delayed hash, export/import, build mismatch, offline source, quota error.                                                                         |
+| Gameplay test, full suite, typecheck, formatting, lint, production build | **BLOCKED / NOT RUN**                     | Available runtime Node 22.16.0/npm 10.9.2; repository requires Node >=24.15 <25 and npm >=12.1 <13, git clone DNS inaccessible. Physical Mac Node v26.10 npm12.1 EBADENGINE documented in handoff.                              |
+| CI                                                                       | **NO RUNS**                               | GitHub Actions `actions/runs?branch=feature%2Fextended-map-controls-solo-rules` reports `total_count: 0`; combined commit statuses `[]`. Presence of workflow file is NOT proof of execution.                                   |
+| 7×–10× Giant World, GPU/CPU/FPS/replay determinism                       | **NOT VERIFIED**                          | No browser session, GPU MAX_TEXTURE_SIZE observations, tick benchmarks, crash recovery, or determinism hash playback run on target hardware.                                                                                    |
 
 **Outstanding risks:** TypeScript/lint/format failure possible; IndexedDB quota and partial-write recovery not tested; source-record import capped at 2,000,000 turns; export and replay processing reconstruct full records in RAM (requires benchmarking); pending writes can lose a few seconds on sudden tab close; existing processed replay library is deliberately kept distinct. UI new controls and Solo status labels must be exercised in browser. The full allocation cap does not establish safe memory on specific hardware.
 
@@ -41,16 +41,16 @@ Previous PR2 checkpoints, PR1 historical board and full DEVLOG follow below.
 
 ## PR #2 SOURCE FEATURE CHECKPOINT — 2026-10-18 05:20 UTC
 
-| Deliverable | Current state | Evidence |
-| --- | --- | --- |
-| 1×–10× selector, area math and 64.1M guard | PREEXISTING / UNVERIFIED on PR #2 | Head branch originally at `a5951bd`; no Node24/browser tests performed |
-| Live + WebGL + replay full-map zoom floors | PREEXISTING / UNVERIFIED | Explicit Fit-map action added to HUD / replay viewer `8a76c57`, `3996fe9`, `b295aae`; no real pan/zoom test |
-| Solo 1–100% default 80 | PREEXISTING / UNVERIFIED | Fixed no-timer Solo 170min forced victory `e8d7019`; regression test `88a0731` |
-| Offline Solo source recording | IMPLEMENTED / UNTESTED | `SoloRecordStore.ts` chunked IndexedDB; hooked into LocalServer; separate delayed hashes; records continue post-win; 512-turn bounded pending/inflight backlog |
-| Offline library / replay viewer | IMPLEMENTED / UNTESTED | Solo modal lists local saves; watch/export gzip/import/delete/usage; renderer prioritizes local source, bypasses stale processed replay cache |
-| New tests | WRITTEN / NOT RUN | `tests/client/replay/SoloRecordStore.test.ts`: 1000 ticks incl win, delayed hash, roundtrip, quota, offline lookup |
-| Node/npm environment, install, full tests, typecheck, lint, build | BLOCKED | Runtime Node 22.16.0/npm 10.9.2 and git DNS blocked; Mac Node26 EBADENGINE at handoff. CI API returns zero repo workflow runs |
-| Browser gameplay, GPU/CPU benchmarks, 7×–10× safety, reproducible replays | NOT VERIFIED | No browser/game executable in current environment; only source inspection and GitHub commits |
+| Deliverable                                                               | Current state                     | Evidence                                                                                                                                                       |
+| ------------------------------------------------------------------------- | --------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1×–10× selector, area math and 64.1M guard                                | PREEXISTING / UNVERIFIED on PR #2 | Head branch originally at `a5951bd`; no Node24/browser tests performed                                                                                         |
+| Live + WebGL + replay full-map zoom floors                                | PREEXISTING / UNVERIFIED          | Explicit Fit-map action added to HUD / replay viewer `8a76c57`, `3996fe9`, `b295aae`; no real pan/zoom test                                                    |
+| Solo 1–100% default 80                                                    | PREEXISTING / UNVERIFIED          | Fixed no-timer Solo 170min forced victory `e8d7019`; regression test `88a0731`                                                                                 |
+| Offline Solo source recording                                             | IMPLEMENTED / UNTESTED            | `SoloRecordStore.ts` chunked IndexedDB; hooked into LocalServer; separate delayed hashes; records continue post-win; 512-turn bounded pending/inflight backlog |
+| Offline library / replay viewer                                           | IMPLEMENTED / UNTESTED            | Solo modal lists local saves; watch/export gzip/import/delete/usage; renderer prioritizes local source, bypasses stale processed replay cache                  |
+| New tests                                                                 | WRITTEN / NOT RUN                 | `tests/client/replay/SoloRecordStore.test.ts`: 1000 ticks incl win, delayed hash, roundtrip, quota, offline lookup                                             |
+| Node/npm environment, install, full tests, typecheck, lint, build         | BLOCKED                           | Runtime Node 22.16.0/npm 10.9.2 and git DNS blocked; Mac Node26 EBADENGINE at handoff. CI API returns zero repo workflow runs                                  |
+| Browser gameplay, GPU/CPU benchmarks, 7×–10× safety, reproducible replays | NOT VERIFIED                      | No browser/game executable in current environment; only source inspection and GitHub commits                                                                   |
 
 **Important remaining engineering:** Typecheck/lint/format/review on Node24, fix any test failures, independently verify source replay determinism beyond winner, 6×–10× browser memory/FPS, adjust instrumentation/recording failure UX. Export currently materializes one JSON string and replay viewing reconstructs turns in memory; both require measured large-file headroom. Periodic 2s flush is crash tolerant but cannot guarantee last ticks on killed tab. Mac worktrees remain untouched; PR #2 draft and unmerged.
 
@@ -65,12 +65,12 @@ Previous PR2 checkpoints, PR1 historical board and full DEVLOG follow below.
 - **Next:** implement bounded IndexedDB journal in source, integration, static review, tests, then real Node24/browser verification on compatible host. Track outcomes in DEVLOG.
 - **Previous PR #1 report remains below as historical baseline only.**
 
-
 > **Engineering checkpoint.** This file is the current, human-readable status board for OpenFrontIO-X. GPT-6 Sol (or any engineer) must maintain it during implementation. For chronological implementation details use [DEVLOG.md](DEVLOG.md).
 >
 > **Status updates become externally visible only after the engineer commits and pushes them to GitHub.** This is not an automatically streaming telemetry feed.
 
 ## Latest checkpoint
+
 - **Last updated (UTC):** 2026-10-16 19:13 UTC — final engineering-session checkpoint
 - **Owner repository:** [LeviCade/OpenFrontIO-X](https://github.com/LeviCade/OpenFrontIO-X)
 - **Working branch:** `feature/map-multiplier`
@@ -84,31 +84,32 @@ Previous PR2 checkpoints, PR1 historical board and full DEVLOG follow below.
 
 Use **NOT STARTED**, **IN PROGRESS**, **BLOCKED**, **IMPLEMENTED / UNTESTED**, or **VERIFIED PASS**. Update after every substantive milestone.
 
-| Milestone | Status | Verification / reference |
-| --- | --- | --- |
-| Pristine 1× baseline and build | BLOCKED | Runtime Node v22.16.0 / npm v10.9.2; requires Node 24/npm 12; `git ls-remote` failed DNS in sandbox |
-| Deterministic terrain scaler and unit tests | IMPLEMENTED / UNTESTED | `MapMultiplier.ts`, `tests/MapMultiplier.test.ts`; commits `b6714d7`, `dda8375` |
-| Actual playable 2× single-player game | IMPLEMENTED / UNTESTED | End-to-end worker pathway + headless 2× runner test `tests/MapMultiplierGameplay.test.ts` (`9ef1388`); NO passing headless/browser gameplay evidence |
-| Config + 1×–6× selector | IMPLEMENTED / UNTESTED | Optional config schema, private host modal selector, patch propagation; commits `35f4ba6`, `acd5ad2`, `228ec17` |
-| Minimap, renderer, spawn, cache integration | IMPLEMENTED / UNTESTED | Main+mini terrain, nation/tribe/team spawns; 3-part client cache; WebGL size guard; real GPU, overlays, pathfinding, desync not verified |
-| 3×–6× performance and stability | IMPLEMENTED / UNTESTED | Scaler all 1×–6× + `perf:game -- --multiplier N` harness. Actual benchmark runs ZERO; no FPS/tick/memory numbers measured |
-| Multiplayer / replay / snapshot checks | IMPLEMENTED / UNTESTED | Server forces 1× on public/listed (`b00194f`, `5065920`); game runner reads factor for new/snapshot (`cbcb3fb`). Neither replay nor network sync tested |
-| License/assets and release readiness | BLOCKED | Read upstream and repository policies; unverified assets/distribution audit. No merge/release |
+| Milestone                                   | Status                 | Verification / reference                                                                                                                                |
+| ------------------------------------------- | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Pristine 1× baseline and build              | BLOCKED                | Runtime Node v22.16.0 / npm v10.9.2; requires Node 24/npm 12; `git ls-remote` failed DNS in sandbox                                                     |
+| Deterministic terrain scaler and unit tests | IMPLEMENTED / UNTESTED | `MapMultiplier.ts`, `tests/MapMultiplier.test.ts`; commits `b6714d7`, `dda8375`                                                                         |
+| Actual playable 2× single-player game       | IMPLEMENTED / UNTESTED | End-to-end worker pathway + headless 2× runner test `tests/MapMultiplierGameplay.test.ts` (`9ef1388`); NO passing headless/browser gameplay evidence    |
+| Config + 1×–6× selector                     | IMPLEMENTED / UNTESTED | Optional config schema, private host modal selector, patch propagation; commits `35f4ba6`, `acd5ad2`, `228ec17`                                         |
+| Minimap, renderer, spawn, cache integration | IMPLEMENTED / UNTESTED | Main+mini terrain, nation/tribe/team spawns; 3-part client cache; WebGL size guard; real GPU, overlays, pathfinding, desync not verified                |
+| 3×–6× performance and stability             | IMPLEMENTED / UNTESTED | Scaler all 1×–6× + `perf:game -- --multiplier N` harness. Actual benchmark runs ZERO; no FPS/tick/memory numbers measured                               |
+| Multiplayer / replay / snapshot checks      | IMPLEMENTED / UNTESTED | Server forces 1× on public/listed (`b00194f`, `5065920`); game runner reads factor for new/snapshot (`cbcb3fb`). Neither replay nor network sync tested |
+| License/assets and release readiness        | BLOCKED                | Read upstream and repository policies; unverified assets/distribution audit. No merge/release                                                           |
 
 ## Test and performance evidence
 
-| Check | Result | Command / evidence |
-| --- | --- | --- |
-| Typecheck | BLOCKED | Node 22 / npm 10; required Node 24 / npm 12, no local repository checkout |
-| Unit/integration tests | BLOCKED | No local checkout; GitHub connector remains available for code edits and CI inspection |
-| Lint | NOT RUN | `npm run lint` |
-| Format | NOT RUN | `npm run format:check` |
-| Production build | NOT RUN | `npm run build-prod` |
-| Actual browser/gameplay | NOT RUN | `npm run dev`; record map, factor, player/bots, device |
-| Performance | NOT RUN | Record map, multiplier, seed, bots, FPS, p50/p95 tick, memory and startup time |
-| CI checks | BLOCKED / ZERO RUNS | GitHub GET actions/runs returned `total_count: 0` for repository at ~19:10 UTC; commit status-check array empty; no passing jobs |
+| Check                   | Result              | Command / evidence                                                                                                               |
+| ----------------------- | ------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| Typecheck               | BLOCKED             | Node 22 / npm 10; required Node 24 / npm 12, no local repository checkout                                                        |
+| Unit/integration tests  | BLOCKED             | No local checkout; GitHub connector remains available for code edits and CI inspection                                           |
+| Lint                    | NOT RUN             | `npm run lint`                                                                                                                   |
+| Format                  | NOT RUN             | `npm run format:check`                                                                                                           |
+| Production build        | NOT RUN             | `npm run build-prod`                                                                                                             |
+| Actual browser/gameplay | NOT RUN             | `npm run dev`; record map, factor, player/bots, device                                                                           |
+| Performance             | NOT RUN             | Record map, multiplier, seed, bots, FPS, p50/p95 tick, memory and startup time                                                   |
+| CI checks               | BLOCKED / ZERO RUNS | GitHub GET actions/runs returned `total_count: 0` for repository at ~19:10 UTC; commit status-check array empty; no passing jobs |
 
 ## Code checkpoint (pushed)
+
 - Pure packed-terrain nearest-neighbor area scaler, 1× exact identity, re-derived shore flags, 64M-tile hard allocation guard, counted passable tiles. Per-tile coast closure removed for lower GC pressure (`121473d`).
 - Normal/Compact main + minigrid scaling, nation + team spawn transforms (`554ec76`), separate positioned bot tribe transforms (`b2a430a`); worker/snapshot receives authoritative factor.
 - Optional config schema and host event patching; browser cache/preload keys include map + size + multiplier; visible 1×–6× selector in private unlisted host modal; public/listed games forced to 1× server-side on creation, update, listing.
@@ -117,6 +118,7 @@ Use **NOT STARTED**, **IN PROGRESS**, **BLOCKED**, **IMPLEMENTED / UNTESTED**, o
 - Acceptance steps and commands in [MAP_MULTIPLIER_TEST_PLAN.md](MAP_MULTIPLIER_TEST_PLAN.md); real gameplay, replay, hosted multiplayer, overlays, pathfinding stability, WebGL and all performance values remain unverified.
 
 ## Work in progress / blockers
+
 - No reproducible 2× gameplay or benchmark evidence yet. GitHub Actions runs list is empty; no verified passing checks.
 - Source inspection identified positioned tribe spawns and hardware texture sizes as risks; code fixes were pushed but are untested.
 - Initial engineering audit began. Environment: `node --version` => v22.16.0; `npm --version` => 10.9.2; `git ls-remote https://github.com/LeviCade/OpenFrontIO-X.git refs/heads/feature/map-multiplier` => could not resolve host. No checkout or dev server possible through this runtime.
@@ -124,6 +126,7 @@ Use **NOT STARTED**, **IN PROGRESS**, **BLOCKED**, **IMPLEMENTED / UNTESTED**, o
 - Full OpenFront gameplay and multiplayer behavior at enlarged sizes remain unproven.
 
 ## Next concrete actions
+
 1. **FIRST:** Clone own repo with Node 24/npm 12; run `npm ci && npm run typecheck && npm run format:check && npm run lint && npm test -- tests/MapMultiplier.test.ts tests/MapMultiplierIntegration.test.ts tests/MapMultiplierGameplay.test.ts`; fix all failures. GitHub Actions has zero runs, so inspect whether Actions is enabled/CI trigger permissions.
 2. Start actual private 2× game (hosted, bots/nations/humans), record real evidence; test all behaviors in [validation runbook](MAP_MULTIPLIER_TEST_PLAN.md). The current smoke test is only CODE, not a passed test.
 3. Run 1× regression and `npm run build-prod`, verify no stale caches; exercise Compact/pathfinding/nation/positioned tribe spawn, overlay layers, snapshot restore, multiplayer and replay correctness.
@@ -144,6 +147,7 @@ Use **NOT STARTED**, **IN PROGRESS**, **BLOCKED**, **IMPLEMENTED / UNTESTED**, o
 ## Update protocol for engineers (mandatory)
 
 **Whenever a substantial milestone is reached, fails, or a blocker changes:**
+
 1. Replace the **Latest checkpoint**, active milestone row(s), evidence, blockers, next steps and last-updated UTC timestamp with factual current information.
 2. Prepend one concise **Checkpoint log** entry (UTC timestamp; change; affected files; commit SHA or draft PR URL; test outcome). Don't erase prior checkpoint entries.
 3. Append the full engineering narrative and reproducible test commands to `docs/DEVLOG.md`.

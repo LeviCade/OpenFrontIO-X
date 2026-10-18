@@ -1,10 +1,18 @@
 // @vitest-environment node
-import type { GameRecord, WireGameStartInfo } from "@openfront/shared/WireSchemas";
+import type {
+  GameRecord,
+  WireGameStartInfo,
+} from "@openfront/shared/WireSchemas";
 import { GameType } from "@openfront/engine-api/game/GameTypes";
 import { describe, expect, it, vi } from "vitest";
 import {
-  SoloRecordJournal, getSoloRecord, exportSoloRecord, importSoloRecord,
-  listSoloRecords, deleteSoloRecord, type SoloRecordBackend,
+  SoloRecordJournal,
+  getSoloRecord,
+  exportSoloRecord,
+  importSoloRecord,
+  listSoloRecords,
+  deleteSoloRecord,
+  type SoloRecordBackend,
   type SoloRecordSnapshot,
 } from "../../../src/client/replay/SoloRecordStore";
 import { fetchReplayRecord } from "../../../src/client/replay/ReplayRecord";
@@ -15,9 +23,12 @@ function memoryBackend(): SoloRecordBackend {
   return {
     async write(meta, chunks, hashes) {
       const existing = games.get(meta.gameID);
-      const chunkMap = new Map((existing?.chunks ?? []).map((c) => [c.first, c]));
+      const chunkMap = new Map(
+        (existing?.chunks ?? []).map((c) => [c.first, c]),
+      );
       const hashMap = new Map((existing?.hashes ?? []).map((h) => [h.turn, h]));
-      for (const chunk of chunks) chunkMap.set(chunk.first, structuredClone(chunk));
+      for (const chunk of chunks)
+        chunkMap.set(chunk.first, structuredClone(chunk));
       for (const hash of hashes) hashMap.set(hash.turn, structuredClone(hash));
       games.set(meta.gameID, {
         meta: structuredClone(meta),
@@ -25,10 +36,18 @@ function memoryBackend(): SoloRecordBackend {
         hashes: [...hashMap.values()].sort((a, b) => a.turn - b.turn),
       });
     },
-    async read(id) { return games.get(id); },
-    async meta(id) { return games.get(id)?.meta; },
-    async list() { return [...games.values()].map((v) => v.meta); },
-    async remove(id) { games.delete(id); },
+    async read(id) {
+      return games.get(id);
+    },
+    async meta(id) {
+      return games.get(id)?.meta;
+    },
+    async list() {
+      return [...games.values()].map((v) => v.meta);
+    },
+    async remove(id) {
+      games.delete(id);
+    },
   };
 }
 
@@ -52,7 +71,13 @@ describe("durable Solo source recording", () => {
     const { info } = await fixture();
     const backend = memoryBackend();
     const failures = vi.fn();
-    const journal = new SoloRecordJournal(info, backend, failures, () => 1000, () => "DEV");
+    const journal = new SoloRecordJournal(
+      info,
+      backend,
+      failures,
+      () => 1000,
+      () => "DEV",
+    );
     journal.begin();
     for (let turn = 0; turn < 1000; turn++) {
       journal.append({ turnNumber: turn, intents: [] });
@@ -73,16 +98,27 @@ describe("durable Solo source recording", () => {
     const replay = await getSoloRecord(info.gameID, backend);
     expect(replay?.info.num_turns).toBe(1000);
     expect(replay?.info.winner).toEqual(["player", info.players[0].clientID]);
-    expect(replay?.turns).toContainEqual({ turnNumber: 100, intents: [], hash: 1.25 });
+    expect(replay?.turns).toContainEqual({
+      turnNumber: 100,
+      intents: [],
+      hash: 1.25,
+    });
     expect(failures).not.toHaveBeenCalled();
   }, 60_000);
 
   it("exports and imports an extended replay with winner tick and compatible build", async () => {
     const { info } = await fixture();
     const original = memoryBackend();
-    const journal = new SoloRecordJournal(info, original, undefined, Date.now, () => "DEV");
+    const journal = new SoloRecordJournal(
+      info,
+      original,
+      undefined,
+      Date.now,
+      () => "DEV",
+    );
     journal.begin();
-    for (let i = 0; i < 145; i++) journal.append({ turnNumber: i, intents: [] });
+    for (let i = 0; i < 145; i++)
+      journal.append({ turnNumber: i, intents: [] });
     journal.win(["player", info.players[0].clientID], 70);
     await journal.finish();
     const portable = await exportSoloRecord(info.gameID, original);
@@ -90,17 +126,25 @@ describe("durable Solo source recording", () => {
     const destination = memoryBackend();
     await importSoloRecord(portable, destination, "DEV");
     expect((await destination.meta(info.gameID))?.wonAtTick).toBe(70);
-    expect((await getSoloRecord(info.gameID, destination))?.info.num_turns).toBe(145);
+    expect(
+      (await getSoloRecord(info.gameID, destination))?.info.num_turns,
+    ).toBe(145);
     expect((await listSoloRecords(destination)).length).toBe(1);
-    await expect(importSoloRecord(portable, destination, "DEV")).rejects.toThrow("already exists");
-    await expect(importSoloRecord(portable, memoryBackend(), "a".repeat(40))).rejects.toThrow("original game build");
+    await expect(
+      importSoloRecord(portable, destination, "DEV"),
+    ).rejects.toThrow("already exists");
+    await expect(
+      importSoloRecord(portable, memoryBackend(), "a".repeat(40)),
+    ).rejects.toThrow("original game build");
     await deleteSoloRecord(info.gameID, destination);
     expect(await getSoloRecord(info.gameID, destination)).toBeUndefined();
   }, 60_000);
 
   it("prioritizes the local source when remote API is unreachable", async () => {
     const { record } = await fixture();
-    const remote = vi.fn(async () => { throw new Error("offline"); });
+    const remote = vi.fn(async () => {
+      throw new Error("offline");
+    });
     const result = await fetchReplayRecord(record.info.gameID, {
       ownCommit: "DEV",
       localSource: async () => record,
@@ -114,10 +158,19 @@ describe("durable Solo source recording", () => {
     const { info } = await fixture();
     const failed = vi.fn();
     const backend = memoryBackend();
-    backend.write = async () => { throw new Error("QuotaExceededError"); };
-    const journal = new SoloRecordJournal(info, backend, failed, Date.now, () => "DEV");
+    backend.write = async () => {
+      throw new Error("QuotaExceededError");
+    };
+    const journal = new SoloRecordJournal(
+      info,
+      backend,
+      failed,
+      Date.now,
+      () => "DEV",
+    );
     journal.begin();
-    for (let i = 0; i < 100; i++) journal.append({ turnNumber: i, intents: [] });
+    for (let i = 0; i < 100; i++)
+      journal.append({ turnNumber: i, intents: [] });
     await journal.flush();
     expect(journal.error?.message).toBe("QuotaExceededError");
     expect(failed).toHaveBeenCalledTimes(1);

@@ -163,7 +163,11 @@ export class LocalServer {
         (error) => {
           console.error("Solo replay persistence unavailable:", error);
           if (typeof window !== "undefined") {
-            showToast("Offline replay saving failed. Check browser storage.", "red", 8000);
+            showToast(
+              "Offline replay saving failed. Check browser storage.",
+              "red",
+              8000,
+            );
           }
         },
       );
@@ -195,8 +199,9 @@ export class LocalServer {
         gameStartInfo: this.lobbyConfig.gameStartInfo!,
         // Only materialize the dense list for an explicit rejoin; a long
         // Solo game otherwise retains only meaningful intents/hashes in RAM.
-        turns: Array.from({ length: this.turns.length }, (_, i) =>
-          this.turns[i] ?? { turnNumber: i, intents: [] },
+        turns: Array.from(
+          { length: this.turns.length },
+          (_, i) => this.turns[i] ?? { turnNumber: i, intents: [] },
         ),
         lobbyCreatedAt: this.lobbyConfig.gameStartInfo!.lobbyCreatedAt,
         myClientID: this.lobbyConfig.gameRecord ? undefined : this.clientID,
@@ -236,11 +241,12 @@ export class LocalServer {
           if (clientMsg.turnNumber < this.turns.length) {
             const turn = this.turns[clientMsg.turnNumber];
             if (turn) turn.hash = clientMsg.hash;
-            else this.turns[clientMsg.turnNumber] = {
-              turnNumber: clientMsg.turnNumber,
-              intents: [],
-              hash: clientMsg.hash,
-            };
+            else
+              this.turns[clientMsg.turnNumber] = {
+                turnNumber: clientMsg.turnNumber,
+                intents: [],
+                hash: clientMsg.hash,
+              };
             this.soloJournal?.hash(clientMsg.turnNumber, clientMsg.hash);
           }
         }

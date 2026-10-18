@@ -115,7 +115,10 @@ export class Camera {
 
   /** Multiply zoom by a factor (centered on current view). */
   zoomBy(factor: number): void {
-    this.zoom = Math.max(this.minZoom(), Math.min(MAX_ZOOM, this.zoom * factor));
+    this.zoom = Math.max(
+      this.minZoom(),
+      Math.min(MAX_ZOOM, this.zoom * factor),
+    );
     this.clampOffset();
     this.dirty = true;
   }
@@ -133,7 +136,10 @@ export class Camera {
    */
   zoomAtScreen(factor: number, screenX: number, screenY: number): void {
     const worldBefore = this.screenToWorld(screenX, screenY);
-    this.zoom = Math.max(this.minZoom(), Math.min(MAX_ZOOM, this.zoom * factor));
+    this.zoom = Math.max(
+      this.minZoom(),
+      Math.min(MAX_ZOOM, this.zoom * factor),
+    );
     const worldAfter = this.screenToWorld(screenX, screenY);
     this.offsetX += worldBefore.x - worldAfter.x;
     this.offsetY += worldBefore.y - worldAfter.y;
