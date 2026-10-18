@@ -33,6 +33,7 @@ export class ReplayCamera {
     this.y = this.mapHeight / 2;
     this.zoom = clamp(
       Math.min(viewWidth / this.mapWidth, viewHeight / this.mapHeight) * 0.9,
+      this.minZoom(viewWidth, viewHeight),
     );
   }
 
@@ -79,6 +80,14 @@ export class ReplayCamera {
     };
   }
 
+  private minZoom(viewWidth: number, viewHeight: number): number {
+    return Math.min(
+      MIN_ZOOM,
+      (viewWidth / this.mapWidth) * 0.9,
+      (viewHeight / this.mapHeight) * 0.9,
+    );
+  }
+
   /** Zoom by `factor`, keeping the world point under (sx, sy) in place. */
   zoomAt(
     sx: number,
@@ -92,7 +101,7 @@ export class ReplayCamera {
     const oy = sy - viewHeight / 2;
     const wx = this.x + ox / this.zoom;
     const wy = this.y + oy / this.zoom;
-    this.zoom = clamp(this.zoom * factor);
+    this.zoom = clamp(this.zoom * factor, this.minZoom(viewWidth, viewHeight));
     this.x = wx - ox / this.zoom;
     this.y = wy - oy / this.zoom;
   }
@@ -150,6 +159,6 @@ function midpoint(
   return { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
 }
 
-function clamp(zoom: number): number {
-  return Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, zoom));
+function clamp(zoom: number, minZoom = MIN_ZOOM): number {
+  return Math.max(minZoom, Math.min(MAX_ZOOM, zoom));
 }
