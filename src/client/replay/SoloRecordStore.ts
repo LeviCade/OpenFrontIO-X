@@ -52,6 +52,7 @@ export interface SoloRecordSnapshot {
 export interface SoloRecordBackend {
   write(meta: SoloRecordMeta, chunks: SoloChunk[], hashes: SoloHash[]): Promise<void>;
   read(gameID: string): Promise<SoloRecordSnapshot | undefined>;
+  meta(gameID: string): Promise<SoloRecordMeta | undefined>;
   list(): Promise<SoloRecordMeta[]>;
   remove(gameID: string): Promise<void>;
 }
@@ -115,6 +116,10 @@ export function createIndexedSoloBackend(factory: IDBFactory = indexedDB): SoloR
       ]);
       return { meta, chunks, hashes };
     }),
+    meta: (gameID) => withDb(async (db) => {
+      const tx = db.transaction(GAMES, "readonly");
+      return await request(tx.objectStore(GAMES).get(gameID)) as SoloRecordMeta | undefined;
+    }),
     list: () => withDb(async (db) => {
       const tx = db.transaction(GAMES, "readonly");
       return await request(tx.objectStore(GAMES).getAll()) as SoloRecordMeta[];
@@ -124,19 +129,18 @@ export function createIndexedSoloBackend(factory: IDBFactory = indexedDB): SoloR
       const done = complete(tx);
       tx.objectStore(GAMES).delete(gameID);
       // A bounded per-game cursor, not a getAll of potentially huge chunks.
-      for (const name of [CHUNKS, HASHES]) {
+      const clear = (name: string) => new Promise<void>((resolve, reject) => {
         const store = tx.objectStore(name);
-        await new Promise<void>((resolve, reject) => {
-          const cursor = store.openKeyCursor(range(gameID));
-          cursor.onerror = () => reject(cursor.error);
-          cursor.onsuccess = () => {
-            const current = cursor.result;
-            if (!current) return resolve();
-            store.delete(current.primaryKey);
-            current.continue();
-          };
-        });
-      }
+        const cursor = store.openKeyCursor(range(gameID));
+        cursor.onerror = () => reject(cursor.error);
+        cursor.onsuccess = () => {
+          const current = cursor.result;
+          if (!current) return resolve();
+          store.delete(current.primaryKey);
+          current.continue();
+        };
+      });
+      await Promise.all([clear(CHUNKS), clear(HASHES)]);
       await done;
     }),
   };
@@ -317,6 +321,13 @@ export class SoloRecordJournal {
     this.failed = error;
     this.onError(error);
   }
+}
+
+export async function hasSoloRecord(
+  gameID: string,
+  backend: SoloRecordBackend = soloRecordBackend(),
+): Promise<boolean> {
+  return (await backend.meta(gameID)) !== undefined;
 }
 
 export async function listSoloRecords(backend: SoloRecordBackend = soloRecordBackend()):
