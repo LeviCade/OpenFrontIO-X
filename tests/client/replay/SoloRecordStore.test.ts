@@ -4,7 +4,7 @@ import { describe, expect, it, vi } from "vitest";
 import {
   SoloRecordJournal, getSoloRecord, exportSoloRecord, importSoloRecord,
   listSoloRecords, deleteSoloRecord, type SoloRecordBackend,
-  type SoloRecordMeta, type SoloRecordSnapshot,
+  type SoloRecordSnapshot,
 } from "../../../src/client/replay/SoloRecordStore";
 import { fetchReplayRecord } from "../../../src/client/replay/ReplayRecord";
 import { config, human, playAndArchive } from "./util/ArchiveGame";
@@ -58,6 +58,9 @@ describe("durable Solo source recording", () => {
       if (turn === 200) journal.win(["player", info.players[0].clientID], 200);
       if (turn === 400) journal.win(["player", info.players[0].clientID], 400);
       if (turn === 710) journal.hash(100, 1.25); // late hash on old persisted chunk
+      // Simulate realistic event-loop progress: the bounded writer deliberately
+      // refuses 512 uncommitted ticks arriving in one synchronous burst.
+      if (turn % 64 === 63) await journal.flush();
     }
     await journal.finish();
     const stored = await backend.read(info.gameID);
