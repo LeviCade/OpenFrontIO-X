@@ -115,14 +115,14 @@ export class Camera {
 
   /** Multiply zoom by a factor (centered on current view). */
   zoomBy(factor: number): void {
-    this.zoom = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, this.zoom * factor));
+    this.zoom = Math.max(this.minZoom(), Math.min(MAX_ZOOM, this.zoom * factor));
     this.clampOffset();
     this.dirty = true;
   }
 
   /** Set absolute zoom level. */
   zoomTo(level: number): void {
-    this.zoom = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, level));
+    this.zoom = Math.max(this.minZoom(), Math.min(MAX_ZOOM, level));
     this.clampOffset();
     this.dirty = true;
   }
@@ -133,12 +133,21 @@ export class Camera {
    */
   zoomAtScreen(factor: number, screenX: number, screenY: number): void {
     const worldBefore = this.screenToWorld(screenX, screenY);
-    this.zoom = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, this.zoom * factor));
+    this.zoom = Math.max(this.minZoom(), Math.min(MAX_ZOOM, this.zoom * factor));
     const worldAfter = this.screenToWorld(screenX, screenY);
     this.offsetX += worldBefore.x - worldAfter.x;
     this.offsetY += worldBefore.y - worldAfter.y;
     this.clampOffset();
     this.dirty = true;
+  }
+
+  /** Allow a full-map fit even when a giant map requires less than 0.2x. */
+  private minZoom(): number {
+    return Math.min(
+      MIN_ZOOM,
+      (this.canvasW / this.mapW) * 0.9,
+      (this.canvasH / this.mapH) * 0.9,
+    );
   }
 
   /** Return the column-major mat3 camera matrix (world → clip). */
