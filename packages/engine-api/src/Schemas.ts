@@ -256,9 +256,12 @@ export const GameConfigSchema = z.object({
   mapAreaMultiplier: z.union([
     z.literal(1), z.literal(2), z.literal(3),
     z.literal(4), z.literal(5), z.literal(6),
+    z.literal(7), z.literal(8), z.literal(9), z.literal(10),
   ]).optional(),
   doomsdayClock: DoomsdayClockConfigSchema.optional(),
   overtime: OvertimeConfigSchema.optional(),
+  // Solo-only victory territory percentage (default remains the original 80%).
+  winPercentage: zb.uint({ min: 1, max: 100 }).optional(),
   publicGameModifiers: z
     .object({
       isCompact: z.boolean().optional(),
