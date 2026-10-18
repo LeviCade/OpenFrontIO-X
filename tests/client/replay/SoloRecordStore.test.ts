@@ -1,5 +1,6 @@
 // @vitest-environment node
 import type { GameRecord, WireGameStartInfo } from "@openfront/shared/WireSchemas";
+import { GameType } from "@openfront/engine-api/game/GameTypes";
 import { describe, expect, it, vi } from "vitest";
 import {
   SoloRecordJournal, getSoloRecord, exportSoloRecord, importSoloRecord,
@@ -37,7 +38,7 @@ async function fixture(): Promise<{
 }> {
   const { record } = await playAndArchive({
     gameID: "SOLOREC1",
-    config: config({ bots: 0 }),
+    config: config({ bots: 0, gameType: GameType.Singleplayer }),
     players: [human(1)],
     ticks: 5,
     intents: () => [],
