@@ -112,3 +112,28 @@ See `docs/MAP_MULTIPLIER_TEST_PLAN.md`. Start by checking `git remote -v` for **
 - Fixed default Solo timeout `WinCheckExecution.ts` `e8d7019`; new regression `88a0731`; explicit timer still applies.
 - Added full-map fit live event HUD and replay viewer button / Shift+F (`8a76c57`, `3996fe9`, `b295aae`). Source-level only, no browser pass.
 - New source-journal regression tests `tests/client/replay/SoloRecordStore.test.ts` (`5861392`, `4104079`) written, NOT EXECUTED. Real checks blocked by Node22/npm10 and no git checkout/DNS. No performance data or actual 7×–10× gameplay observed here.
+
+## 2026-10-18 05:40 UTC — Final PR2 engineering audit and handoff
+
+### Latest implementation after prior checkpoint
+- `3bc6372`: first win tick follows last issued turn, independent of worker acknowledgment timing.
+- `aa44101`: LocalServer now uses a sparse in-memory turn array (only intents + periodic hashes), retaining logical length for backlog and archived `num_turns`. Explicit rejoin temporarily materializes full Turn[]; existing remote source archive uses sparse-array filter and unchanged semantics.
+- `22d6080`: import validates Solo-only config, safe integer 1..2,000,000 turn span; prevents runaway importer loops.
+- `542882d`: repaired test fixture to use `GameType.Singleplayer` (ArchiveGame.config default is Public).
+- `87b933a`, `3e60e12`: inject build ID into SoloRecordJournal fixture so Node tests do not rely on `window.BOOTSTRAP_CONFIG` / ClientEnv before boot.
+- `ea91ae3`: warning callback no longer references window in Node/headless LocalServer replay-speed test.
+- `d271ebf`: source-replay design docs updated to reflect added implementation and unverified acceptance gates.
+- PR #2 body updated to reflect offline sources and explicit NO PASS claim. PR remains draft, stacked on same-repo feature/map-multiplier. No Mac worktree, Skybot, official upstream or main branch modifications.
+
+### Evidence and limitations as measured (not inferred)
+- No local code checkout or project dependencies. Runtime Node v22.16.0/npm v10.9.2; project requires Node >=24.15 <25/npm>=12.1<13; GitHub DNS failed. In handoff operator's separate Mac worktree Node26.10 caused `EBADENGINE`, after which tsc/oxfmt were absent. No Mac intervention in this session.
+- GitHub App pushed implementation and docs; GitHub Actions run count for PR2 branch is **zero**, commit statuses returned an empty list on `ea91ae3`. No TypeScript, Vitest, lint, formatting, build, browser, replay or GPU benchmark commands were executed. **NO VERIFIED PASS**.
+- Test files committed but unexecuted: new `SoloRecordStore.test.ts`; updated WinCheckExecution test; prior 1×–10× map/camera tests on branch. Do not conflate authored tests with successful tests.
+- Local source retains initial win and subsequent turn watermark; processed ReplayStore remains cache only. The remote API win-time archive is not extended. Crash/Quota/Imprecise winning-tick test might reveal bugs, and source export/decode memory is not streaming.
+- Operator-reported previous Giant World 6× Solo gameplay from HANDOFF document is historical external observation, not a verified current-head test. 7×–10× have zero measured performance evidence here; 9/10× Normal Giant must remain refused until headroom measured and architecture revised.
+
+### Operator-independent next step
+1. Isolate compatible Node24/npm12 environment and repo worktree without resetting the existing Mac worktrees; run install, format, typecheck, lint, targeted tests and production build. **Fix every actual failing check before UI acceptance.**
+2. Verify offline Solo replay (win at 1%, 50%, exact 100%, custom + default 80%; continue 1000 turns, confirm original winner remains, then close/reopen, playback to last recorded tick, compare engine hashes, export/import), and cross-build, interrupted/quota scenarios.
+3. Performance stress smaller 1×–10× and Giant World 7/8 with FPS, p50/p95 tick, peak RSS, browser/GPU memory and real GPU texture limits; 9/10 Normal Giant must fail visibly under 64.1M cap.
+4. Commit exact output and screenshots/logs, then review PR #2 as draft stacked on PR1. Merge only after acceptance and distribution/asset audits.
