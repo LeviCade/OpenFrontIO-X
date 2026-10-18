@@ -98,3 +98,8 @@ This is the long-lived engineering memory for AI agents and human contributors. 
 See `docs/MAP_MULTIPLIER_TEST_PLAN.md`. Start by checking `git remote -v` for **LeviCade/OpenFrontIO-X ONLY**, then Node24/npm12 and `npm ci`, `npm run typecheck`, `npm run format:check`, `npm run lint`, `npm test -- tests/MapMultiplier.test.ts tests/MapMultiplierIntegration.test.ts tests/MapMultiplierGameplay.test.ts`, `npm run build-prod`; fix failures with evidence. Run an actual hosted 2× game before any claim of playable software; repeat 1× regression and >2 performance.
 ### PR state
 - PR https://github.com/LeviCade/OpenFrontIO-X/pull/1 targeting own main; **draft**, no merges or actions submitted to official OpenFront. Last implementation commit: `121473d`.
+
+## 2026-10-18 05:01 UTC — PR #2 engineering takeover
+- Read AGENTS.md, docs/ONE_SWEEP_ENGINEERING_HANDOFF.md, docs/EXTENDED_MAP_AND_SOLO_REPLAY_PLAN.md, existing PR metadata and replay/LocalServer architecture. PR #2 draft and stacked on same-repo feature/map-multiplier.
+- Verified current runtime node v22.16.0/npm v10.9.2; git ls-remote failure `Could not resolve host: github.com`. No dependencies or executable tests available; user Mac Node 26 engine error is separate and remains untouched.
+- Starting head a5951bd93d174260a6f84f0f0d1c742e1bf6e4a5; implementing source-only offline record journal next. No replay or map acceptance claimed.
