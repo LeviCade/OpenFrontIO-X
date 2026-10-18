@@ -460,7 +460,7 @@ export class GameConfigSettings extends LitElement {
                 <div class="text-xs font-bold uppercase tracking-wider text-white/70">
                   Map area multiplier (experimental)
                 </div>
-                <div class="grid grid-cols-6 gap-2" role="group" aria-label="Map area multiplier">
+                <div class="grid grid-cols-5 md:grid-cols-10 gap-2" role="group" aria-label="Map area multiplier">
                   ${MAP_AREA_MULTIPLIERS.map((factor) =>
                     renderTextCardButton(
                       `${factor}×`,
