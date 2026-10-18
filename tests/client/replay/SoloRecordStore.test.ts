@@ -52,7 +52,7 @@ describe("durable Solo source recording", () => {
     const { info } = await fixture();
     const backend = memoryBackend();
     const failures = vi.fn();
-    const journal = new SoloRecordJournal(info, backend, failures, () => 1000);
+    const journal = new SoloRecordJournal(info, backend, failures, () => 1000, () => "DEV");
     journal.begin();
     for (let turn = 0; turn < 1000; turn++) {
       journal.append({ turnNumber: turn, intents: [] });
@@ -80,7 +80,7 @@ describe("durable Solo source recording", () => {
   it("exports and imports an extended replay with winner tick and compatible build", async () => {
     const { info } = await fixture();
     const original = memoryBackend();
-    const journal = new SoloRecordJournal(info, original);
+    const journal = new SoloRecordJournal(info, original, undefined, Date.now, () => "DEV");
     journal.begin();
     for (let i = 0; i < 145; i++) journal.append({ turnNumber: i, intents: [] });
     journal.win(["player", info.players[0].clientID], 70);
@@ -115,7 +115,7 @@ describe("durable Solo source recording", () => {
     const failed = vi.fn();
     const backend = memoryBackend();
     backend.write = async () => { throw new Error("QuotaExceededError"); };
-    const journal = new SoloRecordJournal(info, backend, failed);
+    const journal = new SoloRecordJournal(info, backend, failed, Date.now, () => "DEV");
     journal.begin();
     for (let i = 0; i < 100; i++) journal.append({ turnNumber: i, intents: [] });
     await journal.flush();
