@@ -1,5 +1,19 @@
 # OpenFrontIO-X engineering status
 
+## PR #2 MAC VALIDATION AND CI ENABLEMENT — 2026-10-18
+
+**Current status (supersedes earlier unverified engineering-handoff checkpoints below):** Source at commit `4ac2554abbb4073576e8cd83d81a9a69eeb18775` was executed in the owner's separate detached `OpenFrontIO-X-extended` macOS worktree with **Node v24.22.0 / npm 12.1.0**. This is **real local test evidence**, not GitHub-hosted CI.
+
+- **Full Vitest regression suite: PASS** — `npm test`, 666/666 test files passed; **9,319 passed, 1 skipped, 0 failed**, 79.76 seconds. The earlier full run had 3 failures, subsequently repaired and rerun both in isolation (51/51) and in the complete suite.
+- **Targeted map/win/zoom/local Solo replay tests: PASS** — 61/61 across seven files. New Solo recorder tests used an in-memory test backend; this **does not** verify physical browser IndexedDB and replay rendering end-to-end.
+- **TypeScript, both linters, production build: PASS** on the physical Mac during the source-validation sequence. `npm run build-prod` completed with Vite and TypeScript exit 0 and generated asset hashes, with nonfatal CSS/bundle warnings. The full suite alone was re-run on the latest commit.
+- **Formatting: PASS LOCALLY AFTER `npm run format`**, but GitHub does not yet contain the automatic formatting of 27 files. The Mac formatting changes were preserved as `../OpenFrontIO-X-extended-formatting.patch` and stash `PR2 formatting backup before regression fixes`. **GitHub CI's format job may still fail** until the changes are reviewed and committed to this branch.
+- **GitHub Actions:** Owner reports enabling Actions on this fork on October 18. The checked-in `.github/workflows/ci.yml` already has `pull_request` jobs for Ubuntu Node 24/npm 12, build/typecheck, sharded Vitest, lint, format, generated-map consistency. At the start of this checkpoint, Actions API returned **zero runs** on the PR #2 feature branch. This documentation update is a legitimate new PR head commit and should trigger a new `pull_request synchronize` event; **do not call it a CI pass without an actual run and job conclusions**.
+- **PR state:** #2 remains **DRAFT / UNMERGED**, stacked on own repository's `feature/map-multiplier`; no writes to official upstream.
+- **Still blocking release:** Browser Solo first victory → **Keep Playing** → further turns → exit/reopen → locally replay turns past the win; IndexedDB durability/quota/abrupt close; 7×/8× Giant World GPU/FPS/tick benchmarks; graceful 9×/10× Giant World refusal; format changes committed and actual CI passing.
+
+Detailed validation evidence is captured in the PR #2 comments. All previous source-only claims below are preserved as historical checkpoints, not the current validation status.
+
 ## PR #2 FINAL ENGINEERING HANDOFF — 2026-10-18 05:40 UTC
 
 **Repo / branch / PR:** [LeviCade/OpenFrontIO-X](https://github.com/LeviCade/OpenFrontIO-X), `feature/extended-map-controls-solo-rules`, [draft PR #2](https://github.com/LeviCade/OpenFrontIO-X/pull/2) stacked on `feature/map-multiplier`. **NOT MERGED.** Last implementation commit before documentation: [`ea91ae3`](https://github.com/LeviCade/OpenFrontIO-X/commit/ea91ae3b170ca818b5de5a124be8273ea737659e).
