@@ -92,8 +92,9 @@ function range(gameID: string): IDBKeyRange {
   return IDBKeyRange.bound([gameID, 0], [gameID, Number.MAX_SAFE_INTEGER]);
 }
 /** Separate database; never upgrade or evict the processed ReplayStore. */
-export function createIndexedSoloBackend(factory: IDBFactory = indexedDB): SoloRecordBackend {
+export function createIndexedSoloBackend(factory: IDBFactory | undefined = globalThis.indexedDB): SoloRecordBackend {
   const withDb = async <T>(fn: (db: IDBDatabase) => Promise<T>): Promise<T> => {
+    if (!factory) throw new Error("IndexedDB is unavailable: Solo cannot save offline replays");
     const db = await openDatabase(factory);
     try { return await fn(db); } finally { db.close(); }
   };
