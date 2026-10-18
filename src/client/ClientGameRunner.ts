@@ -294,11 +294,16 @@ export function joinLobby(
         userSettings,
         // The start packet is authoritative. A late host edit could
         // invalidate the earlier lobby preload; select by all three fields.
-        requestTerrainLoad(
-          message.gameStartInfo.config.gameMap,
-          message.gameStartInfo.config.gameMapSize,
-          message.gameStartInfo.config.mapAreaMultiplier ?? 1,
-        ),
+        // A malformed start packet must still reach createClientGame's
+        // asynchronous "missing gameStartInfo" error handler instead of
+        // throwing synchronously while computing the preload arguments.
+        message.gameStartInfo
+          ? requestTerrainLoad(
+              message.gameStartInfo.config.gameMap,
+              message.gameStartInfo.config.gameMapSize,
+              message.gameStartInfo.config.mapAreaMultiplier ?? 1,
+            )
+          : null,
         terrainMapFileLoader,
       )
         .then((r) => {
