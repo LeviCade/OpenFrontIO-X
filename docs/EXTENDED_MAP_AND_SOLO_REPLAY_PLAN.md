@@ -9,7 +9,7 @@ Status: **source-only prototype, NOT yet run through the Mac test suite or new b
 - Gigantic maps that exceed this budget are rejected before a Solo match starts, with a user-readable dimension warning. No guard is silently bypassed.
 - Normal/Compact scaling, minis, spawns, replay configuration and WebGL maximum texture size validation retain their existing paths.
 - The actual live input camera (`TransformHandler`), WebGL camera, and replay viewer camera now permit zooming out to a 90%-fit full-map view even below their historic zoom floors. Other maps keep their existing minimum.
-- Solo has a 1–100% integer territory win setting, default 80%. The override is ignored by multiplayer/ranked logic. Exactly 100% is attainable for an explicit Solo choice; no override preserves the original strict >80% comparison.
+- Solo has a 1–100% integer territory win setting, default 80%. The override is ignored by multiplayer/ranked logic. Exactly 100% is attainable for an explicit Solo choice; no override preserves the original strict >80% comparison. Explicit Solo overrides also bypass the hosted 170-minute automatic winner watchdog (the optional Solo max timer remains authoritative if enabled).
 - Extended values are represented in the GameConfig wire schema, so game starts/turns use deterministic settings.
 
 ### Giant World constraints (Normal size)
