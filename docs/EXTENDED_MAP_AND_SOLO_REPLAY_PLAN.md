@@ -1,6 +1,6 @@
 # Extended maps, Solo victory and offline replay engineering
 
-Status: **source-only prototype, NOT yet run through the Mac test suite or new browser acceptance.** Work here is independent from upstream OpenFrontIO.
+Status (2026-10-18): **Offline Solo source recording code added, but NO Node 24 compile, test or browser verification on this PR head.** Work here is independent from upstream OpenFrontIO.
 
 ## Implemented in this branch
 
@@ -35,7 +35,7 @@ Original map: 4108×1948 = 8,002,384 tiles.
 5. Measure tick time, browser/GPU memory, frame rate, texture support and replay determinism on the target Mac.
 6. Keep the PR draft until tests and manual evidence exist.
 
-## Offline Solo replay / keep-playing architecture (not implemented)
+## Offline Solo replay / keep-playing architecture (source implemented, UNVERIFIED)
 
 ### Existing behavior found
 
@@ -44,7 +44,17 @@ Original map: 4108×1948 = 8,002,384 tiles.
 - The winner modal already has **Keep Playing** (or Spectate). The local turn producer does **not** stop merely because a winner was received, but `archived` / `archiveInFlight` prevents a newer, extended turn record being uploaded at exit. Consequently the win-time archive normally captures only turns through victory.
 - `src/client/replay/ReplayRecord.ts` fetches a `GameRecord` from the remote API. `ReplayViewer.ts` processes it locally and then uses `ReplayStore.ts`'s 256 MiB IndexedDB cache **for processed replays**, not for independent offline source records. The cache is not a Solo game-record library.
 
-### Proposed implementation and acceptance contract
+### New source implementation (not yet tested)
+
+- `src/client/replay/SoloRecordStore.ts`: separate IndexedDB source database, 64-tick immutable chunks and separate hash rows, serial atomic metadata writes, first victory tick, last tick, source build, incomplete/finished state, bounded 512 pending/in-flight turn buffer, 2-second checkpoints and best-effort visibility/pagehide flush.
+- `LocalServer.ts`: keeps the original remote win-time archive for compatibility while retaining a separate local extended recording, including all turns after Keep Playing. In-memory empty turns are sparse so long-running games do not hold a full object per tick. A rejoin materializes dense turns temporarily.
+- `ReplayRecord.ts` / `ReplayViewer.ts`: load local source before remote API/processed frame cache, avoid stale derived frames, enforce exact build compatibility for local replays.
+- `SoloReplayLibrary.ts` / `SinglePlayerModal.ts`: offline list, Watch, Delete, compressed JSON Export, Import, quota estimate; import capped at 2,000,000 turns and restricted to Solo. Export and replay decode still need large-session memory measurements.
+- `tests/client/replay/SoloRecordStore.test.ts`: first win + subsequent 1000 turns, late hashes, offline load, export/import, duplicate/build rejection and simulated quota failure. Written, **NOT RUN**.
+- Added visible full-map Fit map actions in HUD and replay viewer, fixed Solo default 80% forced 170-minute watchdog and added regression test. These still require actual UI and runtime checks.
+
+### Original proposed acceptance contract (open and unverified)
+
 
 - Add a separate `SoloRecordStore` in IndexedDB for validated, versioned **source turn logs**, with bounded batches/chunks and periodic checkpoints while playing; retain game start/config, seed, player identity/cosmetics, hashes, win event/win tick and end/last-processed tick.
 - At victory, mark an outcome/checkpoint **without freezing or deleting the turn log**. Keep simulation running if the player chooses Keep Playing; all subsequent turns must remain replayable until the player exits/closes the tab. Preserve the original winner and tick as the result, even when the replay extends past it.
@@ -53,4 +63,4 @@ Original map: 4108×1948 = 8,002,384 tiles.
 - Maintain separate `wonAtTick` / `lastRecordedTick` semantics; a win should not automatically terminate gameplay or recording; do not submit altered extended matches to ranked/public archives. Revisit the win-time API upload vs. final on-exit record lifecycle to avoid duplicate or misleading remote records.
 - Specify quotas for multi-hour 8x matches and avoid an unbounded turn array in RAM. Test no backend, browser/tab exit, refresh/crash, resumed viewing, quota full, replay beyond victory, 1x compatibility, cross-build rejection, server availability restoration and correct deletion/export.
 
-This requires a dedicated reviewed PR and tests; it must not be described as delivered by the multiplier patch.
+This source now belongs to draft PR #2, stacked on PR #1. Do not claim working, verified or released until actual Node 24, replay determinism and browser tests pass.
