@@ -209,12 +209,13 @@ export class SoloRecordJournal {
     private backend: SoloRecordBackend = soloRecordBackend(),
     private onError: (error: Error) => void = (e) => console.error("Solo replay storage failed", e),
     now: () => number = Date.now,
+    build: () => string = () => ClientEnv.gitCommit(),
   ) {
     this.now = now;
     this.meta = {
       gameID: startInfo.gameID,
       startInfo,
-      gitCommit: ClientEnv.gitCommit(),
+      gitCommit: build(),
       startedAt: now(), updatedAt: now(), lastRecordedTurn: -1,
       wonAtTick: null, finished: false, failed: false,
     };
