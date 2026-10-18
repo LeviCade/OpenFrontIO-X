@@ -189,6 +189,7 @@ export function recordFromSnapshot(snapshot: SoloRecordSnapshot): GameRecord {
 export class SoloRecordJournal {
   private meta: SoloRecordMeta;
   private pending: Turn[] = [];
+  private queuedTurns = 0;
   private pendingHashes = new Map<number, number>();
   private serial: Promise<void> = Promise.resolve();
   private timer: ReturnType<typeof setInterval> | null = null;
@@ -228,7 +229,7 @@ export class SoloRecordJournal {
 
   append(turn: Turn): void {
     if (this.stopped || this.failed) return;
-    if (this.pending.length >= MAX_PENDING_TURNS) {
+    if (this.pending.length + this.queuedTurns >= MAX_PENDING_TURNS) {
       this.fail(new Error("Offline replay writer is stalled; bounded turn buffer exhausted"));
       return;
     }
@@ -301,6 +302,7 @@ export class SoloRecordJournal {
         turns: batch.filter((t) => t.intents.length > 0),
       });
     }
+    this.queuedTurns += batch.length;
     this.serial = this.serial.then(async () => {
       if (this.failed) return;
       const committedTurn = Math.max(this.committedTurn, last);
@@ -313,6 +315,8 @@ export class SoloRecordJournal {
         this.committedTurn = committedTurn;
       } catch (err) {
         this.fail(err instanceof Error ? err : new Error(String(err)));
+      } finally {
+        this.queuedTurns -= batch.length;
       }
     });
   }
