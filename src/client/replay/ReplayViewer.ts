@@ -81,6 +81,7 @@ import { fetchReplayRecord, hasRecordedHashes } from "./ReplayRecord";
 import "./ReplayStatus";
 import type { Preparing } from "./ReplayStatus";
 import { replayStore } from "./ReplayStore";
+import { hasSoloRecord } from "./SoloRecordStore";
 import { ReplayTerrain } from "./ReplayTerrain";
 
 const WHEEL_ZOOM = 1.0015;
@@ -153,6 +154,8 @@ export class ReplayViewer extends LitElement {
   private base: ReplayBase | null = null;
   /** The replay on screen came from this browser's store. */
   private fromStore = false;
+  /** An offline source can grow after the initial win; never serve stale frame cache. */
+  private localSource = false;
   /** Worker results are applied one at a time, in order. */
   private applying: Promise<void> = Promise.resolve();
   /** What the HUD components read (ReplayGameAdapter). */
@@ -203,7 +206,9 @@ export class ReplayViewer extends LitElement {
    * redirected to that build's versioned shell.
    */
   private async open(): Promise<void> {
-    const stored = await replayStore.get(this.gameID);
+    this.localSource = typeof indexedDB !== "undefined" &&
+      await hasSoloRecord(this.gameID).catch(() => false);
+    const stored = this.localSource ? undefined : await replayStore.get(this.gameID);
     if (this.abort.signal.aborted) return;
     if (stored !== undefined) {
       this.fromStore = true;
@@ -225,6 +230,12 @@ export class ReplayViewer extends LitElement {
         this.fail(translateText("replay_viewer.unavailable_unreachable"));
         return;
       case "other_build": {
+        // IndexedDB is origin-local: redirecting a local replay to another
+        // build/host would lose its source. Report a build mismatch instead.
+        if (result.local) {
+          this.fail("This local Solo replay requires the build it was recorded with.");
+          return;
+        }
         const url = await versionedViewerUrl(this.gameID);
         if (this.abort.signal.aborted) return;
         if (url !== null) {
@@ -239,6 +250,7 @@ export class ReplayViewer extends LitElement {
     }
 
     const record = result.record;
+    this.localSource = result.local === true;
     this.gameLength = record.info.num_turns;
     this.unverified = !hasRecordedHashes(record);
     this.unverifiedNotice = this.unverified;
@@ -324,7 +336,9 @@ export class ReplayViewer extends LitElement {
 
   /** Keep a processed replay in this browser, so it opens at once next time. */
   private store(playback: ReplayPlayback): Promise<void> {
-    return replayStore.put(this.gameID, playback.data());
+    // Source may keep growing until the browser exits. Derived cached frames
+    // would otherwise hide newly recorded turns on next watch.
+    return this.localSource ? Promise.resolve() : replayStore.put(this.gameID, playback.data());
   }
 
   /** Show an error and offer the client-side replay. */
