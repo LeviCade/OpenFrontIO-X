@@ -149,6 +149,10 @@ export class LocalServer {
     if (this.lobbyConfig.gameStartInfo === undefined) {
       throw new Error("missing gameStartInfo");
     }
+    this.clientID = this.lobbyConfig.gameStartInfo.players[0]?.clientID;
+    if (!this.clientID) {
+      throw new Error("missing clientID");
+    }
     if (!this.isReplay) {
       this.soloJournal = new SoloRecordJournal(
         this.lobbyConfig.gameStartInfo,
@@ -159,10 +163,6 @@ export class LocalServer {
         },
       );
       this.soloJournal.begin();
-    }
-    this.clientID = this.lobbyConfig.gameStartInfo.players[0]?.clientID;
-    if (!this.clientID) {
-      throw new Error("missing clientID");
     }
     this.clientMessage({
       type: "start",
