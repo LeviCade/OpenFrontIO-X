@@ -1,5 +1,20 @@
 # OpenFrontIO-X engineering status
 
+## PR #2 SOURCE FEATURE CHECKPOINT — 2026-10-18 05:20 UTC
+
+| Deliverable | Current state | Evidence |
+| --- | --- | --- |
+| 1×–10× selector, area math and 64.1M guard | PREEXISTING / UNVERIFIED on PR #2 | Head branch originally at `a5951bd`; no Node24/browser tests performed |
+| Live + WebGL + replay full-map zoom floors | PREEXISTING / UNVERIFIED | Explicit Fit-map action added to HUD / replay viewer `8a76c57`, `3996fe9`, `b295aae`; no real pan/zoom test |
+| Solo 1–100% default 80 | PREEXISTING / UNVERIFIED | Fixed no-timer Solo 170min forced victory `e8d7019`; regression test `88a0731` |
+| Offline Solo source recording | IMPLEMENTED / UNTESTED | `SoloRecordStore.ts` chunked IndexedDB; hooked into LocalServer; separate delayed hashes; records continue post-win; 512-turn bounded pending/inflight backlog |
+| Offline library / replay viewer | IMPLEMENTED / UNTESTED | Solo modal lists local saves; watch/export gzip/import/delete/usage; renderer prioritizes local source, bypasses stale processed replay cache |
+| New tests | WRITTEN / NOT RUN | `tests/client/replay/SoloRecordStore.test.ts`: 1000 ticks incl win, delayed hash, roundtrip, quota, offline lookup |
+| Node/npm environment, install, full tests, typecheck, lint, build | BLOCKED | Runtime Node 22.16.0/npm 10.9.2 and git DNS blocked; Mac Node26 EBADENGINE at handoff. CI API returns zero repo workflow runs |
+| Browser gameplay, GPU/CPU benchmarks, 7×–10× safety, reproducible replays | NOT VERIFIED | No browser/game executable in current environment; only source inspection and GitHub commits |
+
+**Important remaining engineering:** Typecheck/lint/format/review on Node24, fix any test failures, independently verify source replay determinism beyond winner, 6×–10× browser memory/FPS, adjust instrumentation/recording failure UX. Export currently materializes one JSON string and replay viewing reconstructs turns in memory; both require measured large-file headroom. Periodic 2s flush is crash tolerant but cannot guarantee last ticks on killed tab. Mac worktrees remain untouched; PR #2 draft and unmerged.
+
 ## PR #2 ACTIVE ENGINEERING CHECKPOINT — 2026-10-18 05:01 UTC
 
 - **Branch:** `feature/extended-map-controls-solo-rules`, stacked on `feature/map-multiplier`, draft PR [#2](https://github.com/LeviCade/OpenFrontIO-X/pull/2). No merge or upstream write.
