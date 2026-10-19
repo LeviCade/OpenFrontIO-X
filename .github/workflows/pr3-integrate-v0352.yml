@@ -17,7 +17,7 @@ concurrency:
 
 jobs:
   integrate:
-    if: github.event.head_commit.message == 'ci(pr3): launch controlled v0.35.2 merge'
+    if: "github.event.head_commit.message == 'ci(pr3): launch controlled v0.35.2 merge'"
     runs-on: ubuntu-latest
     timeout-minutes: 25
     steps:
