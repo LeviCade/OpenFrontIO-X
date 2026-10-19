@@ -10,7 +10,11 @@ function makeSnapshot(): SoloRecordSnapshot {
   // Real journals flush early on victory, backgrounding, pagehide or timers.
   // Their chunk boundaries are not necessarily aligned to multiples of 64.
   const chunkEnds = [
-    63, 127, 191, 200, 255,
+    63,
+    127,
+    191,
+    200,
+    255,
     ...Array.from({ length: 12 }, (_, i) => Math.min(999, 319 + 64 * i)),
   ];
   return {
@@ -152,12 +156,18 @@ describe("optional private Solo cloud transfer contract", () => {
 
   it("refuses a missing early-flushed boundary, corrupt turn or duplicate hash", async () => {
     for (const mutate of [
-      (s: SoloRecordSnapshot) => { s.chunks[4].first++; },
-      (s: SoloRecordSnapshot) => { s.chunks[3].last = 265; },
+      (s: SoloRecordSnapshot) => {
+        s.chunks[4].first++;
+      },
+      (s: SoloRecordSnapshot) => {
+        s.chunks[3].last = 265;
+      },
       (s: SoloRecordSnapshot) => {
         s.chunks[3].turns[0].turnNumber = 201;
       },
-      (s: SoloRecordSnapshot) => { s.hashes.push({ ...s.hashes[0] }); },
+      (s: SoloRecordSnapshot) => {
+        s.hashes.push({ ...s.hashes[0] });
+      },
     ]) {
       const snapshot = makeSnapshot();
       mutate(snapshot);

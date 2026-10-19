@@ -10,7 +10,6 @@
 
 **Current follow-up CI:** [39318854003](https://github.com/LeviCade/OpenFrontIO-X/actions/runs/39318854003) has passed build and lint; formatting and generated-map consistency failed only because the newly edited `SoloCloudProtocol.test.ts` is not yet oxfmt-formatted. Existing sharded tests were still in progress at this checkpoint. Re-run formatter on PR #3 only, then obtain another actual **8/8 green** run; do not inherit prior-head passes. The cloud backend remains off by default, with no owned service or cross-device network retrieval operational. 10× Pangaea bounded CPU success remains; Giant World GPU/visual quality work is not verified.
 
-
 ## PR #3 IMPLEMENTATION + EXECUTABLE ACCEPTANCE — 2026-10-19
 
 **Active draft:** [PR #3](https://github.com/LeviCade/OpenFrontIO-X/pull/3), `feature/v0352-cloud-solo-10x` targeting draft PR #2, **unmerged**; main, official upstream and owner's Mac untouched.
