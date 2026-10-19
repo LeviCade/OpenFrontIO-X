@@ -96,6 +96,20 @@ export class SoloReplayLibrary extends LitElement {
     }
   }
 
+  private async copyReference(gameID: string, link: boolean): Promise<void> {
+    try {
+      const value = link
+        ? `${window.location.origin}/#replay-viewer=${encodeURIComponent(gameID)}`
+        : gameID;
+      await navigator.clipboard.writeText(value);
+      this.message = link
+        ? "Copied replay link. This replay is LOCAL ONLY: other devices cannot open it without an explicit import or future authenticated cloud sync."
+        : "Copied game ID. This replay is LOCAL ONLY and is not published online.";
+    } catch (error) {
+      this.message = "Copy failed: " + String(error);
+    }
+  }
+
   private async removeGame(gameID: string): Promise<void> {
     if (!window.confirm("Delete this local Solo replay permanently?")) return;
     this.busy = true;
@@ -118,7 +132,7 @@ export class SoloReplayLibrary extends LitElement {
         <div class="pt-3 space-y-3 text-sm">
           <p class="text-white/60">
             Offline, saved in this browser. Export important replays before
-            clearing site data. Current matches save incrementally; sudden
+            clearing site data. Game IDs and replay links work in THIS browser only until you explicitly export/import them or a privately owned cloud backend is configured. Current matches save incrementally; sudden
             shutdown may lose recent turns.
           </p>
           <p class="text-xs text-white/50">${this.storage}</p>
@@ -170,6 +184,20 @@ export class SoloReplayLibrary extends LitElement {
                       }}
                     >
                       Watch
+                    </button>
+                    <button
+                      ?disabled=${this.busy}
+                      class="rounded border border-white/30 px-3 py-1"
+                      @click=${() => void this.copyReference(game.gameID, false)}
+                    >
+                      Copy game ID
+                    </button>
+                    <button
+                      ?disabled=${this.busy}
+                      class="rounded border border-white/30 px-3 py-1"
+                      @click=${() => void this.copyReference(game.gameID, true)}
+                    >
+                      Copy replay link
                     </button>
                     <button
                       ?disabled=${this.busy}
