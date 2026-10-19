@@ -122,9 +122,7 @@ export async function syncSoloSnapshot(
     const { meta } = snapshot;
     if (meta.lastRecordedTurn < 0) throw new Error("No persisted turns");
     const chunks = [...snapshot.chunks].sort((a, b) => a.first - b.first);
-    const expectedCount = Math.ceil(
-      (meta.lastRecordedTurn + 1) / 64,
-    );
+    const expectedCount = Math.ceil((meta.lastRecordedTurn + 1) / 64);
     if (chunks.length !== expectedCount) {
       throw new Error("Local source journal has missing chunks");
     }
@@ -209,7 +207,8 @@ export async function syncSoloSnapshot(
     }
     if (meta.finished) {
       await retry(
-        () => backend.finish(session.uploadID, meta.gameID, meta.lastRecordedTurn),
+        () =>
+          backend.finish(session.uploadID, meta.gameID, meta.lastRecordedTurn),
         options,
       );
     }

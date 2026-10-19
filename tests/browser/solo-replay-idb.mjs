@@ -23,7 +23,9 @@ async function openFixture(context) {
   // Import the actual module in an isolated root-origin document instead.
   await page.evaluate(async () => {
     await import("/src/client/replay/SoloReplayLibrary.ts");
-    document.body.replaceChildren(document.createElement("solo-replay-library"));
+    document.body.replaceChildren(
+      document.createElement("solo-replay-library"),
+    );
   });
   return page;
 }
@@ -97,7 +99,9 @@ try {
   await page.reload();
   await page.evaluate(async () => {
     await import("/src/client/replay/SoloReplayLibrary.ts");
-    document.body.replaceChildren(document.createElement("solo-replay-library"));
+    document.body.replaceChildren(
+      document.createElement("solo-replay-library"),
+    );
   });
   const recovered = await page.evaluate(async (id) => {
     const { getSoloRecord, hasSoloRecord, listSoloRecords } =
@@ -160,9 +164,9 @@ try {
     buffer: await readFile(await download.path()),
   });
   await other.waitForFunction(() =>
-    document.querySelector("solo-replay-library")?.textContent?.includes(
-      "Replay imported.",
-    ),
+    document
+      .querySelector("solo-replay-library")
+      ?.textContent?.includes("Replay imported."),
   );
   const imported = await other.evaluate(async (id) => {
     const { getSoloRecord, listSoloRecords } =
@@ -182,8 +186,12 @@ try {
   });
   await second.close();
   await first.close();
-  console.log("PASS: Chromium IndexedDB 1000 turns, win at 200, continued capture, exit/reload, local lookup, gzip export/import and second-profile isolation");
-  console.log("LIMIT: Deterministic source-turn fixture; no game engine playback or real Solo HUD win flow exercised");
+  console.log(
+    "PASS: Chromium IndexedDB 1000 turns, win at 200, continued capture, exit/reload, local lookup, gzip export/import and second-profile isolation",
+  );
+  console.log(
+    "LIMIT: Deterministic source-turn fixture; no game engine playback or real Solo HUD win flow exercised",
+  );
 } finally {
   await browser.close();
 }
