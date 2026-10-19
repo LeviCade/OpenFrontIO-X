@@ -193,3 +193,7 @@ See `docs/MAP_MULTIPLIER_TEST_PLAN.md`. Start by checking `git remote -v` for **
 - Project `oxfmt` and generated maps consistency currently flag **newly authored docs/UI files**; a final one-shot formatting pass is required after the implementation freeze, then a human-app-authored commit must trigger CI on final head. Do not claim 8/8 green until real run completes.
 - Separate mandatory PR milestone governance failure: existing PR #3 lacks assigned milestone; do not bypass this rule or prematurely merge. Main, PR1/PR2 and Mac checkout unchanged.
 - **Not done:** official production API cannot serve new saves; no owned service deployed, no cross-device backend, no full user-driven victory → post-win replay-renderer proof, no GPU measured and no high-detail 10× Giant World implementation. All protection caps retained.
+
+## 2026-10-19 — Post-format final CI trigger
+
+- [PR3 formatter run 39315393701](https://github.com/LeviCade/OpenFrontIO-X/actions/runs/39315393701) **PASS**: `npm run format`, `npm run format:check`, `git diff --check`, and automatic removal of the one-shot contents-write workflow. Formatter commit `8113cde2e5da47ced4dce7b0e92af1618ffff523`. This ordinary GitHub-authored devlog checkpoint triggers fresh CI on the final formatted feature tree; its check results must be read from GitHub before considering the PR ready.
