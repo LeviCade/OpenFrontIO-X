@@ -1,5 +1,14 @@
 # OpenFrontIO-X engineering status
 
+## PR #3 v0.35.2 OFFICIAL TAG MERGED — 2026-10-19 19:30 UTC
+
+**Verified merge commit** `c558732504a7c460d328ea23d60ca2be25d7b067` on `feature/v0352-cloud-solo-10x`, executed by [GitHub Actions run 39311331279](https://github.com/LeviCade/OpenFrontIO-X/actions/runs/39311331279) (integrate job **success**).
+- Explicitly fetched official **tag** `v0.35.2` at `08b63c054897c030e6516e0731ab7cc62b2998b7`, never upstream main.
+- Confirmed merge base `dfd420fd7836ae023504a9440d9d68897745b7b4`. Actual `git merge --no-commit --no-ff` merged 31 upstream paths, including an **automatic, conflict-free merge** in `src/server/GameServer.ts`; custom MapMultiplier, SoloRecordStore/Library, LocalServer flags survived. Committed and pushed the genuine two-parent merge. No upstream writes.
+- The merge-push's automated PR checks initially show `action_required` (GitHub-generated commit actor); **NOT a pass**. A subsequent human-app-authored docs change will trigger new CI on the integrated branch. Do not merge until actual passing CI/build and subsequent browser acceptance. Governance milestone gate remains separate and unresolved.
+- **Next:** CI on the merged head, repair actual failures, then Playwright real-browser Solo flow and owned-cloud-backend identification; 10× performance remains unproven.
+
+
 ## PR #3 ENGINEERING TAKEOVER — 2026-10-19 19:22 UTC
 
 **Scope:** Only draft [PR #3](https://github.com/LeviCade/OpenFrontIO-X/pull/3), branch `feature/v0352-cloud-solo-10x`. Preserve draft PR #1/#2, owner Mac checkout and official upstream (read-only).
