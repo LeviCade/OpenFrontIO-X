@@ -11,7 +11,7 @@ import { chromium } from "playwright";
 const url = process.env.SOLO_BROWSER_URL ?? "http://127.0.0.1:9000/";
 const browser = await chromium.launch({
   headless: true,
-  executablePath: process.env.CHROME_BIN || "/usr/bin/google-chrome",
+  executablePath: process.env.CHROME_BIN ?? "/usr/bin/google-chrome",
   args: ["--no-sandbox"],
 });
 
