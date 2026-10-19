@@ -1,0 +1,45 @@
+# One-time formatting repair following the exact upstream merge.
+# Removes both elevated-permission temporary workflows before pushing.
+name: PR3 format merged source and retire elevated workflows
+on:
+  push:
+    branches:
+      - feature/v0352-cloud-solo-10x
+    paths:
+      - .github/workflows/pr3-format-once.yml
+
+permissions:
+  contents: write
+
+jobs:
+  format-once:
+    if: "github.event.head_commit.message == 'ci(pr3): format merged source tree'"
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: feature/v0352-cloud-solo-10x
+          persist-credentials: true
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "24"
+          cache: "npm"
+      - name: Setup pinned npm and project dependencies
+        run: |
+          npm install --global --ignore-scripts npm@12.1.0
+          npm ci --ignore-scripts
+      - name: Apply project formatter, then retire write-enabled workflows
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm run format
+          rm -f .github/workflows/pr3-integrate-v0352.yml
+          rm -f .github/workflows/pr3-format-once.yml
+          git diff --check
+          git status --short
+          git add -u
+          git config user.name "openfrontio-x-pr3-ci"
+          git config user.email "147657883+LeviCade@users.noreply.github.com"
+          git commit -m "style(pr3): format v0.35.2 integration and retire temporary workflows"
+          git push origin HEAD:refs/heads/feature/v0352-cloud-solo-10x
