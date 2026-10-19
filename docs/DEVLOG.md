@@ -153,3 +153,9 @@ See `docs/MAP_MULTIPLIER_TEST_PLAN.md`. Start by checking `git remote -v` for **
 2. Verify offline Solo replay (win at 1%, 50%, exact 100%, custom + default 80%; continue 1000 turns, confirm original winner remains, then close/reopen, playback to last recorded tick, compare engine hashes, export/import), and cross-build, interrupted/quota scenarios.
 3. Performance stress smaller 1×–10× and Giant World 7/8 with FPS, p50/p95 tick, peak RSS, browser/GPU memory and real GPU texture limits; 9/10 Normal Giant must fail visibly under 64.1M cap.
 4. Commit exact output and screenshots/logs, then review PR #2 as draft stacked on PR1. Merge only after acceptance and distribution/asset audits.
+
+## 2026-10-19 19:22 UTC — PR #3 v0.35.2 engineering takeover
+- Read full V0352 engineering spec, AGENTS.md, PR #3 metadata, baseline status and existing CI. PR #3 draft targets PR #2; no upstream writes, PR1/PR2 edits, main merge or Mac worktree modifications.
+- Starting head `8c920ee4e63e403c06b2f9f19c68dc3a02204a4a`. Verified GitHub Actions core CI [39308402294](https://github.com/LeviCade/OpenFrontIO-X/actions/runs/39308402294) passed 8/8 jobs; independent gate [39308402293](https://github.com/LeviCade/OpenFrontIO-X/actions/runs/39308402293) failed because PR has no assigned milestone. This is a governance check and will not be bypassed.
+- Official read-only tag v0.35.2 `08b63c054897c030e6516e0731ab7cc62b2998b7`, six commits beyond fork's original `dfd420fd7836ae023504a9440d9d68897745b7b4`, 31 changed upstream paths. Baseline feature branch changed `src/server/GameServer.ts`; it is the only overlapping path (different hunks may auto-merge).
+- Current sandbox Node 22/npm10, git DNS unable to resolve github.com; use real Node24 GitHub Actions isolated checkout for upstream tag merge and tests. Work begins now; no upgraded features have been claimed verified.
