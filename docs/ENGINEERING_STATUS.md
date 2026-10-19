@@ -1,5 +1,16 @@
 # OpenFrontIO-X engineering status
 
+## PR #3 — CONNECTIVITY RESUMED AND EARLY-FLUSH UPLOAD BUG FIXED (2026-10-19)
+
+**Validated previously published head:** `a18c1d82b4b2cf303e0aa24894e395048f9949d0` passed all eight core jobs on [CI run 39315729226](https://github.com/LeviCade/OpenFrontIO-X/actions/runs/39315729226), all three benchmarks on [39315727742](https://github.com/LeviCade/OpenFrontIO-X/actions/runs/39315727742) and real Chromium on [39315727486](https://github.com/LeviCade/OpenFrontIO-X/actions/runs/39315727486). Governance PR check [39315727610](https://github.com/LeviCade/OpenFrontIO-X/actions/runs/39315727610) separately fails because PR lacks an assigned milestone. PR #1/#2/#3 remain draft/unmerged; official upstream and owner's Mac untouched.
+
+**New source defect confirmed by inspection, then repaired:** `SoloRecordJournal` flushes 1–64 turn source chunks whenever its timer, victory, pagehide or visibility trigger fires; these chunk boundaries are **not** aligned to fixed global 64-turn indices. Previous `syncSoloSnapshot` incorrectly required `first === index * 64`, rejecting normal winning-time or backgrounded games. New `src/client/replay/SoloCloudProtocol.ts` validation accepts immutable **consecutive variable-boundary 1–64 turn chunks**, and checks game ID, bounds, missing/overlapping ranges, sparse turn ordering, duplicate/invalid late hashes and watermark consistency. Mock resumable backend tests now include win at 200, upload before final exit, later resume through turn 999, retry after lost acknowledgement, and corrupt-journal refusal.
+
+**PASS — real Chromium [39318854010](https://github.com/LeviCade/OpenFrontIO-X/actions/runs/39318854010):** the expanded browser test feeds actual persisted early-flush IndexedDB chunks through the optional cloud-sync contract, with a simulated owner-authorized backend (no upstream/network/cloud writes), along with its earlier replay retrieval/export/import test. The full real UI first-win→Keep Playing→replay-renderer proof is STILL not executed.
+
+**Current follow-up CI:** [39318854003](https://github.com/LeviCade/OpenFrontIO-X/actions/runs/39318854003) has passed build and lint; formatting and generated-map consistency failed only because the newly edited `SoloCloudProtocol.test.ts` is not yet oxfmt-formatted. Existing sharded tests were still in progress at this checkpoint. Re-run formatter on PR #3 only, then obtain another actual **8/8 green** run; do not inherit prior-head passes. The cloud backend remains off by default, with no owned service or cross-device network retrieval operational. 10× Pangaea bounded CPU success remains; Giant World GPU/visual quality work is not verified.
+
+
 ## PR #3 IMPLEMENTATION + EXECUTABLE ACCEPTANCE — 2026-10-19
 
 **Active draft:** [PR #3](https://github.com/LeviCade/OpenFrontIO-X/pull/3), `feature/v0352-cloud-solo-10x` targeting draft PR #2, **unmerged**; main, official upstream and owner's Mac untouched.
