@@ -1,5 +1,17 @@
 # OpenFrontIO-X engineering status
 
+## PR #3 ENGINEERING TAKEOVER — 2026-10-19 19:22 UTC
+
+**Scope:** Only draft [PR #3](https://github.com/LeviCade/OpenFrontIO-X/pull/3), branch `feature/v0352-cloud-solo-10x`. Preserve draft PR #1/#2, owner Mac checkout and official upstream (read-only).
+
+**Starting head:** `8c920ee4e63e403c06b2f9f19c68dc3a02204a4a`; baseline is PR #2 head `5845afa73b9ccaea89f7029827618eca71ae4c44`.
+**Verified initial CI:** [run 39308402294](https://github.com/LeviCade/OpenFrontIO-X/actions/runs/39308402294): all eight core CI jobs **success** (build, 3 Vitest shards+rollup, formatting, lint, generated maps). Separate [run 39308402293](https://github.com/LeviCade/OpenFrontIO-X/actions/runs/39308402293) fails the required **PR milestone policy**, not code; reviewer must assign milestone before merging. Do not disable the policy.
+
+**Exact upstream tag confirmed:** `openfrontio/OpenFrontIO` v0.35.2 -> `08b63c054897c030e6516e0731ab7cc62b2998b7`, six commits after original fork `dfd420fd7836ae023504a9440d9d68897745b7b4`, 31 touched paths. Fork changes overlap only `src/server/GameServer.ts` by path. Current sandbox has Node 22/npm 10 and lacks GitHub DNS; GitHub-hosted Node24 CI is verified and will be used to merge/test.
+
+**Milestone state:** v0.35.2 integration **IN PROGRESS**; real browser Solo acceptance **NOT STARTED**; cloud owned-backend discovery **NOT STARTED**; 10× GPU/memory work **NOT STARTED**. No new feature claimed verified. Next: isolated CI runner exact-tag merge, inspect conflicts and CI, preserve all custom logic, then browser acceptance/backend analysis. No merge into main.
+
+
 ## PR #2 MAC VALIDATION AND CI ENABLEMENT — 2026-10-18
 
 **Current status (supersedes earlier unverified engineering-handoff checkpoints below):** Source at commit `4ac2554abbb4073576e8cd83d81a9a69eeb18775` was executed in the owner's separate detached `OpenFrontIO-X-extended` macOS worktree with **Node v24.22.0 / npm 12.1.0**. This is **real local test evidence**, not GitHub-hosted CI.
