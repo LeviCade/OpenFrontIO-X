@@ -14,7 +14,7 @@ export type SoloCloudState = "local_only" | "uploading" | "synced" | "failed";
 export interface SoloCloudBegin {
   /** Server-generated opaque upload capability tied to an authenticated owner. */
   uploadID: string;
-  /** Already durably committed 64-turn chunks, in order. */
+  /** Already durably committed immutable chunks, in order; ranges can end early. */
   nextChunk: number;
 }
 
@@ -36,7 +36,7 @@ export interface SoloCloudBackend {
    */
   begin(meta: SoloRecordMeta, manifestDigest: string): Promise<SoloCloudBegin>;
   /**
-   * Commit a chunk in a transaction with conditional sequence advancement.
+   * Commit a consecutive 1–64 turn-range chunk in a transaction with conditional sequence advancement.
    * Re-uploading an identical chunk is idempotent, changed bytes are rejected.
    * Acknowledgment must represent durable, contiguous server storage.
    */
@@ -121,17 +121,57 @@ export async function syncSoloSnapshot(
   try {
     const { meta } = snapshot;
     if (meta.lastRecordedTurn < 0) throw new Error("No persisted turns");
+    // IndexedDB journal chunks are immutable, but NOT globally 64-aligned:
+    // victory, visibility/pagehide and the two-second timer flush early.
+    // Every chunk covers a consecutive range of at most 64 logical turns,
+    // with sparse commands inside (idle turns are reconstructed by watermark).
+    if (!Number.isSafeInteger(meta.lastRecordedTurn)) {
+      throw new Error("Invalid Solo replay last-turn watermark");
+    }
     const chunks = [...snapshot.chunks].sort((a, b) => a.first - b.first);
-    const expectedCount = Math.ceil((meta.lastRecordedTurn + 1) / 64);
-    if (chunks.length !== expectedCount) {
+    let expectedFirst = 0;
+    for (const chunk of chunks) {
+      if (
+        chunk.gameID !== meta.gameID ||
+        !Number.isSafeInteger(chunk.first) ||
+        !Number.isSafeInteger(chunk.last) ||
+        chunk.first !== expectedFirst ||
+        chunk.last < chunk.first ||
+        chunk.last - chunk.first >= 64 ||
+        chunk.last > meta.lastRecordedTurn
+      ) {
+        throw new Error("Local source journal has missing or invalid chunks");
+      }
+      let previousTurn = chunk.first - 1;
+      for (const turn of chunk.turns) {
+        if (
+          !Number.isSafeInteger(turn.turnNumber) ||
+          turn.turnNumber <= previousTurn ||
+          turn.turnNumber > chunk.last ||
+          !Array.isArray(turn.intents)
+        ) {
+          throw new Error("Local source journal has invalid sparse turns");
+        }
+        previousTurn = turn.turnNumber;
+      }
+      expectedFirst = chunk.last + 1;
+    }
+    if (expectedFirst !== meta.lastRecordedTurn + 1) {
       throw new Error("Local source journal has missing chunks");
     }
-    for (let i = 0; i < chunks.length; i++) {
-      const first = i * 64;
-      const last = Math.min(first + 63, meta.lastRecordedTurn);
-      if (chunks[i].first !== first || chunks[i].last !== last) {
-        throw new Error("Local source journal has missing or reordered turns");
+    const seenHashes = new Set<number>();
+    for (const item of snapshot.hashes) {
+      if (
+        item.gameID !== meta.gameID ||
+        !Number.isSafeInteger(item.turn) ||
+        item.turn < 0 ||
+        item.turn > meta.lastRecordedTurn ||
+        !Number.isFinite(item.hash) ||
+        seenHashes.has(item.turn)
+      ) {
+        throw new Error("Local source journal has invalid hash entries");
       }
+      seenHashes.add(item.turn);
     }
     // UpdatedAt, per-session network state and extended watermark are NOT
     // part of the immutable manifest; first winner/tick and config are.
