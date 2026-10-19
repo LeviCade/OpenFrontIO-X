@@ -167,3 +167,29 @@ See `docs/MAP_MULTIPLIER_TEST_PLAN.md`. Start by checking `git remote -v` for **
 - Real `git merge --no-commit --no-ff` automatically combined `src/server/GameServer.ts` without conflict, merged 31 upstream-changed paths while maintaining presence of fork map/solo modules. `git diff --cached --check` passed, two-parent commit `c558732504a7c460d328ea23d60ca2be25d7b067` pushed ONLY to PR3.
 - Initial integration workflow YAML `84743d0` failed before jobs due to an unquoted YAML scalar containing colon; corrected `1f01234`; next workflow succeeded. This is actual failure/debug evidence, not silently discarded.
 - GitHub generated-actor merge CI initially `action_required`. New docs commit will request regular PR CI on merged code. No post-merge TypeScript/Vitest/browser acceptance yet.
+
+## 2026-10-19 — PR #3 real-browser, private cloud contract and bounded 10× benchmark checkpoint
+
+### Actual successful runs
+
+- [39311331279](https://github.com/LeviCade/OpenFrontIO-X/actions/runs/39311331279): **PASS**, isolated genuine merge of tag v0.35.2 (SHA `08b63c054897c030e6516e0731ab7cc62b2998b7`) onto fork, merge commit `c558732504a7c460d328ea23d60ca2be25d7b067`; `GameServer.ts` auto-merged without conflicts. PR1/PR2 modules preserved.
+- [39312933139](https://github.com/LeviCade/OpenFrontIO-X/actions/runs/39312933139): **PASS**, real Chrome/IndexedDB 1,000 synthetic turns after first win at 200, delayed hash from turn 100, persisted turn 999 through reload; game ID retrieval and gzip export/import into second isolated browser profile; local-only privacy. Follow-up [39314027037](https://github.com/LeviCade/OpenFrontIO-X/actions/runs/39314027037) browser run **PASS**.
+- [39314845914](https://github.com/LeviCade/OpenFrontIO-X/actions/runs/39314845914): **PASS**, actual Pangaea game-core 64-tick headless Ubuntu benchmark, seed `pr3-pangaea-identical`, 10 bots/nations disabled: **1×** p95 1.76ms, RSS final 165 MiB; **4×** p95 1.63ms, RSS 188 MiB; **10×** p95 1.53ms, RSS 227 MiB. All 0/64 ticks >100ms. Different RNG hashes per map size expected; no GPU/FPS/long-fight inference.
+- [39313372741](https://github.com/LeviCade/OpenFrontIO-X/actions/runs/39313372741): **PASS**, real project-wide oxfmt and removal of temporary contents-write merge/format workflows; the later new files will require another formatting pass.
+
+### Implementation
+
+- Browser fixture `tests/browser/solo-replay-idb.mjs` and persistent CI workflow `.github/workflows/pr3-solo-browser.yml` (Node24/npm12/Chromium).
+- `src/client/replay/SoloCloudProtocol.ts` introduces **NO DEFAULT NETWORK** owner-authenticated resumable source upload abstraction; idempotent indexed chunks and separate delayed hash events, SHA256, max chunk size, bounded retry and local-only fallback. `tests/client/replay/SoloCloudProtocol.test.ts` tests mocked backend functionality. No actual hosted backend verified; do not redirect to the official OpenFront API. Detailed threat model in `docs/PR3_CLOUD_BACKEND_AND_10X_SPIKE.md`.
+- `SoloReplayLibrary.ts` now copies stable game ID/replay link with visible **local only** warning; cross-device requires explicit export/import until a user-controlled service exists.
+- `packages/engine-lib/src/game/TextureChunkPlan.ts` pure GPU-safe texture/halo tile plan, and `tests/TextureChunkPlan.test.ts` seam/limit/geometry test. NOT enabled in renderer.
+- `.github/workflows/pr3-map-perf.yml` samples actual deterministic Pangaea 1×/4×/10× CPU, RSS, p95. Does not bypass 64.1M-tile safety cap or imply high-quality Giant World support.
+
+### Debug and remaining blockers
+
+- One-shot merge workflow initial YAML colon not quoted, resulted in zero jobs; fixed and reran to success. Initial browser fixture path was swallowed by Vite root routing; fixed to load source ES modules on root origin; then Chromium passed.
+- SoloCloudProtocol initial `await` inside non-async callback triggered TS1308; computed SHA before lambda and build passed. Browser script `||` triggered oxlint; changed to `??`. ESLint TypeScript project service originally excluded `tests/browser/*.mjs`; added path to allowDefaultProject.
+- Initial 1×/4×/10× footprint matrix all failed because Node `gc()` unavailable; added `--expose-gc`; corrected matrix then passed all three jobs.
+- Project `oxfmt` and generated maps consistency currently flag **newly authored docs/UI files**; a final one-shot formatting pass is required after the implementation freeze, then a human-app-authored commit must trigger CI on final head. Do not claim 8/8 green until real run completes.
+- Separate mandatory PR milestone governance failure: existing PR #3 lacks assigned milestone; do not bypass this rule or prematurely merge. Main, PR1/PR2 and Mac checkout unchanged.
+- **Not done:** official production API cannot serve new saves; no owned service deployed, no cross-device backend, no full user-driven victory → post-win replay-renderer proof, no GPU measured and no high-detail 10× Giant World implementation. All protection caps retained.
