@@ -177,13 +177,16 @@ describe("optional private Solo cloud transfer contract", () => {
     const backend = { ...fakeBackend().backend, begin };
     await expect(
       syncSoloSnapshot(snapshot, backend, { maxRetries: 0 }),
-    ).rejects.toThrow("missing chunks");
+    ).rejects.toThrow("missing or invalid chunks");
     expect(begin).not.toHaveBeenCalled();
   });
 
   it("keeps private-access errors visible and never claims a sync", async () => {
     const snapshot = makeSnapshot();
     snapshot.meta.gameID = "WRONGOWN";
+    snapshot.meta.startInfo.gameID = "WRONGOWN";
+    for (const chunk of snapshot.chunks) chunk.gameID = "WRONGOWN";
+    for (const hash of snapshot.hashes) hash.gameID = "WRONGOWN";
     const states: string[] = [];
     await expect(
       syncSoloSnapshot(snapshot, fakeBackend().backend, {
