@@ -96,6 +96,61 @@ try {
   assert.deepEqual(initial.winner, ["player", "client001"]);
   assert.equal(initial.hash, 1.25);
 
+  // Feed the *actual IndexedDB journal layout* to the optional sync layer.
+  // Keep the adapter entirely in-memory: NO public API, credentials, remote
+  // archive, or owner service is contacted in this acceptance test.
+  const journalTransfer = await page.evaluate(async (id) => {
+    const { soloRecordBackend } =
+      await import("/src/client/replay/SoloRecordStore.ts");
+    const { syncSoloSnapshot } =
+      await import("/src/client/replay/SoloCloudProtocol.ts");
+    const snapshot = await soloRecordBackend().read(id);
+    if (!snapshot) throw new Error("Actual IndexedDB journal is missing");
+    const uploaded = new Map();
+    const lateHashes = [];
+    let finalizedTurn = -1;
+    const adapter = {
+      async begin(meta, manifestDigest) {
+        if (meta.gameID !== id || manifestDigest.length !== 64)
+          throw new Error("Invalid mock owner session or manifest");
+        return { uploadID: "mock-private-owner", nextChunk: uploaded.size };
+      },
+      async putChunk(chunk) {
+        if (
+          chunk.uploadID !== "mock-private-owner" ||
+          chunk.gameID !== id ||
+          chunk.index !== uploaded.size
+        ) {
+          throw new Error("Non-contiguous or unauthorized source chunk");
+        }
+        uploaded.set(chunk.index, chunk);
+        return { nextChunk: uploaded.size };
+      },
+      async putHashes(_uploadID, gameID, hashes) {
+        if (gameID !== id) throw new Error("Wrong game");
+        lateHashes.push(...hashes);
+      },
+      async finish(_uploadID, gameID, lastTurn) {
+        if (gameID !== id) throw new Error("Wrong game");
+        finalizedTurn = lastTurn;
+      },
+    };
+    const state = await syncSoloSnapshot(snapshot, adapter);
+    return {
+      state,
+      chunks: uploaded.size,
+      expected: snapshot.chunks.length,
+      nonaligned: snapshot.chunks.some((chunk) => chunk.first % 64 !== 0),
+      hashes: lateHashes.length,
+      finalizedTurn,
+    };
+  }, gameID);
+  assert.equal(journalTransfer.state, "synced");
+  assert.equal(journalTransfer.chunks, journalTransfer.expected);
+  assert.equal(journalTransfer.nonaligned, true);
+  assert.equal(journalTransfer.hashes, 1);
+  assert.equal(journalTransfer.finalizedTurn, 999);
+
   await page.reload();
   await page.evaluate(async () => {
     await import("/src/client/replay/SoloReplayLibrary.ts");
