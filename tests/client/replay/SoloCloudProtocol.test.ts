@@ -7,6 +7,12 @@ import type { SoloRecordSnapshot } from "../../../src/client/replay/SoloRecordSt
 
 function makeSnapshot(): SoloRecordSnapshot {
   const gameID = "SOLOCLOUD";
+  // Real journals flush early on victory, backgrounding, pagehide or timers.
+  // Their chunk boundaries are not necessarily aligned to multiples of 64.
+  const chunkEnds = [
+    63, 127, 191, 200, 255,
+    ...Array.from({ length: 12 }, (_, i) => Math.min(999, 319 + 64 * i)),
+  ];
   return {
     meta: {
       gameID,
@@ -25,17 +31,15 @@ function makeSnapshot(): SoloRecordSnapshot {
         players: [],
       },
     },
-    chunks: Array.from({ length: 16 }, (_, i) => ({
-      gameID,
-      first: i * 64,
-      last: Math.min(999, i * 64 + 63),
-      turns: [
-        {
-          turnNumber: i * 64,
-          intents: [],
-        },
-      ],
-    })),
+    chunks: chunkEnds.map((last, i) => {
+      const first = i === 0 ? 0 : chunkEnds[i - 1] + 1;
+      return {
+        gameID,
+        first,
+        last,
+        turns: [{ turnNumber: first, intents: [] }],
+      };
+    }),
     hashes: [
       { gameID, turn: 100, hash: 123.5 },
       { gameID, turn: 900, hash: 456.25 },
@@ -89,7 +93,7 @@ function fakeBackend() {
       }
     },
     async finish(_uploadID, _gameID, lastTurn) {
-      if (stored.size !== 16) throw new Error("missing chunks");
+      if (stored.size !== 17) throw new Error("missing chunks");
       finishedAt = lastTurn;
     },
   };
@@ -117,14 +121,53 @@ describe("optional private Solo cloud transfer contract", () => {
         onState: (s) => states.push(s),
       }),
     ).toBe("synced");
-    expect(stored.size).toBe(16);
+    expect(stored.size).toBe(17);
     expect(hashes.get(100)).toBe(123.5);
     expect(hashes.get(900)).toBe(456.25);
     expect(getFinished()).toBe(999);
     expect(wait).toHaveBeenCalledTimes(1);
     expect(states).toEqual(["uploading", "synced"]);
     expect(await syncSoloSnapshot(makeSnapshot(), backend)).toBe("synced");
-    expect(stored.size).toBe(16);
+    expect(stored.size).toBe(17);
+  });
+
+  it("resumes an early winner checkpoint without rewriting uploaded chunks", async () => {
+    const { backend, stored, getFinished } = fakeBackend();
+    const first = makeSnapshot();
+    first.chunks = first.chunks.slice(0, 4);
+    first.hashes = first.hashes.filter((entry) => entry.turn <= 200);
+    first.meta.lastRecordedTurn = 200;
+    first.meta.finished = false;
+    expect(await syncSoloSnapshot(first, backend)).toBe("synced");
+    expect(stored.size).toBe(4);
+    expect(getFinished()).toBeUndefined();
+    const original = [...stored.entries()];
+    expect(await syncSoloSnapshot(makeSnapshot(), backend)).toBe("synced");
+    expect(stored.size).toBe(17);
+    expect(getFinished()).toBe(999);
+    for (const [index, checksum] of original) {
+      expect(stored.get(index)).toBe(checksum);
+    }
+  });
+
+  it("refuses a missing early-flushed boundary, corrupt turn or duplicate hash", async () => {
+    for (const mutate of [
+      (s: SoloRecordSnapshot) => { s.chunks[4].first++; },
+      (s: SoloRecordSnapshot) => { s.chunks[3].last = 265; },
+      (s: SoloRecordSnapshot) => {
+        s.chunks[3].turns[0].turnNumber = 201;
+      },
+      (s: SoloRecordSnapshot) => { s.hashes.push({ ...s.hashes[0] }); },
+    ]) {
+      const snapshot = makeSnapshot();
+      mutate(snapshot);
+      const begin = vi.fn();
+      const backend = { ...fakeBackend().backend, begin };
+      await expect(
+        syncSoloSnapshot(snapshot, backend, { maxRetries: 0 }),
+      ).rejects.toThrow(/Local source journal/);
+      expect(begin).not.toHaveBeenCalled();
+    }
   });
 
   it("rejects an incomplete local journal without uploading", async () => {
