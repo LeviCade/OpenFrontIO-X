@@ -12,6 +12,7 @@
 ## A. Incorporate official v0.35.2 first, without losing custom behavior
 
 **Verified comparison:** fork baseline main `dfd420fd7836ae023504a9440d9d68897745b7b4` exists in upstream history. Official tag [v0.35.2](https://github.com/openfrontio/OpenFrontIO/releases/tag/v0.35.2) targets `08b63c054897c030e6516e0731ab7cc62b2998b7`; `openfrontio/OpenFrontIO/compare/dfd420fd...v0.35.2` shows **6 commits ahead** of fork main, zero behind, with changes across 31 paths. These are:
+
 1. `8989303`: Antarctic tribe themes.
 2. `0273d3d`: hide store, Steam promos, and profile links on portals.
 3. `538d205`: latest clan tag on profile cards.
@@ -35,7 +36,7 @@
 
 ### Required product behavior
 
-1. A Solo game has ONE stable ID from start through first win, Keep Playing, exit, and playback. Show a **Copy game ID / Copy replay link** action. A successful *cloud* save must be openable by that ID on another supported device/build **subject to access permissions**. A local-only saved ID must say clearly that it is unavailable on other devices until synced.
+1. A Solo game has ONE stable ID from start through first win, Keep Playing, exit, and playback. Show a **Copy game ID / Copy replay link** action. A successful _cloud_ save must be openable by that ID on another supported device/build **subject to access permissions**. A local-only saved ID must say clearly that it is unavailable on other devices until synced.
 2. Preserve **first winner, first-win tick, all completed turn intents, periodic engine hashes, map name/size/multiplier, Solo rules, engine build ID, recorded last turn, timestamps**. After Keep Playing, uploading additional turns must **not** overwrite the first win, reduce watermark, or truncate older chunks.
 3. Use a robust upload protocol to an **owned/authorized backend**: authenticated owner + per-game authorization, versioned schema, bounded batches (e.g. 64-turn chunks), idempotent sequence numbers / content hashes, resumable upload acknowledgments, atomic server-side commit of contiguous chunks, bounded retries, offline backoff, and a finalize operation. Guard against forged IDs, malicious oversized inputs, rate abuse, cost explosion, and replay poisoning.
 4. Do **not** assume the official upstream `api.openfront.io` backend supports post-win mutation or our custom schema. Do NOT upload experimental records to production upstream as a hack. Evaluate storage options explicitly (self-hosted service/object store/database, credentials, quotas and retention), with a deploy and cost plan. If an owned backend isn't configured, keep a fully functional **local-first mode** with export/import and a truthful `Local only / Uploading / Synced / Failed` indicator.
@@ -50,7 +51,7 @@
 - `packages/engine-lib/src/game/MapMultiplier.ts` scales destination width/height approximately by `sqrt(areaMultiplier)` using packed **nearest-neighbor** sampling and recomputed coast flags. This increases tile count but **does not invent new geographic detail**.
 - `MAX_MULTIPLIED_MAP_TILES = 64_100_000`. The current code says 8× Giant World occupies ~64.02M tiles, so 9×–10× Giant World Normal is intentionally refused. Keep a safety guard until measured memory and GPU safety permits a carefully designed replacement.
 - Physical camera/render/WebGL textures, minimap/pathfinding, simulation arrays, bot AI, asset coordinates and snapshot/replay all depend on this grid. A larger allocation or relaxed cap does not guarantee safe performance.
-- **Definition:** 10× is *10 times total map area*, NOT 10 times each axis (which would be 100× area). Confirm this is the intended product knob. Define separate **visual-quality** goals (smooth boundaries, clear coastlines, readable overlays at zoom) vs simulation resolution (number of logical tiles).
+- **Definition:** 10× is _10 times total map area_, NOT 10 times each axis (which would be 100× area). Confirm this is the intended product knob. Define separate **visual-quality** goals (smooth boundaries, clear coastlines, readable overlays at zoom) vs simulation resolution (number of logical tiles).
 
 ### Engineering spikes (measure before design choices)
 
@@ -73,7 +74,7 @@
 
 **Stage 1 — Upgrade only:** integrate six v0.35.2 commits into THIS feature branch; resolve conflicts; all CI green. Preserve PR1+PR2 baseline. Keep it draft.
 
-**Stage 2 — Reproduce live browser:** immediately run the existing Solo 2×/20% win/Keep Playing/exit/replay scenario on Mac so we know the old local-only path works *before* rewriting persistence. Record bugs and fix. Add browser integration smoke tests.
+**Stage 2 — Reproduce live browser:** immediately run the existing Solo 2×/20% win/Keep Playing/exit/replay scenario on Mac so we know the old local-only path works _before_ rewriting persistence. Record bugs and fix. Add browser integration smoke tests.
 
 **Stage 3 — Define and implement owned game-ID cloud replay storage:** write API/schema/auth/storage design, identify actual available backend and credentials; implement local-first uploader and cloud reader only where supported. Ensure owner privacy and first-win immutable semantics.
 
