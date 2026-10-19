@@ -8,8 +8,7 @@ import { readFile } from "node:fs/promises";
 import { gunzipSync } from "node:zlib";
 import { chromium } from "playwright";
 
-const url = process.env.SOLO_BROWSER_URL ??
-  "http://127.0.0.1:9000/tests/browser/solo-replay-idb.html";
+const url = process.env.SOLO_BROWSER_URL ?? "http://127.0.0.1:9000/";
 const browser = await chromium.launch({
   headless: true,
   executablePath: process.env.CHROME_BIN || "/usr/bin/google-chrome",
@@ -20,9 +19,12 @@ async function openFixture(context) {
   const page = await context.newPage();
   page.on("pageerror", (error) => console.error("PAGE ERROR:", error));
   await page.goto(url, { waitUntil: "domcontentloaded" });
-  await page.waitForFunction(
-    () => document.documentElement.dataset.soloFixture === "ready",
-  );
+  // Vite's html plugin replaces nested fixture HTML with its index page.
+  // Import the actual module in an isolated root-origin document instead.
+  await page.evaluate(async () => {
+    await import("/src/client/replay/SoloReplayLibrary.ts");
+    document.body.replaceChildren(document.createElement("solo-replay-library"));
+  });
   return page;
 }
 
@@ -93,9 +95,10 @@ try {
   assert.equal(initial.hash, 1.25);
 
   await page.reload();
-  await page.waitForFunction(
-    () => document.documentElement.dataset.soloFixture === "ready",
-  );
+  await page.evaluate(async () => {
+    await import("/src/client/replay/SoloReplayLibrary.ts");
+    document.body.replaceChildren(document.createElement("solo-replay-library"));
+  });
   const recovered = await page.evaluate(async (id) => {
     const { getSoloRecord, hasSoloRecord, listSoloRecords } =
       await import("/src/client/replay/SoloRecordStore.ts");
