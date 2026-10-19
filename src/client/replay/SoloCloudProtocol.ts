@@ -31,7 +31,7 @@ export interface SoloCloudChunk {
 export interface SoloCloudBackend {
   /**
    * Authenticated owner-only request. Must bind manifestDigest, game ID,
-   * build, first winner/tick and immutable configuration on first write.
+   * build and immutable configuration on first write; may set first winner/tick exactly once on later begin().
    * A resume MUST check owner and digest before returning the next cursor.
    */
   begin(meta: SoloRecordMeta, manifestDigest: string): Promise<SoloCloudBegin>;
@@ -41,6 +41,17 @@ export interface SoloCloudBackend {
    * Acknowledgment must represent durable, contiguous server storage.
    */
   putChunk(chunk: SoloCloudChunk): Promise<{ nextChunk: number }>;
+  /**
+   * Idempotent hashes keyed by turn; may arrive later than the turn chunk.
+   * The server must reject conflicting values, owner mismatches and uploads
+   * beyond its contiguous committed turn watermark.
+   */
+  putHashes(
+    uploadID: string,
+    gameID: string,
+    hashes: { turn: number; hash: number }[],
+    sha256: string,
+  ): Promise<void>;
   /**
    * Accessible only to the owner. Finalize never changes the first winner.
    * Rejects a watermark larger than the contiguous committed sequence.
@@ -132,8 +143,6 @@ export async function syncSoloSnapshot(
         gitCommit: meta.gitCommit,
         startInfo: meta.startInfo,
         startedAt: meta.startedAt,
-        wonAtTick: meta.wonAtTick,
-        winner: meta.winner,
       }),
     );
     const session = await retry(
@@ -152,19 +161,16 @@ export async function syncSoloSnapshot(
     while (next < chunks.length) {
       assertActive(options.signal);
       const chunk = chunks[next];
-      const payload = JSON.stringify({
-        turns: chunk.turns,
-        hashes: snapshot.hashes.filter(
-          (hash) =>
-            hash.turn >= chunk.first && hash.turn <= chunk.last,
-        ),
-      });
+      // Hashes are separate because an engine hash can arrive after the
+      // turn chunk was already uploaded and acknowledged.
+      const payload = JSON.stringify({ turns: chunk.turns });
       if (
         new TextEncoder().encode(payload).byteLength >
         SOLO_CLOUD_MAX_CHUNK_BYTES
       ) {
         throw new Error("Solo replay chunk is over the 1 MiB upload limit");
       }
+      const chunkHash = await sha256(payload);
       const ack = await retry(
         () =>
           backend.putChunk({
@@ -174,7 +180,7 @@ export async function syncSoloSnapshot(
             first: chunk.first,
             last: chunk.last,
             payload,
-            sha256: await sha256(payload),
+            sha256: chunkHash,
           }),
         options,
       );
@@ -182,6 +188,24 @@ export async function syncSoloSnapshot(
         throw new Error("Backend acknowledged a noncontiguous turn chunk");
       }
       next++;
+    }
+    const hashes = [...snapshot.hashes]
+      .filter((item) => item.turn <= meta.lastRecordedTurn)
+      .sort((a, b) => a.turn - b.turn);
+    for (let start = 0; start < hashes.length; start += 64) {
+      assertActive(options.signal);
+      const batch = hashes.slice(start, start + 64);
+      const hashDigest = await sha256(JSON.stringify(batch));
+      await retry(
+        () =>
+          backend.putHashes(
+            session.uploadID,
+            meta.gameID,
+            batch.map(({ turn, hash }) => ({ turn, hash })),
+            hashDigest,
+          ),
+        options,
+      );
     }
     if (meta.finished) {
       await retry(
