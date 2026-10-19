@@ -1,0 +1,11 @@
+<!doctype html>
+<html lang="en">
+  <head><meta charset="utf-8" /><title>Solo replay browser acceptance</title></head>
+  <body>
+    <main id="browser-test"><solo-replay-library></solo-replay-library></main>
+    <script type="module">
+      await import("/src/client/replay/SoloReplayLibrary.ts");
+      document.documentElement.dataset.soloFixture = "ready";
+    </script>
+  </body>
+</html>
