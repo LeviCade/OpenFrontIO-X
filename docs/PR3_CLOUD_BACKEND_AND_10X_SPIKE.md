@@ -18,15 +18,15 @@ Recommended independent architecture: **owned API + relational manifest store + 
 
 All endpoints below belong exclusively to a future authenticated OpenFrontIO-X-controlled origin (no published endpoint exists today).
 
-| Operation | Method + route | Constraints |
-| --- | --- | --- |
-| Begin/resume | `POST /v1/solo-replays/:gameID/uploads` | Verify active owner session, CSRF protection and manifest, mint opaque 256-bit upload capability, return durable next contiguous chunk number |
-| Immutable source chunk | `PUT /v1/solo-replays/:gameID/uploads/:uploadID/chunks/:index` | At most 64 logical turns and 1 MiB serialized; SHA-256; atomic database pointer only after private object-store write; same hash/sequence idempotent; different bytes rejected (409) |
-| Late hash batch | `PUT /v1/solo-replays/:gameID/uploads/:uploadID/hashes` | Hashes bound to committed tick range; same (tick, hash) accepted, changed hash rejected; never rewrite game commands |
-| Finalize | `POST /v1/solo-replays/:gameID/uploads/:uploadID/finalize` | Owner only; ensure contiguous full length and original first winner; idempotent |
-| List/read | `GET /v1/solo-replays`, `GET /v1/solo-replays/:gameID/manifest`, `GET /v1/solo-replays/:gameID/chunks/:index` | Private to owner, no public lookup, no guessing-based access, short-lived signed links only to authorized session |
-| Delete | `DELETE /v1/solo-replays/:gameID` | Owner or account-deletion flow; tombstone immediately, revoke capabilities, asynchronously purge blobs/backups per retention policy |
-| Explicit share/revoke | `POST /v1/solo-replays/:gameID/shares`, `DELETE /v1/solo-replays/:gameID/shares/:id` | Off by default, random 256-bit capability, optional TTL/revocation, avoid leaking via referrers/indexers/logs |
+| Operation              | Method + route                                                                                                | Constraints                                                                                                                                                                          |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Begin/resume           | `POST /v1/solo-replays/:gameID/uploads`                                                                       | Verify active owner session, CSRF protection and manifest, mint opaque 256-bit upload capability, return durable next contiguous chunk number                                        |
+| Immutable source chunk | `PUT /v1/solo-replays/:gameID/uploads/:uploadID/chunks/:index`                                                | At most 64 logical turns and 1 MiB serialized; SHA-256; atomic database pointer only after private object-store write; same hash/sequence idempotent; different bytes rejected (409) |
+| Late hash batch        | `PUT /v1/solo-replays/:gameID/uploads/:uploadID/hashes`                                                       | Hashes bound to committed tick range; same (tick, hash) accepted, changed hash rejected; never rewrite game commands                                                                 |
+| Finalize               | `POST /v1/solo-replays/:gameID/uploads/:uploadID/finalize`                                                    | Owner only; ensure contiguous full length and original first winner; idempotent                                                                                                      |
+| List/read              | `GET /v1/solo-replays`, `GET /v1/solo-replays/:gameID/manifest`, `GET /v1/solo-replays/:gameID/chunks/:index` | Private to owner, no public lookup, no guessing-based access, short-lived signed links only to authorized session                                                                    |
+| Delete                 | `DELETE /v1/solo-replays/:gameID`                                                                             | Owner or account-deletion flow; tombstone immediately, revoke capabilities, asynchronously purge blobs/backups per retention policy                                                  |
+| Explicit share/revoke  | `POST /v1/solo-replays/:gameID/shares`, `DELETE /v1/solo-replays/:gameID/shares/:id`                          | Off by default, random 256-bit capability, optional TTL/revocation, avoid leaking via referrers/indexers/logs                                                                        |
 
 Do not trust a `gameID` as authentication. Bind all records to an authoritative owner user ID; never accept ownerID, access tier, immutable config, build identity or winner changes from client-supplied update bodies. The browser's Solo engine is not an authoritative anti-cheat service, so identify imported replays as unverified user recordings rather than server-attested game results. Preserve original official archive and XP path exactly once, never double award.
 
@@ -40,12 +40,12 @@ Current nearest-neighbor scaler is deterministic and recomputes coast flags, but
 
 ### Concrete baseline derived from checked-in Giant World manifest
 
-| Giant World Normal area | Approximate source/destination | Logical cells | Safety status |
-| --- | --- | --- | --- |
-| 1× | 4,108 × 1,948 | 8,002,384 | Existing |
-| 8× | about 11,619 × 5,510 | about 64.0 million | Fits 64.1M guard, but GPU/memory NOT verified |
-| 9× | about 12,324 × 5,844 | about 72.0 million | Refused |
-| 10× | about 12,991 × 6,160 | about 80.0 million | Refused |
+| Giant World Normal area | Approximate source/destination | Logical cells      | Safety status                                 |
+| ----------------------- | ------------------------------ | ------------------ | --------------------------------------------- |
+| 1×                      | 4,108 × 1,948                  | 8,002,384          | Existing                                      |
+| 8×                      | about 11,619 × 5,510           | about 64.0 million | Fits 64.1M guard, but GPU/memory NOT verified |
+| 9×                      | about 12,324 × 5,844           | about 72.0 million | Refused                                       |
+| 10×                     | about 12,991 × 6,160           | about 80.0 million | Refused                                       |
 
 The engine's immutable packed terrain `Uint8Array` + ownership/state `Uint16Array` alone cost **3 bytes/cell**: at Giant 10×, at least **240 MB decimal** (~229 MiB), before independently held client/worker maps, transient scale buffers, WebGL textures, simulation caches, render layers, pathfinding, snapshot/replay and peak GC copies. The actual limit is significantly higher than 3 bytes/cell. On WebGL implementations with `MAX_TEXTURE_SIZE = 8192`, even the ~11.6k-wide 8× texture cannot be allocated as one texture; a 16,384-device may fit the dimension but still fail memory. The existing 64.1M CPU cap is necessary, not sufficient.
 

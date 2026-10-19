@@ -132,8 +132,10 @@ export class SoloReplayLibrary extends LitElement {
         <div class="pt-3 space-y-3 text-sm">
           <p class="text-white/60">
             Offline, saved in this browser. Export important replays before
-            clearing site data. Game IDs and replay links work in THIS browser only until you explicitly export/import them or a privately owned cloud backend is configured. Current matches save incrementally; sudden
-            shutdown may lose recent turns.
+            clearing site data. Game IDs and replay links work in THIS browser
+            only until you explicitly export/import them or a privately owned
+            cloud backend is configured. Current matches save incrementally;
+            sudden shutdown may lose recent turns.
           </p>
           <p class="text-xs text-white/50">${this.storage}</p>
           <label
@@ -188,7 +190,8 @@ export class SoloReplayLibrary extends LitElement {
                     <button
                       ?disabled=${this.busy}
                       class="rounded border border-white/30 px-3 py-1"
-                      @click=${() => void this.copyReference(game.gameID, false)}
+                      @click=${() =>
+                        void this.copyReference(game.gameID, false)}
                     >
                       Copy game ID
                     </button>
