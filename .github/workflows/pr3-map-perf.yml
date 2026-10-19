@@ -38,8 +38,8 @@ jobs:
           set -euo pipefail
           echo "Linux $(uname -a)" > profile.txt
           echo "Node $(node --version)" >> profile.txt
-          echo "Multipler ${MULTIPLIER} area, 64 game ticks, 10 bots" >> profile.txt
-          node --max-old-space-size=3584 --import tsx tests/perf/fullgame/FullGamePerf.ts \
+          echo "Multiplier ${MULTIPLIER} area, 64 game ticks, 10 bots" >> profile.txt
+          node --expose-gc --max-old-space-size=3584 --import tsx tests/perf/fullgame/FullGamePerf.ts \
             --map pangaea --multiplier "${MULTIPLIER}" --ticks 64 --bots 10 \
             --nations disabled --seed pr3-pangaea-identical \
             --no-cpu-profile --no-exec-profile --no-gc-profile --no-alloc-profile \
