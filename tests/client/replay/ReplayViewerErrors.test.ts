@@ -206,10 +206,10 @@ test("viewer loads the recorded 2× terrain rather than unscaled map files", asy
       base: {
         gameStartInfo: {
           config: {
-          gameMap: "onion",
-          gameMapSize: "normal",
-          mapAreaMultiplier: 2,
-        },
+            gameMap: "onion",
+            gameMapSize: "normal",
+            mapAreaMultiplier: 2,
+          },
         },
       },
       append: FIRST,
