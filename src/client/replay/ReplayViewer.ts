@@ -29,7 +29,7 @@ import {
 } from "../hud/layers/SettingsModal";
 import { MouseMoveEvent } from "../InputHandler";
 import { buildTerrainRowSpans } from "../render/frame/derive/TerrainRowSpans";
-import { uploadFrameData } from "../render/frame/Upload";
+import { uploadReplayFrame } from "./ReplayFrameUpload";
 import {
   applyGraphicsOverrides,
   createRenderSettings,
@@ -545,12 +545,7 @@ export class ReplayViewer extends LitElement {
       }
       if (seeked) nukedLayers.seek(fd.tick);
       else nukedLayers.advance(fd.tick);
-      uploadFrameData(view, fd);
-      // Live play deliberately staggers territory changes over render frames.
-      // Historical replay frames must instead present the entire tile delta
-      // together: otherwise border/fill updates lag behind the timeline and
-      // only look correct after a full-state seek.
-      if (!seeked) view.flushReplayTileDeltas();
+      uploadReplayFrame(view, fd, seeked);
       // Snap names after a seek instead of animating them there.
       if (seeked) {
         view.updateNames(
