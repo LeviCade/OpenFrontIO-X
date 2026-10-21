@@ -161,7 +161,12 @@ export async function processGameRecord(
   );
   // The map as the game starts, built from copies of the files, so the
   // engine can take the files over.
-  const { gameMap } = await loadTerrainMap(structuredClone(map));
+  // Reconstruct the same scaled grid used by the live game engine. The
+  // encoded tile references and terrain pixels must share one coordinate space.
+  const { gameMap } = await loadTerrainMap(
+    structuredClone(map),
+    gameStart.config.mapAreaMultiplier ?? 1,
+  );
   const encoder = new StreamingEncoder({
     mapWidth: gameMap.width(),
     mapHeight: gameMap.height(),
