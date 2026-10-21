@@ -5,8 +5,11 @@
  * A seek triggers a full tile-state upload, which already clears old drip
  * buckets; no extra flush is necessary there.
  */
-import { uploadFrameData, type FrameUploadTarget } from "../render/frame/Upload";
 import type { FrameData } from "../render/types";
+import {
+  uploadFrameData,
+  type FrameUploadTarget,
+} from "../render/frame/Upload";
 
 export interface ReplayFrameUploadTarget extends FrameUploadTarget {
   flushReplayTileDeltas(): void;
