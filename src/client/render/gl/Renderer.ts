@@ -718,6 +718,15 @@ export class GPURenderer {
     this.territoryPass.applyLiveDelta(tileState, changedTiles);
   }
 
+  /** Replays present complete historical frames, not live jitter-smoothed turns.
+   * Apply every queued territory tile before the next draw so borders and
+   * fills agree with the displayed replay tick, including at high speeds.
+   * Live multiplayer still uses the regular staggered tile drip.
+   */
+  flushReplayTileDeltas(): void {
+    this.territoryPass.flushAllDripBuckets();
+  }
+
   uploadLiveTrailDelta(
     trailState: Uint16Array,
     dirtyRowMin: number,
