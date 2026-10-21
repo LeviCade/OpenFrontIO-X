@@ -180,7 +180,11 @@ test("viewer loads the recorded 2× terrain rather than unscaled map files", asy
   vi.spyOn(ReplayPlayback, "open").mockResolvedValue({
     header: {
       gameStartInfo: {
-        config: { gameMap: "onion", gameMapSize: "normal", mapAreaMultiplier: 2 },
+        config: {
+          gameMap: "onion",
+          gameMapSize: "normal",
+          mapAreaMultiplier: 2,
+        },
       },
       mapWidth: 8,
       mapHeight: 4,
@@ -201,7 +205,11 @@ test("viewer loads the recorded 2× terrain rather than unscaled map files", asy
     v.start({
       base: {
         gameStartInfo: {
-          config: { gameMap: "onion", gameMapSize: "normal", mapAreaMultiplier: 2 },
+          config: {
+          gameMap: "onion",
+          gameMapSize: "normal",
+          mapAreaMultiplier: 2,
+        },
         },
       },
       append: FIRST,
