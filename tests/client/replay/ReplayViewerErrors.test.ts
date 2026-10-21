@@ -176,6 +176,41 @@ test("a stored replay is kept when something else fails (no WebGL, a download)",
   expect(replayStore.remove).not.toHaveBeenCalled();
 });
 
+test("viewer loads the recorded 2× terrain rather than unscaled map files", async () => {
+  vi.spyOn(ReplayPlayback, "open").mockResolvedValue({
+    header: {
+      gameStartInfo: {
+        config: { gameMap: "onion", gameMapSize: "normal", mapAreaMultiplier: 2 },
+      },
+      mapWidth: 8,
+      mapHeight: 4,
+      players: [],
+    },
+  } as unknown as ReplayPlayback);
+  // Deliberately return unscaled dimensions: the viewer must reject these
+  // before any map renderer can draw displaced/striped tile coordinates.
+  vi.mocked(loadCachedTerrainMap).mockResolvedValue({
+    gameMap: { width: () => 4, height: () => 4 },
+  } as unknown as Awaited<ReturnType<typeof loadCachedTerrainMap>>);
+
+  const element = new ReplayViewer();
+  const v = element as unknown as {
+    start(source: ReplayData): Promise<void>;
+  };
+  await expect(
+    v.start({
+      base: {
+        gameStartInfo: {
+          config: { gameMap: "onion", gameMapSize: "normal", mapAreaMultiplier: 2 },
+        },
+      },
+      append: FIRST,
+    } as ReplayData),
+  ).rejects.toThrow();
+  expect(loadCachedTerrainMap).toHaveBeenCalledWith("onion", "normal", 2);
+  expect(MapRenderer).not.toHaveBeenCalled();
+});
+
 test("closing the viewer while it starts creates no renderer", async () => {
   vi.mocked(replayStore.get).mockResolvedValue({
     base: { gameStartInfo: { config: {} } },
