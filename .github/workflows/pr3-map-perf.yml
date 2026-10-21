@@ -1,0 +1,54 @@
+name: PR3 bounded map-area CPU benchmark
+on:
+  pull_request:
+    paths:
+      - ".github/workflows/pr3-map-perf.yml"
+      - "packages/engine-lib/src/game/MapMultiplier.ts"
+      - "tests/perf/fullgame/FullGamePerf.ts"
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: pr3-map-perf-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  pangaea-matrix:
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.ref == 'feature/v0352-cloud-solo-10x'
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        multiplier: [1, 4, 10]
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "24"
+          cache: "npm"
+      - run: npm install --global --ignore-scripts npm@12.1.0
+      - run: npm ci --ignore-scripts
+      - name: Bounded deterministic game simulation and process-memory profiling
+        shell: bash
+        env:
+          MULTIPLIER: ${{ matrix.multiplier }}
+        run: |
+          set -euo pipefail
+          echo "Linux $(uname -a)" > profile.txt
+          echo "Node $(node --version)" >> profile.txt
+          echo "Multiplier ${MULTIPLIER} area, 64 game ticks, 10 bots" >> profile.txt
+          node --expose-gc --max-old-space-size=3584 --import tsx tests/perf/fullgame/FullGamePerf.ts \
+            --map pangaea --multiplier "${MULTIPLIER}" --ticks 64 --bots 10 \
+            --nations disabled --seed pr3-pangaea-identical \
+            --no-cpu-profile --no-exec-profile --no-gc-profile --no-alloc-profile \
+            --footprint 2>&1 | tee -a profile.txt
+      - name: Upload performance evidence
+        uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: pr3-pangaea-${{ matrix.multiplier }}x-headless
+          path: profile.txt
+          retention-days: 3
+          if-no-files-found: warn

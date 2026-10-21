@@ -8,6 +8,7 @@ const stub = vi.hoisted(() => ({
   constructed: 0,
   disposeArgs: [] as Array<{ releaseContext?: boolean } | undefined>,
   failConstruct: false,
+  replayFlushes: 0,
 }));
 
 vi.mock("../../src/client/render/gl/Renderer", () => ({
@@ -20,6 +21,9 @@ vi.mock("../../src/client/render/gl/Renderer", () => ({
       stub.disposeArgs.push(opts);
     }
     resize() {}
+    flushReplayTileDeltas() {
+      stub.replayFlushes++;
+    }
     setMapLayers() {}
     setLayerVisible() {}
     setLayerAlpha() {}
@@ -51,6 +55,7 @@ describe("MapRenderer context loss", () => {
     stub.constructed = 0;
     stub.disposeArgs = [];
     stub.failConstruct = false;
+    stub.replayFlushes = 0;
   });
 
   // A GPU-process crash is a recoverable loss, but only while the page leaves
@@ -66,6 +71,17 @@ describe("MapRenderer context loss", () => {
 
     expect(lost.defaultPrevented).toBe(true);
     expect(stub.disposeArgs).toEqual([{ releaseContext: false }]);
+    view.dispose();
+  });
+
+  it("forwards replay-only delta flushing without changing live tile uploads", () => {
+    const { view, canvas } = makeRenderer();
+    view.flushReplayTileDeltas();
+    expect(stub.replayFlushes).toBe(1);
+
+    canvas.dispatchEvent(new Event("webglcontextlost", { cancelable: true }));
+    view.flushReplayTileDeltas(); // no renderer during context loss
+    expect(stub.replayFlushes).toBe(1);
     view.dispose();
   });
 

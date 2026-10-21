@@ -6,7 +6,11 @@
  * against the hashes the "live" clients recorded.
  */
 
-import { GameMapType, GameMode } from "@openfront/engine-api/game/GameTypes";
+import {
+  GameMapType,
+  GameMode,
+  GameType,
+} from "@openfront/engine-api/game/GameTypes";
 import { WirePlayer } from "@openfront/shared/WireSchemas";
 import { PlayerTypeEnum } from "../../../../src/client/render/types";
 import { ReplayReader } from "../../../../src/client/replay/codec/decode/ReplayReader";
@@ -59,6 +63,42 @@ async function processWithTruth(
 }
 
 describe("replay processor", () => {
+  test("scaled 2× Solo replay uses the live game's terrain coordinate space", async () => {
+    const multiplier = 2;
+    const map = GameMapType.Onion;
+    const { record } = await playAndArchive({
+      gameID: "procMAP2X",
+      config: config({
+        gameMap: map,
+        gameType: GameType.Singleplayer,
+        mapAreaMultiplier: multiplier,
+        nations: "disabled",
+        bots: 2,
+      }),
+      players: [human(1)],
+      ticks: 35,
+      intents: (game, turn) =>
+        turn === 3 ? [spawnOnLand(game, "client001", 1000)] : [],
+    });
+
+    // This checks actual recorded live turns, hashes, tile positions and
+    // reconstructed replay frames instead of just mocking the loader.
+    const { replay, truth } = await processWithTruth(record);
+    expectReplayMatches({ replay, truth, frames: [] });
+
+    const header = openReader(replay).header;
+    const original = (await mapLoader.getMapData(map).manifest()).map;
+    expect(header.mapWidth).toBe(
+      Math.round(original.width * Math.sqrt(multiplier)),
+    );
+    expect(header.mapHeight).toBe(
+      Math.round(original.height * Math.sqrt(multiplier)),
+    );
+    expect(header.gameStartInfo).toMatchObject({
+      config: { mapAreaMultiplier: multiplier },
+    });
+  }, 60_000);
+
   test("FFA with humans, nations and bots: in sync, decodes to the live game", async () => {
     const [a, b] = [
       human(1, {

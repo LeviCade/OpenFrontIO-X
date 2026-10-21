@@ -153,3 +153,64 @@ See `docs/MAP_MULTIPLIER_TEST_PLAN.md`. Start by checking `git remote -v` for **
 2. Verify offline Solo replay (win at 1%, 50%, exact 100%, custom + default 80%; continue 1000 turns, confirm original winner remains, then close/reopen, playback to last recorded tick, compare engine hashes, export/import), and cross-build, interrupted/quota scenarios.
 3. Performance stress smaller 1×–10× and Giant World 7/8 with FPS, p50/p95 tick, peak RSS, browser/GPU memory and real GPU texture limits; 9/10 Normal Giant must fail visibly under 64.1M cap.
 4. Commit exact output and screenshots/logs, then review PR #2 as draft stacked on PR1. Merge only after acceptance and distribution/asset audits.
+
+## 2026-10-19 19:22 UTC — PR #3 v0.35.2 engineering takeover
+
+- Read full V0352 engineering spec, AGENTS.md, PR #3 metadata, baseline status and existing CI. PR #3 draft targets PR #2; no upstream writes, PR1/PR2 edits, main merge or Mac worktree modifications.
+- Starting head `8c920ee4e63e403c06b2f9f19c68dc3a02204a4a`. Verified GitHub Actions core CI [39308402294](https://github.com/LeviCade/OpenFrontIO-X/actions/runs/39308402294) passed 8/8 jobs; independent gate [39308402293](https://github.com/LeviCade/OpenFrontIO-X/actions/runs/39308402293) failed because PR has no assigned milestone. This is a governance check and will not be bypassed.
+- Official read-only tag v0.35.2 `08b63c054897c030e6516e0731ab7cc62b2998b7`, six commits beyond fork's original `dfd420fd7836ae023504a9440d9d68897745b7b4`, 31 changed upstream paths. Baseline feature branch changed `src/server/GameServer.ts`; it is the only overlapping path (different hunks may auto-merge).
+- Current sandbox Node 22/npm10, git DNS unable to resolve github.com; use real Node24 GitHub Actions isolated checkout for upstream tag merge and tests. Work begins now; no upgraded features have been claimed verified.
+
+## 2026-10-19 19:30 UTC — genuine upstream v0.35.2 merge completed
+
+- GitHub-hosted isolated Ubuntu job [39311331279](https://github.com/LeviCade/OpenFrontIO-X/actions/runs/39311331279) succeeded. Used actions/checkout@v7, git fetch official v0.35.2 tag, SHA assertion `08b63c054897c030e6516e0731ab7cc62b2998b7`, and confirmed merge base `dfd420fd7836ae023504a9440d9d68897745b7b4`.
+- Real `git merge --no-commit --no-ff` automatically combined `src/server/GameServer.ts` without conflict, merged 31 upstream-changed paths while maintaining presence of fork map/solo modules. `git diff --cached --check` passed, two-parent commit `c558732504a7c460d328ea23d60ca2be25d7b067` pushed ONLY to PR3.
+- Initial integration workflow YAML `84743d0` failed before jobs due to an unquoted YAML scalar containing colon; corrected `1f01234`; next workflow succeeded. This is actual failure/debug evidence, not silently discarded.
+- GitHub generated-actor merge CI initially `action_required`. New docs commit will request regular PR CI on merged code. No post-merge TypeScript/Vitest/browser acceptance yet.
+
+## 2026-10-19 — PR #3 real-browser, private cloud contract and bounded 10× benchmark checkpoint
+
+### Actual successful runs
+
+- [39311331279](https://github.com/LeviCade/OpenFrontIO-X/actions/runs/39311331279): **PASS**, isolated genuine merge of tag v0.35.2 (SHA `08b63c054897c030e6516e0731ab7cc62b2998b7`) onto fork, merge commit `c558732504a7c460d328ea23d60ca2be25d7b067`; `GameServer.ts` auto-merged without conflicts. PR1/PR2 modules preserved.
+- [39312933139](https://github.com/LeviCade/OpenFrontIO-X/actions/runs/39312933139): **PASS**, real Chrome/IndexedDB 1,000 synthetic turns after first win at 200, delayed hash from turn 100, persisted turn 999 through reload; game ID retrieval and gzip export/import into second isolated browser profile; local-only privacy. Follow-up [39314027037](https://github.com/LeviCade/OpenFrontIO-X/actions/runs/39314027037) browser run **PASS**.
+- [39314845914](https://github.com/LeviCade/OpenFrontIO-X/actions/runs/39314845914): **PASS**, actual Pangaea game-core 64-tick headless Ubuntu benchmark, seed `pr3-pangaea-identical`, 10 bots/nations disabled: **1×** p95 1.76ms, RSS final 165 MiB; **4×** p95 1.63ms, RSS 188 MiB; **10×** p95 1.53ms, RSS 227 MiB. All 0/64 ticks >100ms. Different RNG hashes per map size expected; no GPU/FPS/long-fight inference.
+- [39313372741](https://github.com/LeviCade/OpenFrontIO-X/actions/runs/39313372741): **PASS**, real project-wide oxfmt and removal of temporary contents-write merge/format workflows; the later new files will require another formatting pass.
+
+### Implementation
+
+- Browser fixture `tests/browser/solo-replay-idb.mjs` and persistent CI workflow `.github/workflows/pr3-solo-browser.yml` (Node24/npm12/Chromium).
+- `src/client/replay/SoloCloudProtocol.ts` introduces **NO DEFAULT NETWORK** owner-authenticated resumable source upload abstraction; idempotent indexed chunks and separate delayed hash events, SHA256, max chunk size, bounded retry and local-only fallback. `tests/client/replay/SoloCloudProtocol.test.ts` tests mocked backend functionality. No actual hosted backend verified; do not redirect to the official OpenFront API. Detailed threat model in `docs/PR3_CLOUD_BACKEND_AND_10X_SPIKE.md`.
+- `SoloReplayLibrary.ts` now copies stable game ID/replay link with visible **local only** warning; cross-device requires explicit export/import until a user-controlled service exists.
+- `packages/engine-lib/src/game/TextureChunkPlan.ts` pure GPU-safe texture/halo tile plan, and `tests/TextureChunkPlan.test.ts` seam/limit/geometry test. NOT enabled in renderer.
+- `.github/workflows/pr3-map-perf.yml` samples actual deterministic Pangaea 1×/4×/10× CPU, RSS, p95. Does not bypass 64.1M-tile safety cap or imply high-quality Giant World support.
+
+### Debug and remaining blockers
+
+- One-shot merge workflow initial YAML colon not quoted, resulted in zero jobs; fixed and reran to success. Initial browser fixture path was swallowed by Vite root routing; fixed to load source ES modules on root origin; then Chromium passed.
+- SoloCloudProtocol initial `await` inside non-async callback triggered TS1308; computed SHA before lambda and build passed. Browser script `||` triggered oxlint; changed to `??`. ESLint TypeScript project service originally excluded `tests/browser/*.mjs`; added path to allowDefaultProject.
+- Initial 1×/4×/10× footprint matrix all failed because Node `gc()` unavailable; added `--expose-gc`; corrected matrix then passed all three jobs.
+- Project `oxfmt` and generated maps consistency currently flag **newly authored docs/UI files**; a final one-shot formatting pass is required after the implementation freeze, then a human-app-authored commit must trigger CI on final head. Do not claim 8/8 green until real run completes.
+- Separate mandatory PR milestone governance failure: existing PR #3 lacks assigned milestone; do not bypass this rule or prematurely merge. Main, PR1/PR2 and Mac checkout unchanged.
+- **Not done:** official production API cannot serve new saves; no owned service deployed, no cross-device backend, no full user-driven victory → post-win replay-renderer proof, no GPU measured and no high-detail 10× Giant World implementation. All protection caps retained.
+
+## 2026-10-19 — Post-format final CI trigger
+
+- [PR3 formatter run 39315393701](https://github.com/LeviCade/OpenFrontIO-X/actions/runs/39315393701) **PASS**: `npm run format`, `npm run format:check`, `git diff --check`, and automatic removal of the one-shot contents-write workflow. Formatter commit `8113cde2e5da47ced4dce7b0e92af1618ffff523`. This ordinary GitHub-authored devlog checkpoint triggers fresh CI on the final formatted feature tree; its check results must be read from GitHub before considering the PR ready.
+
+## 2026-10-19 — Continuation after interrupted session; off-by-one/64 replay upload flaw
+
+- Recovery fact: previous final head `a18c1d82b4b2cf303e0aa24894e395048f9949d0` **passed 8/8 core CI** ([39315729226](https://github.com/LeviCade/OpenFrontIO-X/actions/runs/39315729226)), 3/3 Pangaea CPU benchmarks ([39315727742](https://github.com/LeviCade/OpenFrontIO-X/actions/runs/39315727742)), and Chromium source persistence ([39315727486](https://github.com/LeviCade/OpenFrontIO-X/actions/runs/39315727486)); only independent mandatory PR milestone check failed. PR3 still draft/staked onto PR2 and owner Mac untouched.
+- Inspected actual `SoloRecordJournal.flush` in `SoloRecordStore.ts`: flushed source ranges may be 0..63, 64..127, 128..191, 192..200 (winning-time checkpoint), 201..255, etc.; existing cloud `expectedFirst = index * 64` was wrong. It would reject ordinary persisted source after Keep Playing even though happy-path synthetic 64-grid tests passed.
+- Patch [`1c3edc1`](https://github.com/LeviCade/OpenFrontIO-X/commit/1c3edc1f75a9038a032abe694b9f56de38394ca1): validate actual immutable contiguous 1–64 turn ranges, source IDs, ordered sparse intent ticks, gap/overlap/corruption, finite unique hash rows. Never rewrite acknowledged chunks. Existing local-only behavior remains untouched.
+- Patch [`47c5ef4`](https://github.com/LeviCade/OpenFrontIO-X/commit/47c5ef452c1bfa6ab7170fbc9203846ecef49ca1): fake backend tests cover early checkpoint and later resumption, immutable digest and first winner, duplicate acknowledgement retry, malformed chunks and hashes.
+- Patch [`fd4b29f`](https://github.com/LeviCade/OpenFrontIO-X/commit/fd4b29f4618fee6e1c65f8b98634e59b55b18c1f): extended actual Chrome/IndexedDB test feeds _real source rows_ through the optional `syncSoloSnapshot` protocol to an in-memory owner-scoped backend; no outside networking. [Chromium run 39318854010](https://github.com/LeviCade/OpenFrontIO-X/actions/runs/39318854010) **PASS**.
+- New [CI 39318854003](https://github.com/LeviCade/OpenFrontIO-X/actions/runs/39318854003) has build+lint PASS, formatting FAIL in new `SoloCloudProtocol.test.ts`, generated-map consistency FAIL for the same formatting difference, and Vitest still running at checkpoint. Apply project formatter then launch fresh CI; do not mark newest head 8/8 until verified.
+- Boundaries: cloud tests still use in-memory fake; real authenticated owner database/object store, cross-device ID lookup, actual game UI win/Keep Playing and post-win renderer acceptance, Mac GPU stress, and true 10× Giant World are NOT COMPLETE. Draft only, no merge, no upstream writes.
+
+## 2026-10-19 — Exact failed regression diagnosis and formatter completion
+
+- [CI 39318854003](https://github.com/LeviCade/OpenFrontIO-X/actions/runs/39318854003): **build PASS, lint PASS, tests shards 1/3 + 3/3 PASS, shard 2/3 FAIL**. Only two new `SoloCloudProtocol.test.ts` expectations failed: obsolete `"missing chunks"` error substring and an "unauthorized" fixture that changed only metadata's game ID, now correctly caught as a local source ID mismatch before the fake server was called. Full Vitest rollup consequently failed; no evidence of a production defect in these two failures.
+- [Fix `5ac62b0`](https://github.com/LeviCade/OpenFrontIO-X/commit/5ac62b00059dd0d381f3b36b072e3085aba8b417): align error expectation and mutate metadata, config, stored chunks and hashes consistently to reach simulated unauthorized backend. Keep new stricter source integrity validation intact.
+- [One-shot formatter 39319538605](https://github.com/LeviCade/OpenFrontIO-X/actions/runs/39319538605) **SUCCESS**: Node 24/npm 12 `npm run format` plus `npm run format:check`, `git diff --check`, self-deletion of contents-write temporary workflow; pushed `2dfc38fdd639984bef61e5c5783eb87bc90b0075` ONLY to PR3. No temporary privileged workflow remains from this patch.
+- This app-authored documentation checkpoint is the intended trigger for new official CI checks on the formatted source. Do not mark these latest edits as full CI passed until actual jobs finish. Prior tested Green baseline on `a18c1d82` remains historical.

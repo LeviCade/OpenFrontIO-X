@@ -1,0 +1,261 @@
+/**
+ * Explicit, OFF-BY-DEFAULT contract for an independently owned Solo replay
+ * service. This module performs NO network requests unless a trusted backend
+ * implementation is provided by the application.
+ *
+ * The official OpenFront archive is NOT a SoloCloudBackend.
+ */
+import type { SoloRecordMeta, SoloRecordSnapshot } from "./SoloRecordStore";
+
+export const SOLO_CLOUD_MAX_CHUNK_BYTES = 1024 * 1024;
+export const SOLO_CLOUD_MAX_RETRIES = 4;
+export type SoloCloudState = "local_only" | "uploading" | "synced" | "failed";
+
+export interface SoloCloudBegin {
+  /** Server-generated opaque upload capability tied to an authenticated owner. */
+  uploadID: string;
+  /** Already durably committed immutable chunks, in order; ranges can end early. */
+  nextChunk: number;
+}
+
+export interface SoloCloudChunk {
+  uploadID: string;
+  index: number;
+  gameID: string;
+  first: number;
+  last: number;
+  payload: string;
+  sha256: string;
+}
+
+export interface SoloCloudBackend {
+  /**
+   * Authenticated owner-only request. Must bind manifestDigest, game ID,
+   * build and immutable configuration on first write; may set first winner/tick exactly once on later begin().
+   * A resume MUST check owner and digest before returning the next cursor.
+   */
+  begin(meta: SoloRecordMeta, manifestDigest: string): Promise<SoloCloudBegin>;
+  /**
+   * Commit a consecutive 1–64 turn-range chunk in a transaction with conditional sequence advancement.
+   * Re-uploading an identical chunk is idempotent, changed bytes are rejected.
+   * Acknowledgment must represent durable, contiguous server storage.
+   */
+  putChunk(chunk: SoloCloudChunk): Promise<{ nextChunk: number }>;
+  /**
+   * Idempotent hashes keyed by turn; may arrive later than the turn chunk.
+   * The server must reject conflicting values, owner mismatches and uploads
+   * beyond its contiguous committed turn watermark.
+   */
+  putHashes(
+    uploadID: string,
+    gameID: string,
+    hashes: { turn: number; hash: number }[],
+    sha256: string,
+  ): Promise<void>;
+  /**
+   * Accessible only to the owner. Finalize never changes the first winner.
+   * Rejects a watermark larger than the contiguous committed sequence.
+   */
+  finish(uploadID: string, gameID: string, lastTurn: number): Promise<void>;
+}
+
+export interface SyncOptions {
+  onState?: (state: SoloCloudState) => void;
+  retryWait?: (milliseconds: number) => Promise<void>;
+  signal?: AbortSignal;
+  maxRetries?: number;
+}
+
+function assertActive(signal?: AbortSignal): void {
+  if (signal?.aborted) throw new Error("Solo cloud upload aborted");
+}
+
+async function sha256(value: string): Promise<string> {
+  const digest = await crypto.subtle.digest(
+    "SHA-256",
+    new TextEncoder().encode(value),
+  );
+  return [...new Uint8Array(digest)]
+    .map((byte) => byte.toString(16).padStart(2, "0"))
+    .join("");
+}
+
+async function retry<T>(
+  work: () => Promise<T>,
+  options: SyncOptions,
+): Promise<T> {
+  const maxRetries = Math.min(
+    6,
+    Math.max(0, options.maxRetries ?? SOLO_CLOUD_MAX_RETRIES),
+  );
+  const wait =
+    options.retryWait ??
+    ((milliseconds: number) =>
+      new Promise<void>((resolve) => setTimeout(resolve, milliseconds)));
+  for (let attempt = 0; ; attempt++) {
+    assertActive(options.signal);
+    try {
+      return await work();
+    } catch (error) {
+      if (attempt >= maxRetries) throw error;
+      await wait(Math.min(15000, 300 * 2 ** attempt));
+    }
+  }
+}
+
+/**
+ * Synchronizes a committed local snapshot, never uncommitted pending turns.
+ * On reconnect, begin() discovers the authoritative durable sequence and
+ * skips previously acknowledged chunks. No credentials or endpoints here.
+ */
+export async function syncSoloSnapshot(
+  snapshot: SoloRecordSnapshot,
+  backend: SoloCloudBackend | null,
+  options: SyncOptions = {},
+): Promise<SoloCloudState> {
+  if (backend === null) {
+    options.onState?.("local_only");
+    return "local_only";
+  }
+  options.onState?.("uploading");
+  try {
+    const { meta } = snapshot;
+    if (meta.lastRecordedTurn < 0) throw new Error("No persisted turns");
+    // IndexedDB journal chunks are immutable, but NOT globally 64-aligned:
+    // victory, visibility/pagehide and the two-second timer flush early.
+    // Every chunk covers a consecutive range of at most 64 logical turns,
+    // with sparse commands inside (idle turns are reconstructed by watermark).
+    if (!Number.isSafeInteger(meta.lastRecordedTurn)) {
+      throw new Error("Invalid Solo replay last-turn watermark");
+    }
+    const chunks = [...snapshot.chunks].sort((a, b) => a.first - b.first);
+    let expectedFirst = 0;
+    for (const chunk of chunks) {
+      if (
+        chunk.gameID !== meta.gameID ||
+        !Number.isSafeInteger(chunk.first) ||
+        !Number.isSafeInteger(chunk.last) ||
+        chunk.first !== expectedFirst ||
+        chunk.last < chunk.first ||
+        chunk.last - chunk.first >= 64 ||
+        chunk.last > meta.lastRecordedTurn
+      ) {
+        throw new Error("Local source journal has missing or invalid chunks");
+      }
+      let previousTurn = chunk.first - 1;
+      for (const turn of chunk.turns) {
+        if (
+          !Number.isSafeInteger(turn.turnNumber) ||
+          turn.turnNumber <= previousTurn ||
+          turn.turnNumber > chunk.last ||
+          !Array.isArray(turn.intents)
+        ) {
+          throw new Error("Local source journal has invalid sparse turns");
+        }
+        previousTurn = turn.turnNumber;
+      }
+      expectedFirst = chunk.last + 1;
+    }
+    if (expectedFirst !== meta.lastRecordedTurn + 1) {
+      throw new Error("Local source journal has missing chunks");
+    }
+    const seenHashes = new Set<number>();
+    for (const item of snapshot.hashes) {
+      if (
+        item.gameID !== meta.gameID ||
+        !Number.isSafeInteger(item.turn) ||
+        item.turn < 0 ||
+        item.turn > meta.lastRecordedTurn ||
+        !Number.isFinite(item.hash) ||
+        seenHashes.has(item.turn)
+      ) {
+        throw new Error("Local source journal has invalid hash entries");
+      }
+      seenHashes.add(item.turn);
+    }
+    // UpdatedAt, per-session network state and extended watermark are NOT
+    // part of the immutable manifest; first winner/tick and config are.
+    const manifestDigest = await sha256(
+      JSON.stringify({
+        gameID: meta.gameID,
+        gitCommit: meta.gitCommit,
+        startInfo: meta.startInfo,
+        startedAt: meta.startedAt,
+      }),
+    );
+    const session = await retry(
+      () => backend.begin(meta, manifestDigest),
+      options,
+    );
+    if (
+      !Number.isSafeInteger(session.nextChunk) ||
+      session.nextChunk < 0 ||
+      session.nextChunk > chunks.length ||
+      !session.uploadID
+    ) {
+      throw new Error("Invalid upload cursor from replay backend");
+    }
+    let next = session.nextChunk;
+    while (next < chunks.length) {
+      assertActive(options.signal);
+      const chunk = chunks[next];
+      // Hashes are separate because an engine hash can arrive after the
+      // turn chunk was already uploaded and acknowledged.
+      const payload = JSON.stringify({ turns: chunk.turns });
+      if (
+        new TextEncoder().encode(payload).byteLength >
+        SOLO_CLOUD_MAX_CHUNK_BYTES
+      ) {
+        throw new Error("Solo replay chunk is over the 1 MiB upload limit");
+      }
+      const chunkHash = await sha256(payload);
+      const ack = await retry(
+        () =>
+          backend.putChunk({
+            uploadID: session.uploadID,
+            index: next,
+            gameID: meta.gameID,
+            first: chunk.first,
+            last: chunk.last,
+            payload,
+            sha256: chunkHash,
+          }),
+        options,
+      );
+      if (ack.nextChunk !== next + 1) {
+        throw new Error("Backend acknowledged a noncontiguous turn chunk");
+      }
+      next++;
+    }
+    const hashes = [...snapshot.hashes]
+      .filter((item) => item.turn <= meta.lastRecordedTurn)
+      .sort((a, b) => a.turn - b.turn);
+    for (let start = 0; start < hashes.length; start += 64) {
+      assertActive(options.signal);
+      const batch = hashes.slice(start, start + 64);
+      const hashDigest = await sha256(JSON.stringify(batch));
+      await retry(
+        () =>
+          backend.putHashes(
+            session.uploadID,
+            meta.gameID,
+            batch.map(({ turn, hash }) => ({ turn, hash })),
+            hashDigest,
+          ),
+        options,
+      );
+    }
+    if (meta.finished) {
+      await retry(
+        () =>
+          backend.finish(session.uploadID, meta.gameID, meta.lastRecordedTurn),
+        options,
+      );
+    }
+    options.onState?.("synced");
+    return "synced";
+  } catch (error) {
+    options.onState?.("failed");
+    throw error;
+  }
+}

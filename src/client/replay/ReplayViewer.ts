@@ -29,7 +29,7 @@ import {
 } from "../hud/layers/SettingsModal";
 import { MouseMoveEvent } from "../InputHandler";
 import { buildTerrainRowSpans } from "../render/frame/derive/TerrainRowSpans";
-import { uploadFrameData } from "../render/frame/Upload";
+import { uploadReplayFrame } from "./ReplayFrameUpload";
 import {
   applyGraphicsOverrides,
   createRenderSettings,
@@ -412,7 +412,11 @@ export class ReplayViewer extends LitElement {
     const header = playback.header;
     const gsi = header.gameStartInfo as GameStartInfo;
     const [terrain] = await Promise.all([
-      loadCachedTerrainMap(gsi.config.gameMap, gsi.config.gameMapSize),
+      loadCachedTerrainMap(
+        gsi.config.gameMap,
+        gsi.config.gameMapSize,
+        gsi.config.mapAreaMultiplier ?? 1,
+      ),
       preloadAtlasData(),
     ]);
     if (this.abort.signal.aborted) return;
@@ -541,7 +545,7 @@ export class ReplayViewer extends LitElement {
       }
       if (seeked) nukedLayers.seek(fd.tick);
       else nukedLayers.advance(fd.tick);
-      uploadFrameData(view, fd);
+      uploadReplayFrame(view, fd, seeked);
       // Snap names after a seek instead of animating them there.
       if (seeked) {
         view.updateNames(
