@@ -546,6 +546,11 @@ export class ReplayViewer extends LitElement {
       if (seeked) nukedLayers.seek(fd.tick);
       else nukedLayers.advance(fd.tick);
       uploadFrameData(view, fd);
+      // Live play deliberately staggers territory changes over render frames.
+      // Historical replay frames must instead present the entire tile delta
+      // together: otherwise border/fill updates lag behind the timeline and
+      // only look correct after a full-state seek.
+      if (!seeked) view.flushReplayTileDeltas();
       // Snap names after a seek instead of animating them there.
       if (seeked) {
         view.updateNames(
