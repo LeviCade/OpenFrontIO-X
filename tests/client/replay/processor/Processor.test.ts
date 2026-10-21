@@ -6,7 +6,11 @@
  * against the hashes the "live" clients recorded.
  */
 
-import { GameMapType, GameMode, GameType } from "@openfront/engine-api/game/GameTypes";
+import {
+  GameMapType,
+  GameMode,
+  GameType,
+} from "@openfront/engine-api/game/GameTypes";
 import { WirePlayer } from "@openfront/shared/WireSchemas";
 import { PlayerTypeEnum } from "../../../../src/client/render/types";
 import { ReplayReader } from "../../../../src/client/replay/codec/decode/ReplayReader";
@@ -84,8 +88,12 @@ describe("replay processor", () => {
 
     const header = openReader(replay).header;
     const original = (await mapLoader.getMapData(map).manifest()).map;
-    expect(header.mapWidth).toBe(Math.round(original.width * Math.sqrt(multiplier)));
-    expect(header.mapHeight).toBe(Math.round(original.height * Math.sqrt(multiplier)));
+    expect(header.mapWidth).toBe(
+      Math.round(original.width * Math.sqrt(multiplier)),
+    );
+    expect(header.mapHeight).toBe(
+      Math.round(original.height * Math.sqrt(multiplier)),
+    );
     expect(header.gameStartInfo).toMatchObject({
       config: { mapAreaMultiplier: multiplier },
     });
