@@ -86,7 +86,9 @@ describe("replay processor", () => {
     const original = (await mapLoader.getMapData(map).manifest()).map;
     expect(header.mapWidth).toBe(Math.round(original.width * Math.sqrt(multiplier)));
     expect(header.mapHeight).toBe(Math.round(original.height * Math.sqrt(multiplier)));
-    expect(header.gameStartInfo.config.mapAreaMultiplier).toBe(multiplier);
+    expect(header.gameStartInfo).toMatchObject({
+      config: { mapAreaMultiplier: multiplier },
+    });
   }, 60_000);
 
   test("FFA with humans, nations and bots: in sync, decodes to the live game", async () => {
