@@ -172,6 +172,12 @@ export class MapRenderer {
   ): void {
     this.renderer?.uploadLiveDelta(tileState, changedTiles);
   }
+
+  /** Replay-only: present all tile deltas at the current frame boundary. */
+  flushReplayTileDeltas(): void {
+    this.renderer?.flushReplayTileDeltas();
+  }
+
   uploadLiveTrailDelta(
     trailState: Uint16Array,
     dirtyRowMin: number,
