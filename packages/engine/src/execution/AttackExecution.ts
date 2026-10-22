@@ -476,7 +476,10 @@ export class AttackExecution implements Execution {
       1,
       Math.ceil(100 / this.mg.config().virtualWorldArea()),
     );
-    if (!(this.target.isPlayer() && this.target.numTilesOwned() < collapseCells)) return;
+    if (
+      !(this.target.isPlayer() && this.target.numTilesOwned() < collapseCells)
+    )
+      return;
     const target: Player = this.target;
 
     this.mg.conquerPlayer(this._owner, target);
