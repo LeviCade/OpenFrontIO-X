@@ -1850,8 +1850,11 @@ export class AiAttackBehavior {
   // Keeps the attack at its cheapest loss rate until the bot collapses below 100 tiles
   private botAttackTroopsNeeded(bot: Player): number {
     const stack = Math.max(1, bot.troops() / CHEAPEST_TROOP_RATIO);
-    const tiles = Math.max(0, bot.numTilesOwned() - 100);
-    return Math.max(stack, tiles * this.botTileLoss(bot, stack));
+    // The collapse threshold is 100 perceived cells, not 100 physical cells.
+    // The loss estimate below is already the aggregate cost per physical cell.
+    const collapseCells = Math.ceil(100 / this.game.config().virtualWorldArea());
+    const cellsToFight = Math.max(0, bot.numTilesOwned() - collapseCells);
+    return Math.max(stack, cellsToFight * this.botTileLoss(bot, stack));
   }
 
   // Troops lost per tile at that stack: Impossible reads the terrain on a 6x6 grid
