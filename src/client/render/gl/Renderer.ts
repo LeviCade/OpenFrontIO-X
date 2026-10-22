@@ -567,6 +567,7 @@ export class GPURenderer {
       this.effectTex,
       terrainBytes,
       this.settings,
+      config.virtualWorldVisualScale(),
     );
 
     // --- Range circle (ghost preview radius) ---
@@ -610,7 +611,7 @@ export class GPURenderer {
     this.worldTextPass.setMapWidth(this.mapW);
     this.selectionBoxPass = new SelectionBoxPass(gl);
     this.moveIndicatorPass = new MoveIndicatorPass(gl, this.settings);
-    this.nukeTrajectoryPass = new NukeTrajectoryPass(gl, this.settings);
+    this.nukeTrajectoryPass = new NukeTrajectoryPass(gl, this.settings, config.virtualWorldVisualScale());
     this.nukeTelegraphPass = new NukeTelegraphPass(gl, this.settings);
 
     // --- Scene capture target (for night composite) ---
