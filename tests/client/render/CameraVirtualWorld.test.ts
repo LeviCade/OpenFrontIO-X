@@ -16,6 +16,14 @@ describe("Camera virtual 1×–100× inspection depth", () => {
     expect(camera.zoom).toBe(100);
   });
 
+  it("permits 1000× microstructure inspection only with actual virtual scaling", () => {
+    const camera = new Camera(4108, 1948, 100, 100);
+    camera.zoomTo(5000);
+    expect(camera.zoom).toBe(1000);
+    camera.zoomBy(0.5);
+    expect(camera.zoom).toBe(500);
+  });
+
   it("bounds zoom on ordinary physically multiplied maps too", () => {
     const camera = new Camera(1000, 500, 20);
     camera.zoomTo(1000);
