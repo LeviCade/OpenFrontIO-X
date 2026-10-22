@@ -75,7 +75,8 @@ export class ShellExecution implements Execution {
     if (
       ticks < this.firstMoveTick ||
       (ticks - this.firstMoveTick) % this.ticksPerMove !== 0
-    ) return;
+    )
+      return;
     for (let i = 0; i < 3; i++) {
       const result = this.pathFinder.next(
         this.shell.tile(),
