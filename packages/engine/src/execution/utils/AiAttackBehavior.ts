@@ -1852,7 +1852,9 @@ export class AiAttackBehavior {
     const stack = Math.max(1, bot.troops() / CHEAPEST_TROOP_RATIO);
     // The collapse threshold is 100 perceived cells, not 100 physical cells.
     // The loss estimate below is already the aggregate cost per physical cell.
-    const collapseCells = Math.ceil(100 / this.game.config().virtualWorldArea());
+    const collapseCells = Math.ceil(
+      100 / this.game.config().virtualWorldArea(),
+    );
     const cellsToFight = Math.max(0, bot.numTilesOwned() - collapseCells);
     return Math.max(stack, cellsToFight * this.botTileLoss(bot, stack));
   }
