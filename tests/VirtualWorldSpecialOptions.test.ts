@@ -45,22 +45,61 @@ describe("Special Options opt-in and Virtual World coverage geometry", () => {
   it("stacks atomic and hydrogen radii independently from number of missiles", () => {
     const normal = cfg(100);
     const special = cfg(100, { atomicMultiplier: true });
-    expect(normal.nukeMagnitudes(UnitType.AtomBomb)).toEqual({ inner: 1, outer: 3 });
-    expect(special.nukeMagnitudes(UnitType.AtomBomb, 1)).toEqual({ inner: 1, outer: 3 });
-    expect(special.nukeMagnitudes(UnitType.AtomBomb, 4)).toEqual({ inner: 4, outer: 12 });
-    expect(special.nukeMagnitudes(UnitType.HydrogenBomb, 4)).toEqual({ inner: 32, outer: 40 });
-    expect(normal.nukeMagnitudes(UnitType.AtomBomb, 4)).toEqual(normal.nukeMagnitudes(UnitType.AtomBomb));
-    expect(special.nukeMagnitudes(UnitType.MIRVWarhead, 4)).toEqual(special.nukeMagnitudes(UnitType.MIRVWarhead));
-    expect(cfg(1, { atomicMultiplier: true }).nukeMagnitudes(UnitType.HydrogenBomb, 2).outer).toBe(200);
+    expect(normal.nukeMagnitudes(UnitType.AtomBomb)).toEqual({
+      inner: 1,
+      outer: 3,
+    });
+    expect(special.nukeMagnitudes(UnitType.AtomBomb, 1)).toEqual({
+      inner: 1,
+      outer: 3,
+    });
+    expect(special.nukeMagnitudes(UnitType.AtomBomb, 4)).toEqual({
+      inner: 4,
+      outer: 12,
+    });
+    expect(special.nukeMagnitudes(UnitType.HydrogenBomb, 4)).toEqual({
+      inner: 32,
+      outer: 40,
+    });
+    expect(normal.nukeMagnitudes(UnitType.AtomBomb, 4)).toEqual(
+      normal.nukeMagnitudes(UnitType.AtomBomb),
+    );
+    expect(special.nukeMagnitudes(UnitType.MIRVWarhead, 4)).toEqual(
+      special.nukeMagnitudes(UnitType.MIRVWarhead),
+    );
+    expect(
+      cfg(1, { atomicMultiplier: true }).nukeMagnitudes(
+        UnitType.HydrogenBomb,
+        2,
+      ).outer,
+    ).toBe(200);
   });
 
   it("does not alter starting manpower, income, or per-building price", () => {
     const one = cfg(1);
-    const special = cfg(100, { factoryMultiplier: true, samMultiplier: true, atomicMultiplier: true });
-    const input = { type: () => PlayerType.Human, numTilesOwned: () => 500, unitsOwned: () => 0, unitsConstructed: () => 0, units: () => [], isLobbyCreator: () => false, troops: () => 10_000 };
-    expect(special.startManpower({ playerType: PlayerType.Human } as never)).toBe(one.startManpower({ playerType: PlayerType.Human } as never));
-    expect(special.goldAdditionRate(input as never)).toBe(one.goldAdditionRate(input as never));
-    expect(special.unitInfo(UnitType.Factory).cost!({} as never, input as never)).toBe(one.unitInfo(UnitType.Factory).cost!({} as never, input as never));
+    const special = cfg(100, {
+      factoryMultiplier: true,
+      samMultiplier: true,
+      atomicMultiplier: true,
+    });
+    const input = {
+      type: () => PlayerType.Human,
+      numTilesOwned: () => 500,
+      unitsOwned: () => 0,
+      unitsConstructed: () => 0,
+      units: () => [],
+      isLobbyCreator: () => false,
+      troops: () => 10_000,
+    };
+    expect(
+      special.startManpower({ playerType: PlayerType.Human } as never),
+    ).toBe(one.startManpower({ playerType: PlayerType.Human } as never));
+    expect(special.goldAdditionRate(input as never)).toBe(
+      one.goldAdditionRate(input as never),
+    );
+    expect(
+      special.unitInfo(UnitType.Factory).cost!({} as never, input as never),
+    ).toBe(one.unitInfo(UnitType.Factory).cost!({} as never, input as never));
   });
 
   it("makes in-flight nuclear telegraph use configured area and selected radius", () => {
@@ -82,9 +121,15 @@ describe("Special Options opt-in and Virtual World coverage geometry", () => {
       0,
       undefined,
       0,
-      (type, multiplier) => special.nukeMagnitudes(type as UnitType, multiplier),
+      (type, multiplier) =>
+        special.nukeMagnitudes(type as UnitType, multiplier),
     );
     expect(result).toHaveLength(1);
-    expect(result[0]).toMatchObject({ innerRadius: 4, outerRadius: 12, x: 5, y: 5 });
+    expect(result[0]).toMatchObject({
+      innerRadius: 4,
+      outerRadius: 12,
+      x: 5,
+      y: 5,
+    });
   });
 });
