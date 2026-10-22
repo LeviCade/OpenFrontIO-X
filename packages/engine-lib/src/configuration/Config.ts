@@ -213,7 +213,7 @@ export class Config {
     return this._gameConfig.donateTroops;
   }
   trainStationMaxRange(): number {
-    return 110;
+    return Math.max(1, Math.round(110 * this.virtualWorldVisualScale()));
   }
 
   unitInfo(type: UnitType): UnitInfo {
