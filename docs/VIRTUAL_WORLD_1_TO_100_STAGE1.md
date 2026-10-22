@@ -51,3 +51,45 @@ Perceived size is a design goal, **not perfect parity**: one physical tile canno
 The user's attached Oct 22 server log ran ~60 min and was dominated by failed polls to absent `localhost:8787` cosmetics/reserved tags and repeated missing lobby-service `ECONNREFUSED`, not a reported OOM or replay-processing crash. For Solo development, after correct **Node 24 + npm 12** dependency installation, use `npm run start:client` instead of `npm run dev` if no local server-backed features are required. This avoids starting the full server, workers and noisy fake public lobbies. It may not support server-backed functions; fall back to `npm run dev` when needed.
 
 Do not run blind `npm audit fix --force`; review transitive and exploitable dependencies separately.
+
+## Follow-up: smallest necessary physical resolution, proposed hybrid
+
+The user proposed allocating **only as much actual physical grid** as needed
+when an important world-space mechanic falls below one playable tile. This is a
+strong *optional hybrid* design, but **it is not activated** in the Solo start
+path, and does not bypass the protected physical-map cap.
+
+Mathematically for requested virtual/perceived area `A`, existing footprint
+radius `R`, and minimum meaningful radius `r_min`:
+
+```
+minimum physical area factor P = max(1, ceil(A × (r_min / R)^2))
+remaining virtual area factor V = A / P
+actual grid size ∝ sqrt(P) per axis
+```
+
+Example: at perceived **100×**, original spawn radius **4** and minimum
+one-tile radius, `P = ceil(100/16) = 7` (not 100). The *remaining*
+virtual component is `V ≈ 14.286`, which is **fractional**; engine helpers
+currently accept only integer virtual factors, so live hybrid support requires
+deliberate versioned semantics, replay compatibility, and fractional pacing
+tests. Reusing the existing field without adaptation would double-apply scaling.
+
+`packages/engine-lib/src/game/HybridWorldResolution.ts` implements a
+**geometry-only recommendation** with pure deterministic tests. It refuses
+candidates exceeding the existing 20× physical-mode maximum,
+64.1-million-cell CPU allocation cap, or supplied WebGL
+`MAX_TEXTURE_SIZE`. **Passing this test does not imply GPU memory safety.**
+For Giant World (4108×1948), perceived 100× requires a candidate physical
+7× area (~56 million cells); it fails a simulated 8192-texel GPU axis check
+and is only *geometrically possible* on a 16384-texel GPU. Runtime VRAM/RSS
+and full rendering/replay must still be profiled.
+
+No silent auto-scaling, map expansion, or feature switch is made by this
+pass. If the planner rejects the candidate, the current virtual mode remains
+at the original physical grid with its already-documented one-tile floor.
+Consider a future explicit "Adaptive / Hybrid" selection only after measuring
+hardware, stress-testing sustained games, and proving deterministic saved
+replays. Tiny icon sprites can shrink below one world tile visually without
+requiring physical grid expansion; the hard resolution floor is for gameplay
+geometry such as spawn footprint and target paths, not every icon/pixel.
