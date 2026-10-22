@@ -51,9 +51,7 @@ export function planHybridWorldResolution(
   }
   const requiredPhysicalArea = Math.max(
     1,
-    Math.ceil(
-      perceivedArea * (minimumFootprintTiles / footprintRadius) ** 2,
-    ),
+    Math.ceil(perceivedArea * (minimumFootprintTiles / footprintRadius) ** 2),
   );
   const rejected = (
     rejection: HybridWorldResolutionPlan["rejection"],
