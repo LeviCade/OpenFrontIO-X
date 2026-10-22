@@ -97,7 +97,8 @@ export class MotionPlanResolver {
           record.speed < 1 ||
           (record.ticksPerMove ?? 1) < 1 ||
           record.path.length < 1
-        ) continue;
+        )
+          continue;
         const existing = this.trains.get(record.engineUnitId);
         if (existing && record.planId <= existing.planId) continue;
         if (existing) this.clearTrainPlan(record.engineUnitId);
