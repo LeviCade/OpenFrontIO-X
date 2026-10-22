@@ -70,7 +70,12 @@ export class TrainStationExecution implements Execution {
         this.unit.owner().unitCount(UnitType.Factory),
         this.mg.unitCount(UnitType.Train),
       );
-    for (let i = 0; i < this.unit!.level(); i++) {
+    // Multiplier mode makes each successful factory departure produce
+    // exactly level trains, rather than stacking probability rolls.
+    const attempts = this.mg.config().gameConfig().specialOptions?.factoryMultiplier
+      ? 1
+      : this.unit!.level();
+    for (let i = 0; i < attempts; i++) {
       if (this.random.chance(spawnRate)) {
         return true;
       }
@@ -101,15 +106,22 @@ export class TrainStationExecution implements Execution {
     if (destination === null) return;
     if (destination === station) return;
 
-    this.mg.addExecution(
-      new TrainExecution(
-        this.mg.railNetwork(),
-        owner,
-        station,
-        destination,
-        this.numCars,
-      ),
-    );
+    const count =
+      this.mg.config().gameConfig().gameType === "singleplayer" &&
+      this.mg.config().gameConfig().specialOptions?.factoryMultiplier
+        ? Math.max(1, Math.min(50, this.unit.level()))
+        : 1;
+    for (let i = 0; i < count; i++) {
+      this.mg.addExecution(
+        new TrainExecution(
+          this.mg.railNetwork(),
+          owner,
+          station,
+          destination,
+          this.numCars,
+        ),
+      );
+    }
     this.lastSpawnTick = currentTick;
   }
 
