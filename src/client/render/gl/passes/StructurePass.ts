@@ -133,6 +133,7 @@ export class StructurePass {
     paletteTex: WebGLTexture,
     effectTex: WebGLTexture,
     settings: RenderSettings,
+    private readonly virtualIconScale = 1,
   ) {
     this.gl = gl;
     this.settings = settings;
@@ -379,7 +380,7 @@ export class StructurePass {
     gl.uniformMatrix3fv(this.uCamera, false, cameraMatrix);
     gl.uniform1f(this.uLocalPlayerID, this.localPlayerID);
     gl.uniform1f(this.uZoom, zoom);
-    gl.uniform1f(this.uIconSize, ss.iconSize);
+    gl.uniform1f(this.uIconSize, ss.iconSize * this.virtualIconScale);
     gl.uniform1f(this.uDotsThreshold, ss.dotsZoomThreshold);
     gl.uniform1f(this.uDotScale, ss.dotScale);
     gl.uniform1f(this.uScaleFactor, ss.iconScaleFactorZoomedOut);
