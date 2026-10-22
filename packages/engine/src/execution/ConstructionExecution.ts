@@ -37,6 +37,7 @@ export class ConstructionExecution implements Execution {
     private tile: TileRef,
     private rocketDirectionUp?: boolean,
     private amount?: number,
+    private blastMultiplier?: number,
   ) {}
 
   init(mg: Game, ticks: number): void {
@@ -120,6 +121,17 @@ export class ConstructionExecution implements Execution {
       case UnitType.AtomBomb:
       case UnitType.HydrogenBomb: {
         const count = this.amount ?? 1;
+        const config = this.mg.config().gameConfig();
+        // Untrusted intents cannot enable this experimental option in public,
+        // private or default games. The multiplier changes radius only.
+        const radiusMultiplier =
+          config.gameType === "Singleplayer" &&
+          config.specialOptions?.atomicMultiplier &&
+          Number.isSafeInteger(this.blastMultiplier) &&
+          (this.blastMultiplier ?? 0) >= 1 &&
+          (this.blastMultiplier ?? 0) <= 8
+            ? this.blastMultiplier
+            : 1;
         for (let i = 0; i < count; i++) {
           // NukeExecution staggers same-tick launches per silo itself.
           this.mg.addExecution(
@@ -131,6 +143,7 @@ export class ConstructionExecution implements Execution {
               -1,
               0,
               this.rocketDirectionUp,
+              radiusMultiplier,
             ),
           );
         }
@@ -203,6 +216,7 @@ export class ConstructionExecution implements Execution {
       tile: this.tile,
       rocketDirectionUp: this.rocketDirectionUp,
       amount: this.amount,
+      blastMultiplier: this.blastMultiplier,
       structure: w.unitOrNull(this.structure),
       ticksUntilComplete: this.ticksUntilComplete,
     });
@@ -216,6 +230,7 @@ export class ConstructionExecution implements Execution {
     this.tile = s.tile;
     this.rocketDirectionUp = s.rocketDirectionUp;
     this.amount = s.amount;
+    this.blastMultiplier = s.blastMultiplier;
     this.structure = r.unitOrNull(s.structure);
     this.ticksUntilComplete = s.ticksUntilComplete as Tick;
   }
@@ -230,6 +245,7 @@ const ConstructionStateSchema = z.object({
   tile: zInt(),
   rocketDirectionUp: z.boolean().optional(),
   amount: zInt().optional(),
+  blastMultiplier: zInt().optional(),
   structure: zRef().nullable(),
   // Unset until a structure with a build time is placed.
   ticksUntilComplete: zInt().optional(),
