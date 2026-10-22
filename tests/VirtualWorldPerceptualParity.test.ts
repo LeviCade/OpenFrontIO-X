@@ -36,9 +36,7 @@ describe("100× Virtual World geometry and troop economics", () => {
     };
     const one = config(1).attackLogic(input);
     const hundred = config(100).attackLogic(input);
-    expect(hundred.attackerTroopLoss).toBeCloseTo(
-      one.attackerTroopLoss * 100,
-    );
+    expect(hundred.attackerTroopLoss).toBeCloseTo(one.attackerTroopLoss * 100);
     expect(hundred.tickFraction).toBe(one.tickFraction);
     expect(hundred.defenderTroopLoss).toBe(0);
   });
@@ -81,9 +79,7 @@ describe("100× Virtual World geometry and troop economics", () => {
     expect(hundred.warshipDockingRange()).toBe(1);
     expect(hundred.warshipPassiveHealingRange()).toBe(15);
     expect(virtualInspectionZoomCap(1, 1)).toBe(20);
-    expect(virtualInspectionZoomCap(20, 1)).toBeCloseTo(
-      20 * Math.sqrt(20),
-    );
+    expect(virtualInspectionZoomCap(20, 1)).toBeCloseTo(20 * Math.sqrt(20));
     expect(virtualInspectionZoomCap(100, 100)).toBe(1000);
   });
 
@@ -102,9 +98,9 @@ describe("100× Virtual World geometry and troop economics", () => {
       { findTilePath: () => [], findStationsPath: () => [] } as never,
     );
     const rail = new Railroad({} as TrainStation, {} as TrainStation, [110], 1);
-    (
-      network as unknown as { railGrid: RailSpatialGrid }
-    ).railGrid.register(rail);
+    (network as unknown as { railGrid: RailSpatialGrid }).railGrid.register(
+      rail,
+    );
     expect(network.overlappingRailroads(UnitType.Factory, 110)).toEqual([110]);
     expect(network.overlappingRailroads(UnitType.Factory, 111)).toEqual([]);
   });
