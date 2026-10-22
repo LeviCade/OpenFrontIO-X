@@ -5,7 +5,7 @@
 ## Product interaction
 
 - Solo map configuration now has **Virtual (default)** and **Physical** tabs and **one numeric 1–100× input** (default 1).
-- In Virtual mode: `mapAreaMultiplier=1` and `virtualWorldAreaMultiplier=A`; existing terrain bytes and physical grid sizes remain 1× regardless of A. All maps can *request* A up to 100 without exceeding the physical tile multiplier budget. Some rules/sprites remain subject to one-tile limits.
+- In Virtual mode: `mapAreaMultiplier=1` and `virtualWorldAreaMultiplier=A`; existing terrain bytes and physical grid sizes remain 1× regardless of A. All maps can _request_ A up to 100 without exceeding the physical tile multiplier budget. Some rules/sprites remain subject to one-tile limits.
 - In Physical mode: `mapAreaMultiplier=1..20` (user input capped at 20; the pre-start safety check rejects any dimensions exceeding **64,100,000 physical tiles**). `virtualWorldAreaMultiplier=1`.
 - The values are separate state fields while toggling so switching modes doesn't silently convert a virtual 100 into an illegal physical 100.
 - The wire field `virtualWorldAreaMultiplier` is optional and bounded by `zb.uint({min:1,max:100})` for deterministic zbin binary encoding. Old saves/replays without this field represent virtual A=1. Non-Solo `Config.virtualWorldArea()` returns 1 even when confronted with untrusted values in config.
@@ -17,7 +17,7 @@ Virtual area `A` corresponds to linear factor `L=√A`. `1/L` is a proposed scal
 
 Perceived size is a design goal, **not perfect parity**: one physical tile cannot contain 100 independent subtiles. A spawn with physical 4-tile radius at virtual 100× becomes 0.4 tile, clamped to a minimum playable radius of 1. At 100×, borders move in visually discrete full-tile jumps; currently fractional fixed-point pacing makes those jumps occur roughly once per 10 turns for one active attack, not a smooth continuous sub-tile animation.
 
-## Engine and rendering integrations *implemented in this increment*
+## Engine and rendering integrations _implemented in this increment_
 
 - `VirtualWorldScale.ts`: explicit bounded A, L, inverse visual scale, spawn radius, integer ticks-per-move and deterministic fixed-point per-attack progress. Bad/out-of-range values rejected.
 - `EngineConfig` and `Config`: virtual mode accessor, smaller minimum spawn distance, selected nuclear travel speed, SAM/targetable range, blast inner/outer footprint, structure separation. Full weapon/range audit remains open.
@@ -32,7 +32,7 @@ Perceived size is a design goal, **not perfect parity**: one physical tile canno
 
 - Proportional scaling in **every** render pass: structure level badges, attack trails, SAM overlays, explosions, shells/particle FX, defensive radius previews, paths, building placement indicators, minimap icons, music/notifications, hover hitboxes and selection targets remain to be audited and visually tested.
 - All strategy rules and economy: bot choices, troop regeneration/growth, trade income, cities/factories efficiency, high-level nukes/MIRV/SAM launchers, warship range/patrol/repair, trains/rail behavior, nation spawns and victory duration. Initial rule changes are a prototype.
-- Real *smooth* territory expansion below one tile per tick: demands a virtual sub-tile visual overlay or a multi-resolution simulation design; existing world tiles cannot split.
+- Real _smooth_ territory expansion below one tile per tick: demands a virtual sub-tile visual overlay or a multi-resolution simulation design; existing world tiles cannot split.
 - Replay acceptance: real Mac gameplay, 100× Solo win, Keep Playing, exit/reopen, deterministic replay engine hashes, recorded unit movement plans, sustained CPU/FPS/camera behavior. Passing Vitest does **not** establish these behaviors.
 - Physical Giant World 10× still exceeds unchanged engine cap, even when the UI says 1–100 Virtual; separate PR #4 renderer/tiling effort stands.
 - Multiplayer/public game compatibility: Virtual intended **Solo only**. Do not enable in competitive servers without versioned protocol negotiation.
