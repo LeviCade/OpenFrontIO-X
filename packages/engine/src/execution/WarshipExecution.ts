@@ -1,6 +1,7 @@
 import { TileRef } from "@openfront/engine-api/game/GameMap";
 import { UnitType } from "@openfront/engine-api/game/GameTypes";
 import { PseudoRandom } from "@openfront/engine-lib/PseudoRandom";
+import { advanceVirtualPace } from "@openfront/engine-lib/game/VirtualWorldScale";
 import {
   zInt,
   zNum,
@@ -45,6 +46,8 @@ export class WarshipExecution implements Execution {
   private lastObservedPatrolTile: TileRef | undefined;
   private activeHealingRemainder = 0;
   private lastEmittedCombat = false;
+  private virtualMoveCredit = 0;
+  private virtualMoveReady = true;
 
   constructor(
     private input: (UnitParams<UnitType.Warship> & OwnerComp) | Unit,
@@ -80,6 +83,14 @@ export class WarshipExecution implements Execution {
     if (this.warship.health() <= 0) {
       this.warship.delete();
       return;
+    }
+    const area = this.mg.config().virtualWorldArea();
+    if (area > 1) {
+      const pace = advanceVirtualPace(area, this.virtualMoveCredit);
+      this.virtualMoveCredit = pace.credit;
+      this.virtualMoveReady = pace.move;
+    } else {
+      this.virtualMoveReady = true;
     }
     const isInCombat = this.warship.warshipState().isInCombat ?? false;
     if (this.lastEmittedCombat && !isInCombat) {
@@ -452,6 +463,7 @@ export class WarshipExecution implements Execution {
     }
 
     this.warship.setTargetTile(retreatPortTile);
+    if (!this.virtualMoveReady) return true;
     const result = this.pathfinder.next(this.warship.tile(), retreatPortTile);
     switch (result.status) {
       case PathStatus.COMPLETE:
@@ -678,12 +690,23 @@ export class WarshipExecution implements Execution {
 
   private huntDownTradeShip() {
     this.warship.updateWarshipState({ isInCombat: true });
+    const scale = this.mg.config().virtualWorldVisualScale();
+    const captureRange = Math.max(1, Math.round(5 * scale));
+    const closeRange = Math.max(1, Math.round(20 * scale));
+    if (
+      !this.virtualMoveReady &&
+      this.mg.manhattanDist(
+        this.warship.tile(),
+        this.warship.targetUnit()!.tile(),
+      ) > captureRange
+    )
+      return;
     for (let i = 0; i < 2; i++) {
       const target = this.warship.targetUnit()!;
       const targetTile = target.tile();
       const dist = this.mg.manhattanDist(this.warship.tile(), targetTile);
 
-      if (dist <= 5) {
+      if (dist <= captureRange) {
         this.warship.owner().captureUnit(target);
         this.warship.recordTradeCapture();
         this.warship.setTargetUnit(undefined);
@@ -693,7 +716,7 @@ export class WarshipExecution implements Execution {
 
       // When close, the minimap (2x scale) produces diagonal upscaled paths that
       // make it hard to converge. Use direct greedy movement instead.
-      if (dist <= 20) {
+      if (dist <= closeRange) {
         const nextTile = this.bestNeighborToward(targetTile);
         if (nextTile !== undefined) {
           this.warship.move(nextTile);
@@ -735,6 +758,7 @@ export class WarshipExecution implements Execution {
   }
 
   private patrol() {
+    if (!this.virtualMoveReady) return;
     if (this.warship.targetTile() === undefined) {
       this.warship.setTargetTile(this.randomTile());
       if (this.warship.targetTile() === undefined) {
@@ -864,6 +888,8 @@ export class WarshipExecution implements Execution {
       lastObservedPatrolTile: this.lastObservedPatrolTile,
       activeHealingRemainder: this.activeHealingRemainder,
       lastEmittedCombat: this.lastEmittedCombat,
+      virtualMoveCredit: this.virtualMoveCredit,
+      virtualMoveReady: this.virtualMoveReady,
     });
   }
 
@@ -885,6 +911,8 @@ export class WarshipExecution implements Execution {
     this.lastObservedPatrolTile = s.lastObservedPatrolTile;
     this.activeHealingRemainder = s.activeHealingRemainder;
     this.lastEmittedCombat = s.lastEmittedCombat;
+    this.virtualMoveCredit = s.virtualMoveCredit ?? 0;
+    this.virtualMoveReady = s.virtualMoveReady ?? true;
   }
 }
 
@@ -906,6 +934,8 @@ const WarshipExecutionStateSchema = z.object({
   lastObservedPatrolTile: zTile().optional(),
   activeHealingRemainder: zNum(),
   lastEmittedCombat: z.boolean(),
+  virtualMoveCredit: zInt().optional(),
+  virtualMoveReady: z.boolean().optional(),
 });
 type WarshipExecutionState = z.infer<typeof WarshipExecutionStateSchema>;
 

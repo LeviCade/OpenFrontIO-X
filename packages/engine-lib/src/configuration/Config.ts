@@ -340,6 +340,11 @@ export class Config {
     return 200;
   }
 
+  /** Perceived area, for economic rules only. Ownership and victory stay on the real tile grid. */
+  effectiveTilesOwned(player: PlayerLike): number {
+    return player.numTilesOwned() * this.virtualWorldArea();
+  }
+
   maxTroops(player: PlayerLike): number {
     return this.troopCap(player, true);
   }
@@ -360,7 +365,8 @@ export class Config {
     const maxTroops =
       player.type() === PlayerType.Human && this.hasInfiniteTroopsFor(player)
         ? 1_000_000_000
-        : 2 * (pow(player.numTilesOwned(), 0.6) * 1000 + 50000) + cityTroops;
+        : 2 * (pow(this.effectiveTilesOwned(player), 0.6) * 1000 + 50000) +
+          cityTroops;
 
     if (player.type() === PlayerType.Bot) {
       return maxTroops / 3;

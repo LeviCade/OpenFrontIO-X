@@ -726,7 +726,10 @@ export class NationStructureBehavior {
     if (this.game.config().isUnitDisabled(UnitType.City)) {
       return Math.max(
         1,
-        Math.floor(this.player.numTilesOwned() / TILES_PER_CITY_EQUIVALENT),
+        Math.floor(
+          this.game.config().effectiveTilesOwned(this.player) /
+            TILES_PER_CITY_EQUIVALENT,
+        ),
       );
     }
     return this.player.unitsOwned(UnitType.City);
@@ -743,7 +746,8 @@ export class NationStructureBehavior {
   }
 
   private isHighNationDensity(): boolean {
-    const landTiles = this.game.numLandTiles();
+    const landTiles =
+      this.game.numLandTiles() * this.game.config().virtualWorldArea();
     if (landTiles <= 0) return false;
     return (
       this.game.nations().length / landTiles > HIGH_NATION_DENSITY_THRESHOLD
@@ -1046,7 +1050,7 @@ export class NationStructureBehavior {
    * Calculates total structure density across player's territory.
    */
   private getTotalStructureDensity(): number {
-    const tilesOwned = this.player.numTilesOwned();
+    const tilesOwned = this.game.config().effectiveTilesOwned(this.player);
     return tilesOwned > 0
       ? this.player.units(DENSITY_STRUCTURE_TYPES).length / tilesOwned
       : 0; //ignoring levels for structures

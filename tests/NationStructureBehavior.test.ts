@@ -1101,7 +1101,9 @@ describe("NationStructureBehavior.countDefensePostsNearFront", () => {
 // chance to the unrelated high-gold SAM-first branch.
 
 describe("NationStructureBehavior.doHandleStructures — crowded-map exception", () => {
-  function makeCrowdedGame(opts: { difficulty?: Difficulty } = {}): any {
+  function makeCrowdedGame(
+    opts: { difficulty?: Difficulty; virtualArea?: number } = {},
+  ): any {
     return {
       config: () => ({
         isUnitDisabled: () => false,
@@ -1109,6 +1111,7 @@ describe("NationStructureBehavior.doHandleStructures — crowded-map exception",
           difficulty: opts.difficulty ?? Difficulty.Medium,
         }),
         startingGold: () => 0n,
+        virtualWorldArea: () => opts.virtualArea ?? 1,
       }),
       sharedWaterComponents: () => null, // landlocked -> Factory preferred
       nations: () => Array(400).fill({}),
@@ -1119,6 +1122,7 @@ describe("NationStructureBehavior.doHandleStructures — crowded-map exception",
   function makeCrowdedPlayer(): any {
     return {
       unitsOwned: () => 0, // never owns a city
+      team: () => null,
       numTilesOwned: () => 100_000,
       info: () => ({}),
     };
@@ -1133,6 +1137,20 @@ describe("NationStructureBehavior.doHandleStructures — crowded-map exception",
     expect((behavior as any).doHandleStructures()).toBe(true);
     expect(spy).toHaveBeenCalledWith(UnitType.Factory);
     expect(spy).not.toHaveBeenCalledWith(UnitType.City);
+  });
+
+  it("recognizes that a 100× virtual map is not artificially nation-dense", () => {
+    const behavior = makeBehavior(
+      makeCrowdedGame({ virtualArea: 100 }),
+      makeCrowdedPlayer(),
+    );
+    const spy = vi
+      .spyOn(behavior as any, "maybeSpawnStructure")
+      .mockReturnValue(true);
+
+    expect((behavior as any).doHandleStructures()).toBe(true);
+    expect(spy).toHaveBeenCalledWith(UnitType.City);
+    expect(spy).not.toHaveBeenCalledWith(UnitType.Factory);
   });
 
   it("does not re-fire once it has already succeeded, even though the player still owns no cities", () => {
@@ -1153,6 +1171,7 @@ describe("NationStructureBehavior.doHandleStructures — crowded-map exception",
       isUnitDisabled: () => false,
       gameConfig: () => ({ difficulty: Difficulty.Impossible }),
       startingGold: () => 10_000_000n, // high starting gold
+      virtualWorldArea: () => 1,
     });
     const behavior = makeBehavior(game, makeCrowdedPlayer());
     const spy = vi

@@ -470,7 +470,16 @@ export class AttackExecution implements Execution {
   }
 
   private handleDeadDefender() {
-    if (!(this.target.isPlayer() && this.target.numTilesOwned() < 100)) return;
+    // The legacy 100-tile collapse is a perceived-area threshold.
+    // Never rewrite real ownership counts used by map and victory code.
+    const collapseCells = Math.max(
+      1,
+      Math.ceil(100 / this.mg.config().virtualWorldArea()),
+    );
+    if (
+      !(this.target.isPlayer() && this.target.numTilesOwned() < collapseCells)
+    )
+      return;
     const target: Player = this.target;
 
     this.mg.conquerPlayer(this._owner, target);

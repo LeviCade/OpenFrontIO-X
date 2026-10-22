@@ -28,6 +28,8 @@ export interface TrainRailPathPlan {
   startTick: number;
   speed: number;
   spacing: number;
+  /** Ticks between engine steps; missing on legacy replays means one. */
+  ticksPerMove?: number;
   /**
    * Concatenated rail tile path across all segments, without de-duplicating at stations.
    */
@@ -50,7 +52,7 @@ export function packMotionPlans(
       case "train": {
         const carCount = (record.carUnitIds.length >>> 0) as number;
         const pathLen = (record.path.length >>> 0) as number;
-        totalWords += 2 + 7 + carCount + pathLen;
+        totalWords += 2 + 8 + carCount + pathLen;
         break;
       }
     }
@@ -87,7 +89,7 @@ export function packMotionPlans(
         const path = record.path as ArrayLike<number>;
         const pathLen = path.length >>> 0;
 
-        const wordCount = 2 + 7 + carCount + pathLen;
+        const wordCount = 2 + 8 + carCount + pathLen;
         out[offset++] = PackedMotionPlanKind.TrainRailPathSet;
         out[offset++] = wordCount >>> 0;
         out[offset++] = record.engineUnitId >>> 0;
@@ -97,6 +99,7 @@ export function packMotionPlans(
         out[offset++] = record.spacing >>> 0;
         out[offset++] = carCount >>> 0;
         out[offset++] = pathLen >>> 0;
+        out[offset++] = (record.ticksPerMove ?? 1) >>> 0;
 
         for (let i = 0; i < carCount; i++) {
           out[offset++] = carUnitIds[i] >>> 0;
@@ -176,12 +179,15 @@ export function unpackMotionPlans(packed: Uint32Array): MotionPlanRecord[] {
         const carCount = packed[offset + 7] >>> 0;
         const pathLen = packed[offset + 8] >>> 0;
 
-        const expectedWordCount = 2 + 7 + carCount + pathLen;
-        if (expectedWordCount !== wordCount) {
+        const legacyWords = 2 + 7 + carCount + pathLen;
+        const hasPace = wordCount === legacyWords + 1;
+        if (wordCount !== legacyWords && !hasPace) {
           break;
         }
+        const ticksPerMove = hasPace ? packed[offset + 9] >>> 0 : 1;
+        if (ticksPerMove < 1) break;
 
-        const carStart = offset + 9;
+        const carStart = offset + 9 + (hasPace ? 1 : 0);
         const carEnd = carStart + carCount;
         const pathStart = carEnd;
         const pathEnd = pathStart + pathLen;
@@ -196,6 +202,7 @@ export function unpackMotionPlans(packed: Uint32Array): MotionPlanRecord[] {
           startTick,
           speed,
           spacing,
+          ticksPerMove,
           path,
         });
         break;

@@ -1,6 +1,7 @@
 import { TileRef } from "@openfront/engine-api/game/GameMap";
 import { TrainType, UnitType } from "@openfront/engine-api/game/GameTypes";
 import { MotionPlanRecord } from "@openfront/engine-lib/game/MotionPlans";
+import { virtualTicksPerMove } from "@openfront/engine-lib/game/VirtualWorldScale";
 import {
   zInt,
   zPlayerRef,
@@ -31,6 +32,8 @@ export class TrainExecution implements Execution {
   private stations: TrainStation[] = [];
   private currentRailroad: OrientedRailroad | null = null;
   private speed: number = 2;
+  private ticksPerMove = 1;
+  private firstMoveTick = 1;
   private _tradeStopsVisited: number = 0;
   private pathTiles: TileRef[] = [];
   private pathIndex: number = 0;
@@ -53,6 +56,8 @@ export class TrainExecution implements Execution {
 
   init(mg: Game, ticks: number): void {
     this.mg = mg;
+    this.ticksPerMove = virtualTicksPerMove(mg.config().virtualWorldArea());
+    this.firstMoveTick = ticks + this.ticksPerMove;
     const stations = this.railNetwork.findStationsPath(
       this.source,
       this.destination,
@@ -107,6 +112,7 @@ export class TrainExecution implements Execution {
       startTick: ticks + 1,
       speed: this.speed,
       spacing: this.spacing,
+      ticksPerMove: this.ticksPerMove,
       path: pathTiles,
     };
     this.mg.recordMotionPlan(plan);
@@ -128,6 +134,14 @@ export class TrainExecution implements Execution {
       this.deleteTrain();
       return;
     }
+
+    // A compressed sqrt(A)-shorter rail route must take the same perceived
+    // travel time. Client/replay motion plans use the same integer interval.
+    if (
+      ticks < this.firstMoveTick ||
+      (ticks - this.firstMoveTick) % this.ticksPerMove !== 0
+    )
+      return;
 
     const tile = this.getNextTile();
     if (tile) {
@@ -417,6 +431,8 @@ export class TrainExecution implements Execution {
           ? null
           : { railroad: w.railroad(rr.railroad), forward: rr.forward },
       speed: this.speed,
+      ticksPerMove: this.ticksPerMove,
+      firstMoveTick: this.firstMoveTick,
       tradeStopsVisited: this._tradeStopsVisited,
       pathTiles: w.tiles(this.pathTiles),
       pathIndex: this.pathIndex,
@@ -447,6 +463,8 @@ export class TrainExecution implements Execution {
             s.currentRailroad.forward,
           );
     this.speed = s.speed;
+    this.ticksPerMove = s.ticksPerMove ?? 1;
+    this.firstMoveTick = s.firstMoveTick ?? 1;
     this._tradeStopsVisited = s.tradeStopsVisited;
     this.pathTiles = Array.from(s.pathTiles);
     this.pathIndex = s.pathIndex;
@@ -473,6 +491,8 @@ const TrainExecutionStateSchema = z.object({
     .object({ railroad: zRef(), forward: z.boolean() })
     .nullable(),
   speed: zInt(),
+  ticksPerMove: zInt().optional(),
+  firstMoveTick: zInt().optional(),
   tradeStopsVisited: zInt(),
   pathTiles: zTiles(),
   pathIndex: zInt(),
