@@ -1,5 +1,7 @@
 import { TileRef } from "@openfront/engine-api/game/GameMap";
 import {
+  GameMode,
+  GameType,
   MessageType,
   Structures,
   TerraNullius,
@@ -201,6 +203,26 @@ export class NukeExecution implements Execution {
 
   tick(ticks: number): void {
     if (this.nuke === null) {
+      const cfg = this.mg.config();
+      // nukeSpawn's legacy teammate check sees only the default radius.
+      // A multiplied Solo launch must apply the same no-friendly-fire rule
+      // to the enlarged radius before deducting gold or acquiring a silo.
+      if (
+        cfg.gameConfig().gameType === GameType.Singleplayer &&
+        cfg.gameConfig().gameMode === GameMode.Team &&
+        this.blastMultiplier > 1 &&
+        (this.nukeType === UnitType.AtomBomb ||
+          this.nukeType === UnitType.HydrogenBomb) &&
+        this.mg.anyUnitNearby(
+          this.dst,
+          cfg.nukeMagnitudes(this.nukeType, this.blastMultiplier).outer,
+          Structures.types,
+          (u) => u.owner().isPlayer() && this.player.isOnSameTeam(u.owner()),
+        )
+      ) {
+        this.active = false;
+        return;
+      }
       const spawn = this.player.canBuild(this.nukeType, this.dst);
       if (spawn === false) {
         console.warn(`cannot build Nuke`);
