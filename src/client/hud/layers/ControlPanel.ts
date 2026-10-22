@@ -692,7 +692,7 @@ export class ControlPanel extends LitElement implements Controller {
           : "hidden"}"
         @contextmenu=${(e: MouseEvent) => e.preventDefault()}
       >
-        ${this.game.config?.()?.gameConfig?.()?.specialOptions?.atomicMultiplier &&
+        ${this.game?.config?.()?.gameConfig?.()?.specialOptions?.atomicMultiplier &&
         (this.uiState.ghostStructure === UnitType.AtomBomb ||
           this.uiState.ghostStructure === UnitType.HydrogenBomb)
           ? html`<div class="flex items-center justify-between gap-2 p-2 mb-2 rounded-lg border border-purple-400/60 bg-purple-900/40 text-white text-xs">
