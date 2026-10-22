@@ -1,4 +1,4 @@
-import { UnitType } from "@openfront/engine-api/game/GameTypes";
+import { GameType, UnitType } from "@openfront/engine-api/game/GameTypes";
 import { PseudoRandom } from "@openfront/engine-lib/PseudoRandom";
 import {
   zInt,
@@ -72,7 +72,8 @@ export class TrainStationExecution implements Execution {
       );
     // Multiplier mode makes each successful factory departure produce
     // exactly level trains, rather than stacking probability rolls.
-    const attempts = this.mg.config().gameConfig().specialOptions?.factoryMultiplier
+    const attempts = this.mg.config().gameConfig().gameType === GameType.Singleplayer &&
+    this.mg.config().gameConfig().specialOptions?.factoryMultiplier
       ? 1
       : this.unit!.level();
     for (let i = 0; i < attempts; i++) {
@@ -107,7 +108,7 @@ export class TrainStationExecution implements Execution {
     if (destination === station) return;
 
     const count =
-      this.mg.config().gameConfig().gameType === "singleplayer" &&
+      this.mg.config().gameConfig().gameType === GameType.Singleplayer &&
       this.mg.config().gameConfig().specialOptions?.factoryMultiplier
         ? Math.max(1, Math.min(50, this.unit.level()))
         : 1;
