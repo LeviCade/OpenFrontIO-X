@@ -60,6 +60,18 @@ export function virtualVisualScale(area: number): number {
  * distant neighboring building must never be upgraded by mistake.
  * Normal 1× retains the historical large interaction range.
  */
+/** Precise world-space selection for moving units. With 100× Virtual
+ * magnification, even warships must be clicked on their actual physical cell.
+ */
+export function virtualUnitPickRadius(area: number, normalRadius = 10): number {
+  assertVirtualWorldArea(area);
+  if (!Number.isSafeInteger(normalRadius) || normalRadius < 1) {
+    throw new Error("Invalid unit selection radius");
+  }
+  if (area === 1) return normalRadius;
+  return Math.max(0, Math.floor(normalRadius / Math.sqrt(area) - 0.5));
+}
+
 export function virtualStructurePickRadius(area: number): number {
   assertVirtualWorldArea(area);
   if (area === 1) return 15;
