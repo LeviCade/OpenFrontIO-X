@@ -56,7 +56,7 @@ Do not run blind `npm audit fix --force`; review transitive and exploitable depe
 
 The user proposed allocating **only as much actual physical grid** as needed
 when an important world-space mechanic falls below one playable tile. This is a
-strong *optional hybrid* design, but **it is not activated** in the Solo start
+strong _optional hybrid_ design, but **it is not activated** in the Solo start
 path, and does not bypass the protected physical-map cap.
 
 Mathematically for requested virtual/perceived area `A`, existing footprint
@@ -69,7 +69,7 @@ actual grid size ∝ sqrt(P) per axis
 ```
 
 Example: at perceived **100×**, original spawn radius **4** and minimum
-one-tile radius, `P = ceil(100/16) = 7` (not 100). The *remaining*
+one-tile radius, `P = ceil(100/16) = 7` (not 100). The _remaining_
 virtual component is `V ≈ 14.286`, which is **fractional**; engine helpers
 currently accept only integer virtual factors, so live hybrid support requires
 deliberate versioned semantics, replay compatibility, and fractional pacing
@@ -82,7 +82,7 @@ candidates exceeding the existing 20× physical-mode maximum,
 `MAX_TEXTURE_SIZE`. **Passing this test does not imply GPU memory safety.**
 For Giant World (4108×1948), perceived 100× requires a candidate physical
 7× area (~56 million cells); it fails a simulated 8192-texel GPU axis check
-and is only *geometrically possible* on a 16384-texel GPU. Runtime VRAM/RSS
+and is only _geometrically possible_ on a 16384-texel GPU. Runtime VRAM/RSS
 and full rendering/replay must still be profiled.
 
 No silent auto-scaling, map expansion, or feature switch is made by this
