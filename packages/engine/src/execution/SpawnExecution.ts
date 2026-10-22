@@ -1,3 +1,4 @@
+import { virtualSpawnRadius } from "@openfront/engine-lib/game/VirtualWorldScale";
 import { TileRef } from "@openfront/engine-api/game/GameMap";
 import {
   GameType,
@@ -137,7 +138,7 @@ export class SpawnExecution implements Execution {
 
   private getSpawn(center?: TileRef): Spawn | undefined {
     if (center !== undefined) {
-      const tiles = getSpawnTiles(this.mg, center, false);
+      const tiles = getSpawnTiles(this.mg, center, false, virtualSpawnRadius(this.mg.config().virtualWorldArea()));
 
       if (!tiles.length) {
         return;
@@ -184,7 +185,7 @@ export class SpawnExecution implements Execution {
         }
       }
 
-      const tiles = getSpawnTiles(this.mg, center, true);
+      const tiles = getSpawnTiles(this.mg, center, true, virtualSpawnRadius(this.mg.config().virtualWorldArea()));
       if (!tiles) {
         // if some of the spawn tile is outside of the land, we want to find another spawn tile
         continue;
