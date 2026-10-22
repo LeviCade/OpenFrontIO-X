@@ -1,6 +1,7 @@
 import { TileRef } from "@openfront/engine-api/game/GameMap";
 import { UnitType } from "@openfront/engine-api/game/GameTypes";
 import { PseudoRandom } from "@openfront/engine-lib/PseudoRandom";
+import { virtualTicksPerMove } from "@openfront/engine-lib/game/VirtualWorldScale";
 import {
   zInt,
   zPlayerRef,
@@ -31,6 +32,8 @@ export class ShellExecution implements Execution {
   private mg: Game;
   private destroyAtTick: number = -1;
   private random: PseudoRandom;
+  private ticksPerMove = 1;
+  private firstMoveTick = 0;
 
   constructor(
     private spawn: TileRef,
@@ -43,6 +46,8 @@ export class ShellExecution implements Execution {
     this.pathFinder = PathFinding.Air(mg);
     this.mg = mg;
     this.random = new PseudoRandom(mg.ticks());
+    this.ticksPerMove = virtualTicksPerMove(mg.config().virtualWorldArea());
+    this.firstMoveTick = ticks + this.ticksPerMove - 1;
   }
 
   tick(ticks: number): void {
@@ -65,6 +70,12 @@ export class ShellExecution implements Execution {
       this.destroyAtTick = this.mg.ticks() + this.mg.config().shellLifetime();
     }
 
+    // Shells must cover the same perceived distance per second as they do
+    // on physically enlarged maps; ordinary 1× still advances immediately.
+    if (
+      ticks < this.firstMoveTick ||
+      (ticks - this.firstMoveTick) % this.ticksPerMove !== 0
+    ) return;
     for (let i = 0; i < 3; i++) {
       const result = this.pathFinder.next(
         this.shell.tile(),
@@ -138,6 +149,8 @@ export class ShellExecution implements Execution {
             },
       shell: this.shell === undefined ? null : w.unit(this.shell),
       destroyAtTick: this.destroyAtTick,
+      ticksPerMove: this.ticksPerMove,
+      firstMoveTick: this.firstMoveTick,
       spawn: this.spawn,
       owner: w.player(this._owner),
       ownerUnit: w.unit(this.ownerUnit),
@@ -154,6 +167,8 @@ export class ShellExecution implements Execution {
     }
     if (s.shell !== null) this.shell = r.unit(s.shell);
     this.destroyAtTick = s.destroyAtTick;
+    this.ticksPerMove = s.ticksPerMove ?? 1;
+    this.firstMoveTick = s.firstMoveTick ?? 0;
     this.spawn = s.spawn;
     this._owner = r.player(s.owner);
     this.ownerUnit = r.unit(s.ownerUnit);
@@ -168,6 +183,8 @@ const ShellStateSchema = z.object({
     .nullable(),
   shell: zRef().nullable(),
   destroyAtTick: zInt(),
+  ticksPerMove: zInt().optional(),
+  firstMoveTick: zInt().optional(),
   spawn: zTile(),
   owner: zPlayerRef(),
   ownerUnit: zRef(),
