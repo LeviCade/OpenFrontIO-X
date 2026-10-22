@@ -19,6 +19,7 @@ export interface GridMotionPlan {
 
 interface TrainMotionPlan {
   planId: number;
+  startTick: number;
   speed: number;
   spacing: number;
   ticksPerMove: number;
@@ -103,6 +104,7 @@ export class MotionPlanResolver {
         const carUnitIds = asUint32(record.carUnitIds);
         this.trains.set(record.engineUnitId, {
           planId: record.planId,
+          startTick: record.startTick,
           speed: record.speed,
           spacing: record.spacing,
           ticksPerMove: record.ticksPerMove ?? 1,
