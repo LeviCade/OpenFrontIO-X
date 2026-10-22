@@ -424,7 +424,7 @@ export class Config {
     return Math.min(player.troops() + toAdd, max) - player.troops();
   }
 
-  nukeMagnitudes(unitType: UnitType): NukeMagnitude {
+  nukeMagnitudes(unitType: UnitType, blastMultiplier = 1): NukeMagnitude {
     let source: NukeMagnitude;
     switch (unitType) {
       case UnitType.MIRVWarhead:
@@ -440,10 +440,20 @@ export class Config {
         throw new Error(`Unknown nuke type: ${unitType}`);
     }
     const scale = this.virtualWorldVisualScale();
-    if (scale === 1) return source;
+    const multiplier =
+      this._gameConfig.gameType === GameType.Singleplayer &&
+      this._gameConfig.specialOptions?.atomicMultiplier &&
+      (unitType === UnitType.AtomBomb || unitType === UnitType.HydrogenBomb) &&
+      Number.isSafeInteger(blastMultiplier) &&
+      blastMultiplier >= 1 &&
+      blastMultiplier <= 8
+        ? blastMultiplier
+        : 1;
+    if (scale === 1 && multiplier === 1) return source;
+    // Quantize only once: radius N× is exactly N times the base cell radius.
     return {
-      inner: Math.max(1, Math.round(source.inner * scale)),
-      outer: Math.max(1, Math.round(source.outer * scale)),
+      inner: Math.max(1, Math.round(source.inner * scale)) * multiplier,
+      outer: Math.max(1, Math.round(source.outer * scale)) * multiplier,
     };
   }
 
