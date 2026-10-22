@@ -7,18 +7,21 @@ export function getSpawnTiles(
   gm: GameMap,
   tile: TileRef,
   requireAllValid: true,
+  radius?: number,
 ): TileRef[] | null;
 export function getSpawnTiles(
   gm: GameMap,
   tile: TileRef,
   requireAllValid?: false,
+  radius?: number,
 ): TileRef[];
 export function getSpawnTiles(
   gm: GameMap,
   tile: TileRef,
   requireAllValid = false,
+  radius = 4,
 ): TileRef[] | null {
-  const spawnTiles = Array.from(gm.bfs(tile, euclDistFN(tile, 4, true)));
+  const spawnTiles = Array.from(gm.bfs(tile, euclDistFN(tile, radius, true)));
 
   const isInvalid = (t: TileRef) =>
     gm.hasOwner(t) || !gm.isLand(t) || gm.isImpassable(t);
