@@ -157,6 +157,7 @@ export class StructureLevelPass {
     gl: WebGL2RenderingContext,
     header: RendererConfig,
     settings: RenderSettings,
+    private readonly virtualIconScale = 1,
   ) {
     this.gl = gl;
     this.settings = settings;
@@ -375,7 +376,7 @@ export class StructureLevelPass {
     gl.useProgram(this.program);
     gl.uniformMatrix3fv(this.uCamera, false, cameraMatrix);
     gl.uniform1f(this.uZoom, zoom);
-    gl.uniform1f(this.uIconSize, ss.iconSize);
+    gl.uniform1f(this.uIconSize, ss.iconSize * this.virtualIconScale);
     gl.uniform1f(this.uDotsThreshold, ss.dotsZoomThreshold);
     gl.uniform1f(this.uScaleFactor, ss.iconScaleFactorZoomedOut);
     gl.uniform1f(this.uIconGrowZoom, ss.iconGrowZoom);

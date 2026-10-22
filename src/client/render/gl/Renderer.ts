@@ -277,6 +277,7 @@ export class GPURenderer {
       mapW,
       mapH,
       config.virtualWorldArea() * (config.gameConfig().mapAreaMultiplier ?? 1),
+      config.virtualWorldArea(),
     );
 
     // --- Terrain (static) ---
@@ -427,6 +428,7 @@ export class GPURenderer {
       mapH,
       this.res.tileTex,
       this.settings,
+      config.defensePostRange(),
     );
 
     // --- Heat manager (needs tileTex, heatTexA/B) ---
@@ -589,7 +591,12 @@ export class GPURenderer {
       this.settings,
       config.virtualWorldVisualScale(),
     );
-    this.structureLevelPass = new StructureLevelPass(gl, header, this.settings);
+    this.structureLevelPass = new StructureLevelPass(
+      gl,
+      header,
+      this.settings,
+      config.virtualWorldVisualScale(),
+    );
     this.unitPass = new UnitPass(
       gl,
       header,
@@ -609,7 +616,10 @@ export class GPURenderer {
     this.barPass = new BarPass(gl, header, this.settings, config);
     this.worldTextPass = new WorldTextPass(gl, this.settings, config);
     this.worldTextPass.setMapWidth(this.mapW);
-    this.selectionBoxPass = new SelectionBoxPass(gl);
+    this.selectionBoxPass = new SelectionBoxPass(
+      gl,
+      config.virtualWorldVisualScale(),
+    );
     this.moveIndicatorPass = new MoveIndicatorPass(gl, this.settings);
     this.nukeTrajectoryPass = new NukeTrajectoryPass(
       gl,

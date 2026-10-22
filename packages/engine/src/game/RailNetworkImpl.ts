@@ -130,6 +130,11 @@ export class RailNetworkImpl implements RailNetwork {
     private _stationManager: StationManager,
     private pathService: RailPathFinderService,
   ) {
+    // On a virtual 100× world three world tiles represent thirty perceived
+    // tiles. Snap only to the actual rail beneath the station, not across an
+    // oversized 1× catchment. Keep historical 1× behavior unchanged.
+    const scale = game.config().virtualWorldVisualScale?.() ?? 1;
+    this.stationRadius = Math.max(0, Math.round(this.stationRadius * scale));
     this.railGrid = new RailSpatialGrid(game, this.gridCellSize); // 4x4 tiles spatial grid
   }
 
@@ -196,11 +201,27 @@ export class RailNetworkImpl implements RailNetwork {
     return this.pathService.findStationsPath(from, to);
   }
 
+  /** The spatial grid returns whole 4×4 cells, not exact proximity. */
+  private railWithinSnapRadius(rail: Railroad, tile: TileRef): boolean {
+    if ((this.game.config().virtualWorldArea?.() ?? 1) === 1) {
+      return true; // retain original 1× station snapping
+    }
+    const x = this.game.x(tile);
+    const y = this.game.y(tile);
+    const radiusSq = this.stationRadius * this.stationRadius;
+    return rail.tiles.some((t) => {
+      const dx = this.game.x(t) - x;
+      const dy = this.game.y(t) - y;
+      return dx * dx + dy * dy <= radiusSq;
+    });
+  }
+
   private connectToExistingRails(station: TrainStation): boolean {
     const rails = this.railGrid.query(station.tile(), this.stationRadius);
 
     const editedClusters = new Set<Cluster>();
     for (const rail of rails) {
+      if (!this.railWithinSnapRadius(rail, station.tile())) continue;
       const from = rail.from;
       const to = rail.to;
       const originalId = rail.id;
@@ -266,6 +287,7 @@ export class RailNetworkImpl implements RailNetwork {
     }
     const tiles = new Set<TileRef>();
     for (const railroad of this.railGrid.query(tile, this.stationRadius)) {
+      if (!this.railWithinSnapRadius(railroad, tile)) continue;
       for (const t of railroad.tiles) {
         tiles.add(t);
       }
@@ -274,7 +296,9 @@ export class RailNetworkImpl implements RailNetwork {
   }
 
   private canSnapToExistingRailway(tile: TileRef): boolean {
-    return this.railGrid.query(tile, this.stationRadius).size > 0;
+    return [...this.railGrid.query(tile, this.stationRadius)].some((rail) =>
+      this.railWithinSnapRadius(rail, tile),
+    );
   }
 
   computeGhostRailPaths(unitType: UnitType, tile: TileRef): TileRef[][] {

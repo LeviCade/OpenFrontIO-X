@@ -259,7 +259,7 @@ export class EngineConfig extends Config {
   }
 
   trainStationMinRange(): number {
-    return 15;
+    return Math.max(1, Math.round(15 * this.virtualWorldVisualScale()));
   }
   railroadMaxSize(): number {
     return this.trainStationMaxRange() * 1.4142;
@@ -537,7 +537,12 @@ export class EngineConfig extends Config {
     if (defender === null) {
       const tickBudget = input.borderSize * 2;
       return {
-        attackerTroopLoss: mag / (attacker.type === PlayerType.Bot ? 10 : 5),
+        // One physical cell represents A perceived tiles in Virtual mode.
+        // Charge the aggregate conquest loss rather than allowing A tiles
+        // of territory to be purchased for the ordinary one-cell cost.
+        attackerTroopLoss:
+          (mag / (attacker.type === PlayerType.Bot ? 10 : 5)) *
+          this.virtualWorldArea(),
         defenderTroopLoss: 0,
         tickFraction:
           within(
@@ -601,7 +606,10 @@ export class EngineConfig extends Config {
       LARGE_ATTACKER_SPEED_DEPTH,
     );
     return {
-      attackerTroopLoss,
+      // The simulated tile covers A virtual tiles. Defender troops-per-tile
+      // already represents that entire area's garrison, so only charge the
+      // A-fold aggregate attacker cost. Preserve unchanged 1× equations.
+      attackerTroopLoss: attackerTroopLoss * this.virtualWorldArea(),
       defenderTroopLoss,
       tickFraction:
         (speedCost *
@@ -754,11 +762,11 @@ export class EngineConfig extends Config {
   }
 
   warshipPatrolRange(): number {
-    return 100;
+    return Math.max(1, Math.round(100 * this.virtualWorldVisualScale()));
   }
 
   warshipTargettingRange(): number {
-    return 130;
+    return Math.max(1, Math.round(130 * this.virtualWorldVisualScale()));
   }
 
   warshipShellAttackRate(): number {
@@ -766,7 +774,7 @@ export class EngineConfig extends Config {
   }
 
   warshipDockingRange(): number {
-    return 5;
+    return Math.max(1, Math.round(5 * this.virtualWorldVisualScale()));
   }
 
   warshipPortHealingBonusPerLevel(): number {
@@ -784,7 +792,7 @@ export class EngineConfig extends Config {
   }
 
   warshipPassiveHealingRange(): number {
-    return 150;
+    return Math.max(1, Math.round(150 * this.virtualWorldVisualScale()));
   }
 
   warshipPortSwitchThreshold(): number {

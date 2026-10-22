@@ -1,4 +1,5 @@
 import { Cell } from "@openfront/engine-api/game/GameTypes";
+import { virtualInspectionZoomCap } from "@openfront/engine-lib/game/VirtualWorldScale";
 import { EventBus, GameEvent } from "@openfront/shared/EventBus";
 import {
   CenterCameraEvent,
@@ -214,7 +215,8 @@ export class TransformHandler {
       return;
     }
     this.target = new Cell(nameLocation.x, nameLocation.y);
-    this.targetScale = event.zoom ?? null;
+    this.targetScale =
+      event.zoom === undefined ? null : Math.min(this.maxScale(), event.zoom);
     this.intervalID = setInterval(() => this.goTo(), GOTO_INTERVAL_MS);
   }
 
@@ -311,6 +313,14 @@ export class TransformHandler {
     );
   }
 
+  /** Keep user input and WebGL camera at the same virtual zoom ceiling. */
+  private maxScale(): number {
+    const config = this.game.config?.();
+    const virtual = config?.virtualWorldArea?.() ?? 1;
+    const physical = config?.gameConfig?.().mapAreaMultiplier ?? 1;
+    return virtualInspectionZoomCap(virtual * physical, virtual);
+  }
+
   onZoom(event: ZoomEvent) {
     this.clearTarget();
     const oldScale = this.scale;
@@ -319,7 +329,10 @@ export class TransformHandler {
 
     // On giant maps 0.2 is too close: allow enough zoom to see the edges.
     // On ordinary maps keep the historical 0.2 floor.
-    this.scale = Math.max(this.minScale(), Math.min(20, this.scale));
+    this.scale = Math.max(
+      this.minScale(),
+      Math.min(this.maxScale(), this.scale),
+    );
 
     const canvasCoords = this.screenToCanvasCoordinates(event.x, event.y);
 

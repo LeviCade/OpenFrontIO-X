@@ -83,6 +83,7 @@ export class DefenseCoveragePass {
     mapH: number,
     tileTex: WebGLTexture,
     settings: RenderSettings,
+    private readonly defensePostRange = settings.mapOverlay.defensePostRange,
   ) {
     this.gl = gl;
     this.settings = settings;
@@ -231,7 +232,7 @@ export class DefenseCoveragePass {
     // Shared stamp state (uniforms/textures/VAO don't change between blocks).
     gl.useProgram(this.program);
     gl.uniform2f(this.uMapSize, this.mapW, this.mapH);
-    gl.uniform1f(this.uRange, this.settings.mapOverlay.defensePostRange);
+    gl.uniform1f(this.uRange, this.defensePostRange);
     gl.activeTexture(gl.TEXTURE0);
     gl.bindTexture(gl.TEXTURE_2D, this.tileTex);
     gl.bindVertexArray(this.vao);

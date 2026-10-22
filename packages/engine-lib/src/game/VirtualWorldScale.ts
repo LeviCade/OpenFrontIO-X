@@ -8,6 +8,32 @@
 export type WorldScaleMode = "virtual" | "physical";
 export const MAX_VIRTUAL_WORLD_AREA = 100;
 
+export const MAX_VIRTUAL_INSPECTION_ZOOM = 1000;
+
+/**
+ * The simulation has A times the perceived terrain area without A times the
+ * grid cells. Allow extra magnification so a player can actually target small
+ * virtual structures, rather than stopping at the original 20× HUD limit.
+ * Physical mode retains its existing sqrt(area) zoom behavior.
+ */
+export function virtualInspectionZoomCap(
+  perceivedArea: number,
+  virtualArea = 1,
+): number {
+  if (
+    !Number.isFinite(perceivedArea) ||
+    perceivedArea < 1 ||
+    !Number.isFinite(virtualArea) ||
+    virtualArea < 1
+  ) {
+    throw new Error("Invalid perceived or virtual world area");
+  }
+  return Math.min(
+    MAX_VIRTUAL_INSPECTION_ZOOM,
+    20 * Math.sqrt(perceivedArea) * Math.sqrt(virtualArea),
+  );
+}
+
 /** Fail closed on invalid or fractional input; old records default to 1. */
 export function assertVirtualWorldArea(area: number): asserts area is number {
   if (
@@ -27,6 +53,29 @@ export function virtualLinearScale(area: number): number {
 /** For tile-based visual assets, never permit the sprite to vanish entirely. */
 export function virtualVisualScale(area: number): number {
   return 1 / virtualLinearScale(area);
+}
+
+/** UI hit testing is stricter than construction spacing. At 100× the
+ * player must target the physical tile occupied by a tiny structure; a
+ * distant neighboring building must never be upgraded by mistake.
+ * Normal 1× retains the historical large interaction range.
+ */
+/** Precise world-space selection for moving units. With 100× Virtual
+ * magnification, even warships must be clicked on their actual physical cell.
+ */
+export function virtualUnitPickRadius(area: number, normalRadius = 10): number {
+  assertVirtualWorldArea(area);
+  if (!Number.isSafeInteger(normalRadius) || normalRadius < 1) {
+    throw new Error("Invalid unit selection radius");
+  }
+  if (area === 1) return normalRadius;
+  return Math.max(0, Math.floor(normalRadius / Math.sqrt(area) - 0.5));
+}
+
+export function virtualStructurePickRadius(area: number): number {
+  assertVirtualWorldArea(area);
+  if (area === 1) return 15;
+  return Math.max(0, Math.floor(6 / Math.sqrt(area) - 0.5));
 }
 
 /** Discrete start tiles cannot be subdivided; one-tile minimum is essential. */

@@ -13,6 +13,7 @@ import {
   HashUpdate,
 } from "@openfront/engine-api/game/GameUpdates";
 import { findClosestBy } from "@openfront/engine-lib/Util";
+import { virtualStructurePickRadius } from "@openfront/engine-lib/game/VirtualWorldScale";
 import { Config } from "@openfront/engine-lib/configuration/Config";
 import type { MapAreaMultiplier } from "@openfront/engine-lib/game/MapMultiplier";
 import { TerrainMapData } from "@openfront/engine-lib/game/TerrainMapLoader";
@@ -1325,6 +1326,8 @@ export class ClientGameRunner {
   }
 
   private findAndUpgradeNearestBuilding(clickedTile: TileRef) {
+    const virtualArea = this.gameView.config().virtualWorldArea();
+    const pickRadius = virtualStructurePickRadius(virtualArea);
     this.myPlayer!.actions(clickedTile, Structures.types)
       .then((actions) => {
         const upgradeUnits: {
@@ -1343,6 +1346,8 @@ export class ClientGameRunner {
                 clickedTile,
                 existingUnit.tile(),
               );
+
+              if (virtualArea > 1 && distance > pickRadius) continue;
 
               upgradeUnits.push({
                 unitId: bu.canUpgrade,
@@ -1373,7 +1378,9 @@ export class ClientGameRunner {
             const closestOfType = this.gameView
               .nearbyUnits(
                 clickedTile,
-                this.gameView.config().structureMinDist(),
+                virtualArea > 1
+                  ? pickRadius
+                  : this.gameView.config().structureMinDist(),
                 bu.type,
               )
               .filter(({ unit }) => unit.owner().id() === myPlayerID)

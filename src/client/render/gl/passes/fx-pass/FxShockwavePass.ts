@@ -87,6 +87,7 @@ export class FxShockwavePass {
   constructor(
     private gl: WebGL2RenderingContext,
     private settings: RenderSettings,
+    private readonly virtualVisualScale = 1,
   ) {
     this.program = createProgram(
       gl,
@@ -205,7 +206,10 @@ export class FxShockwavePass {
       durationMs,
       // Cosmetic maxRadius is absolute (world tiles); the default look scales
       // with the bomb's blast radius.
-      maxRadius: params?.maxRadius ?? nukeRadius * fx.nukeShockwaveRadiusFactor,
+      maxRadius:
+        params?.maxRadius !== undefined
+          ? params.maxRadius * this.virtualVisualScale
+          : nukeRadius * fx.nukeShockwaveRadiusFactor,
       // Cosmetic type → its style; no cosmetic → classic ring (the original
       // nuke look).
       style: params
@@ -231,7 +235,7 @@ export class FxShockwavePass {
       y,
       startMs: this.timeFn(),
       durationMs: fx.samShockwaveDurationMs,
-      maxRadius: fx.samShockwaveRadius,
+      maxRadius: fx.samShockwaveRadius * this.virtualVisualScale,
       style: 0, // SAM interception keeps the classic ring
       colors: [WHITE],
       speed: 1,
@@ -300,7 +304,10 @@ export class FxShockwavePass {
     const gl = this.gl;
     gl.useProgram(this.program);
     gl.uniformMatrix3fv(this.uCamera, false, cameraMatrix);
-    gl.uniform1f(this.uRingWidth, this.settings.fx.shockwaveRingWidth);
+    gl.uniform1f(
+      this.uRingWidth,
+      this.settings.fx.shockwaveRingWidth * this.virtualVisualScale,
+    );
     gl.uniform1f(this.uTime, this.timeFn() * 0.001);
     gl.bindBuffer(gl.ARRAY_BUFFER, this.instanceBuf.buffer);
     gl.bufferSubData(

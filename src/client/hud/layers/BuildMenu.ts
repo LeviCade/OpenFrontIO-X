@@ -7,6 +7,7 @@ import {
   UnitType,
 } from "@openfront/engine-api/game/GameTypes";
 import { renderNumber } from "@openfront/engine-lib/Format";
+import { virtualStructurePickRadius } from "@openfront/engine-lib/game/VirtualWorldScale";
 import { assetUrl } from "@openfront/shared/AssetUrls";
 import { EventBus } from "@openfront/shared/EventBus";
 import { css, html, LitElement } from "lit";
@@ -484,11 +485,30 @@ export class BuildMenu extends LitElement implements Controller {
   }
 
   private refresh() {
+    const tile = this.clickedTile;
     this.game
       .myPlayer()
-      ?.buildables(this.clickedTile, BuildMenus.types)
+      ?.buildables(tile, BuildMenus.types)
       .then((buildables) => {
-        this.playerBuildables = buildables;
+        // A stale worker response must not replace a newer menu's targets.
+        if (this._hidden || this.clickedTile !== tile) return;
+        const virtualArea = this.game.config().virtualWorldArea();
+        if (virtualArea === 1) {
+          this.playerBuildables = buildables;
+        } else {
+          const pickRadius = virtualStructurePickRadius(virtualArea);
+          this.playerBuildables = buildables.map((unit) => {
+            if (unit.canUpgrade === false) return unit;
+            const target = this.game.unit(unit.canUpgrade);
+            if (
+              target !== undefined &&
+              this.game.manhattanDist(tile, target.tile()) <= pickRadius
+            ) {
+              return unit;
+            }
+            return { ...unit, canUpgrade: false };
+          });
+        }
         this.requestUpdate();
       });
 

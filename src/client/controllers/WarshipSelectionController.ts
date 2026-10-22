@@ -1,5 +1,6 @@
 import { TileRef } from "@openfront/engine-api/game/GameMap";
 import { Cell, UnitType } from "@openfront/engine-api/game/GameTypes";
+import { virtualUnitPickRadius } from "@openfront/engine-lib/game/VirtualWorldScale";
 import { EventBus } from "@openfront/shared/EventBus";
 import { Controller } from "../Controller";
 import {
@@ -142,14 +143,17 @@ export class WarshipSelectionController implements Controller {
   private findWarshipsNearCell(clickRef: TileRef): UnitView[] {
     const myPlayer = this.game.myPlayer();
     if (!myPlayer) return [];
+    const selectionRadius = virtualUnitPickRadius(
+      this.game.config().virtualWorldArea(),
+      WARSHIP_SELECTION_RADIUS,
+    );
     return this.game
       .units(UnitType.Warship)
       .filter(
         (unit) =>
           unit.isActive() &&
           unit.owner() === myPlayer &&
-          this.game.manhattanDist(unit.tile(), clickRef) <=
-            WARSHIP_SELECTION_RADIUS,
+          this.game.manhattanDist(unit.tile(), clickRef) <= selectionRadius,
       )
       .sort(
         (a, b) =>

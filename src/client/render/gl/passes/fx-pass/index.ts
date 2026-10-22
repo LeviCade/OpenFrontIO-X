@@ -44,7 +44,11 @@ export class FxPass {
     this.mapW = header.mapWidth;
     this.settings = settings;
     this.spritePass = new FxSpritePass(gl, header, settings, config);
-    this.shockwavePass = new FxShockwavePass(gl, settings);
+    this.shockwavePass = new FxShockwavePass(
+      gl,
+      settings,
+      config.virtualWorldVisualScale(),
+    );
     this.attackRingPass = new FxAttackRingPass(gl, settings);
   }
 
@@ -65,7 +69,11 @@ export class FxPass {
     const x = unit.pos % this.mapW;
     const y = (unit.pos - x) / this.mapW;
 
-    const nukeRadius = nukeExplosionRadius(this.settings.fx, typeName);
+    const baseNukeRadius = nukeExplosionRadius(this.settings.fx, typeName);
+    const nukeRadius =
+      baseNukeRadius === undefined
+        ? undefined
+        : baseNukeRadius * this.config.virtualWorldVisualScale();
     if (nukeRadius !== undefined) {
       if (unit.reachedTarget) {
         this.spritePass.spawnFxForUnit(unit, now);

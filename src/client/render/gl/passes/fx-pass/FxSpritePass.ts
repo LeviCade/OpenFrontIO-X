@@ -295,8 +295,10 @@ export class FxSpritePass {
         uvData[i * 4 + 1] = row.height / meta.height;
         uvData[i * 4 + 2] = row.worldWidth / meta.width;
         uvData[i * 4 + 3] = 0;
-        worldData[i * 4 + 0] = row.worldWidth;
-        worldData[i * 4 + 1] = row.worldHeight;
+        worldData[i * 4 + 0] =
+          row.worldWidth * this.config.virtualWorldVisualScale();
+        worldData[i * 4 + 1] =
+          row.worldHeight * this.config.virtualWorldVisualScale();
         worldData[i * 4 + 2] = 0;
         worldData[i * 4 + 3] = 0;
       }
@@ -352,7 +354,11 @@ export class FxSpritePass {
     const x = unit.pos % this.mapW;
     const y = (unit.pos - x) / this.mapW;
 
-    const nukeRadius = nukeExplosionRadius(this.settings.fx, typeName);
+    const baseNukeRadius = nukeExplosionRadius(this.settings.fx, typeName);
+    const nukeRadius =
+      baseNukeRadius === undefined
+        ? undefined
+        : baseNukeRadius * this.config.virtualWorldVisualScale();
     if (nukeRadius !== undefined) {
       if (unit.reachedTarget) {
         this.spawnNukeSprites(x, y, nukeRadius, now, unit.pos);
