@@ -228,6 +228,9 @@ export interface GameConfigSettingsData {
     toggles: ToggleOptionConfig[];
     inputCards: TemplateResult[];
   };
+  specialOptions?: {
+    toggles: ToggleOptionConfig[];
+  };
   hostCheats?: {
     titleKey: string;
     visible: boolean;
@@ -328,6 +331,13 @@ export class GameConfigSettings extends LitElement {
   private handleNationsChanged = (event: Event) => {
     const customEvent = event as CustomEvent<{ value: number }>;
     this.emit("nations-changed", customEvent.detail);
+  };
+
+  private handleSpecialOptionToggle = (toggle: ToggleOptionConfig) => {
+    this.emit("special-option-toggle-changed", {
+      labelKey: toggle.labelKey,
+      checked: !toggle.checked,
+    });
   };
 
   private handleHostCheatToggle = (toggle: ToggleOptionConfig) => {
@@ -678,6 +688,24 @@ export class GameConfigSettings extends LitElement {
             </div>
           `,
         )}
+        ${settings.specialOptions
+          ? renderSection(
+              OPTIONS_ICON,
+              "text-purple-400",
+              "bg-purple-500/20",
+              "Special Options",
+              html`<div class="grid grid-cols-2 lg:grid-cols-3 gap-4">
+                ${settings.specialOptions.toggles.map((toggle) =>
+                  renderTextCardButton(
+                    toggle.labelKey,
+                    toggle.checked,
+                    () => this.handleSpecialOptionToggle(toggle),
+                    "p-4 text-center",
+                  ),
+                )}
+              </div>`,
+            )
+          : nothing}
         ${settings.hostCheats?.visible
           ? renderSection(
               HOST_CHEATS_ICON,
