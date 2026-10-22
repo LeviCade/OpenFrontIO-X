@@ -8,7 +8,7 @@
  * build is sent to that build's versioned shell.
  */
 
-import { Cell, PlayerType } from "@openfront/engine-api/game/GameTypes";
+import { Cell, PlayerType, UnitType } from "@openfront/engine-api/game/GameTypes";
 import type { GameStartInfo } from "@openfront/engine-api/Schemas";
 import { Config } from "@openfront/engine-lib/configuration/Config";
 import { EventBus } from "@openfront/shared/EventBus";
@@ -109,6 +109,8 @@ async function openPlayback(
     allianceDuration: config.allianceDuration(),
     doomsdayClockWarnTicks:
       config.doomsdayClockConfig().warnSeconds * TICKS_PER_SECOND,
+    nukeMagnitudeFor: (type, multiplier) =>
+      config.nukeMagnitudes(type as UnitType, multiplier),
   });
   return { config, playback };
 }
