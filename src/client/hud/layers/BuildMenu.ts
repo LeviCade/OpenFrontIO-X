@@ -385,7 +385,7 @@ export class BuildMenu extends LitElement implements Controller {
 
   public sendBuildOrUpgrade(buildableUnit: BuildableUnit, tile: TileRef): void {
     const atomic =
-      this.game.config().gameConfig().specialOptions?.atomicMultiplier &&
+      this.game.config?.()?.gameConfig?.()?.specialOptions?.atomicMultiplier &&
       (buildableUnit.type === UnitType.AtomBomb ||
         buildableUnit.type === UnitType.HydrogenBomb);
     if (atomic) {
