@@ -273,7 +273,11 @@ export class GPURenderer {
       );
     }
 
-    this.camera = new Camera(mapW, mapH);
+    this.camera = new Camera(
+      mapW,
+      mapH,
+      config.virtualWorldArea() * (config.gameConfig().mapAreaMultiplier ?? 1),
+    );
 
     // --- Terrain (static) ---
     // Bake once and let the array go — nothing below retains map-sized
