@@ -7,9 +7,7 @@ describe("full-resolution Giant World area feasibility (planning only)", () => {
 
   it("measures real 10x logical grid, safety gate and 4096 GPU seams", () => {
     const e = estimateExtendedMap(sourceWidth, sourceHeight, 10, 4096);
-    expect([e.width, e.height, e.tiles]).toEqual([
-      12991, 6160, 80_024_560,
-    ]);
+    expect([e.width, e.height, e.tiles]).toEqual([12991, 6160, 80_024_560]);
     expect(e.withinExistingSafetyBudget).toBe(false);
     expect(e.requiresGpuTiling).toBe(true);
     expect([e.texturePlan.columns, e.texturePlan.rows]).toEqual([4, 2]);
@@ -20,9 +18,7 @@ describe("full-resolution Giant World area feasibility (planning only)", () => {
 
   it("measures real 20x logical grid, mandatory tiling even on 16k GPU", () => {
     const e = estimateExtendedMap(sourceWidth, sourceHeight, 20, 16384);
-    expect([e.width, e.height, e.tiles]).toEqual([
-      18372, 8712, 160_056_864,
-    ]);
+    expect([e.width, e.height, e.tiles]).toEqual([18372, 8712, 160_056_864]);
     expect(e.withinExistingSafetyBudget).toBe(false);
     expect(e.requiresGpuTiling).toBe(true);
     expect([e.texturePlan.columns, e.texturePlan.rows]).toEqual([2, 1]);
