@@ -1,5 +1,5 @@
 import { TileRef } from "@openfront/engine-api/game/GameMap";
-import { GameMode, GameType, Gold } from "@openfront/engine-api/game/GameTypes";
+import { GameMode, GameType, Gold, UnitType } from "@openfront/engine-api/game/GameTypes";
 import { GameUpdateType } from "@openfront/engine-api/game/GameUpdates";
 import { ClientID } from "@openfront/engine-api/Schemas";
 import { Config } from "@openfront/engine-lib/configuration/Config";
@@ -687,6 +687,32 @@ export class ControlPanel extends LitElement implements Controller {
           : "hidden"}"
         @contextmenu=${(e: MouseEvent) => e.preventDefault()}
       >
+        ${this.game.config().gameConfig().specialOptions?.atomicMultiplier &&
+        (this.uiState.ghostStructure === UnitType.AtomBomb ||
+          this.uiState.ghostStructure === UnitType.HydrogenBomb)
+          ? html`<div class="flex items-center justify-between gap-2 p-2 mb-2 rounded-lg border border-purple-400/60 bg-purple-900/40 text-white text-xs">
+              <span class="font-bold">Atomic blast · ${this.uiState.blastMultiplier}× radius</span>
+              <button
+                class="px-3 py-1 rounded border border-purple-300"
+                ?disabled=${this.uiState.blastMultiplier >= 8}
+                @click=${() => {
+                  this.uiState.blastMultiplier = Math.min(
+                    8,
+                    this.uiState.blastMultiplier + 1,
+                  );
+                  this.requestUpdate();
+                }}
+              >+ Radius</button>
+              <button
+                class="px-3 py-1 rounded border border-white/50"
+                @click=${() => {
+                  this.uiState.ghostStructure = null;
+                  this.uiState.blastMultiplier = 1;
+                  this.requestUpdate();
+                }}
+              >Discard</button>
+            </div>`
+          : ""}
         <div class="lg:hidden">${this.renderMobile()}</div>
         <div class="hidden lg:block">${this.renderDesktop()}</div>
       </div>
