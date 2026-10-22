@@ -582,6 +582,7 @@ export class GPURenderer {
       this.paletteTex,
       this.effectTex,
       this.settings,
+      config.virtualWorldVisualScale(),
     );
     this.structureLevelPass = new StructureLevelPass(gl, header, this.settings);
     this.unitPass = new UnitPass(
