@@ -55,6 +55,17 @@ export function virtualVisualScale(area: number): number {
   return 1 / virtualLinearScale(area);
 }
 
+/** UI hit testing is stricter than construction spacing. At 100× the
+ * player must target the physical tile occupied by a tiny structure; a
+ * distant neighboring building must never be upgraded by mistake.
+ * Normal 1× retains the historical large interaction range.
+ */
+export function virtualStructurePickRadius(area: number): number {
+  assertVirtualWorldArea(area);
+  if (area === 1) return 15;
+  return Math.max(0, Math.floor(6 / Math.sqrt(area) - 0.5));
+}
+
 /** Discrete start tiles cannot be subdivided; one-tile minimum is essential. */
 export function virtualSpawnRadius(area: number): number {
   return Math.max(1, Math.round(4 / virtualLinearScale(area)));
