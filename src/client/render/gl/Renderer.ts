@@ -277,6 +277,7 @@ export class GPURenderer {
       mapW,
       mapH,
       config.virtualWorldArea() * (config.gameConfig().mapAreaMultiplier ?? 1),
+      config.virtualWorldArea(),
     );
 
     // --- Terrain (static) ---
