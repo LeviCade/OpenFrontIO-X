@@ -576,11 +576,8 @@ export class GPURenderer {
     this.rangeCirclePass = new RangeCirclePass(gl);
 
     // --- SAM radius overlay (dashed green circles during build mode) ---
-    this.samRadiusPass = new SAMRadiusPass(
-      gl,
-      mapW,
-      this.settings,
-      (level) => config.samRange(level),
+    this.samRadiusPass = new SAMRadiusPass(gl, mapW, this.settings, (level) =>
+      config.samRange(level),
     );
     this.samRadiusPass.setPaletteData(paletteData);
 
