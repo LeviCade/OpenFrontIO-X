@@ -78,12 +78,10 @@ describe("Map Multiplier packed terrain", () => {
     expect(scaled.metadata.height).toBe(9);
     expect(scaled.bytes.length).toBe(81);
     expect(() =>
-      scaleTerrainGrid(
-        new Uint8Array(4).fill(0x80),
-        source,
-        20,
-        { width: 12_991, height: 6_160 },
-      ),
+      scaleTerrainGrid(new Uint8Array(4).fill(0x80), source, 20, {
+        width: 12_991,
+        height: 6_160,
+      }),
     ).toThrow("budget");
   });
 
