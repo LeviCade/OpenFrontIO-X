@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { GameType, GameMode, GameMapSize, GameMapType, Difficulty, UnitType, PlayerType } from "@openfront/engine-api/game/GameTypes";
+import { GameType, UnitType, PlayerType } from "@openfront/engine-api/game/GameTypes";
 import { GameConfig, GameConfigPatchSchema, BuildUnitIntentSchema } from "@openfront/engine-api/Schemas";
-import { Config } from "@openfront/engine-lib/configuration/Config";
 import { EngineConfig } from "@openfront/engine/configuration/EngineConfig";
 import { extractNukeTelegraphs } from "../src/client/render/frame/derive/NukeTelegraphs";
 
