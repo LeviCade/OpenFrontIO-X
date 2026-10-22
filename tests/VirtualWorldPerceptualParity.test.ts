@@ -62,9 +62,7 @@ describe("100× Virtual World geometry and troop economics", () => {
     };
     const one = config(1).attackLogic(input);
     const hundred = config(100).attackLogic(input);
-    expect(hundred.attackerTroopLoss).toBeCloseTo(
-      one.attackerTroopLoss * 100,
-    );
+    expect(hundred.attackerTroopLoss).toBeCloseTo(one.attackerTroopLoss * 100);
     expect(hundred.defenderTroopLoss).toBe(one.defenderTroopLoss);
     expect(hundred.tickFraction).toBe(one.tickFraction);
   });
