@@ -590,7 +590,12 @@ export class GPURenderer {
       this.settings,
       config.virtualWorldVisualScale(),
     );
-    this.structureLevelPass = new StructureLevelPass(gl, header, this.settings);
+    this.structureLevelPass = new StructureLevelPass(
+      gl,
+      header,
+      this.settings,
+      config.virtualWorldVisualScale(),
+    );
     this.unitPass = new UnitPass(
       gl,
       header,
