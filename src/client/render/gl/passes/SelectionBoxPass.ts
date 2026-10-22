@@ -36,7 +36,10 @@ export class SelectionBoxPass {
   /** Reusable buffer of selections — caller mutates via setSelections(). */
   private readonly selections: SelectionEntry[] = [];
 
-  constructor(gl: WebGL2RenderingContext) {
+  constructor(
+    gl: WebGL2RenderingContext,
+    private readonly virtualVisualScale = 1,
+  ) {
     this.gl = gl;
     this.program = createProgram(gl, vertSrc, fragSrc, "SelectionBoxPass");
 
@@ -96,7 +99,7 @@ export class SelectionBoxPass {
     const gl = this.gl;
     gl.useProgram(this.program);
     gl.uniformMatrix3fv(this.uCamera, false, cameraMatrix);
-    gl.uniform1f(this.uHalfSize, HALF_SIZE);
+    gl.uniform1f(this.uHalfSize, HALF_SIZE * this.virtualVisualScale);
     gl.uniform1f(this.uTime, frameTick);
     gl.bindVertexArray(this.vao);
 
