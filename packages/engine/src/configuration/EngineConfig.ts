@@ -740,7 +740,7 @@ export class EngineConfig extends Config {
   }
 
   defaultSamMissileSpeed(): number {
-    return 12;
+    return Math.max(1, Math.round(12 * this.virtualWorldVisualScale()));
   }
 
   // Humans can be soldiers, soldiers attacking, soldiers in boat etc.
