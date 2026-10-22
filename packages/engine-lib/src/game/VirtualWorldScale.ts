@@ -8,6 +8,33 @@
 export type WorldScaleMode = "virtual" | "physical";
 export const MAX_VIRTUAL_WORLD_AREA = 100;
 
+export const MAX_VIRTUAL_INSPECTION_ZOOM = 1000;
+
+/**
+ * The simulation has A times the perceived terrain area without A times the
+ * grid cells. Allow extra magnification so a player can actually target small
+ * virtual structures, rather than stopping at the original 20× HUD limit.
+ * Physical mode retains its existing sqrt(area) zoom behavior.
+ */
+export function virtualInspectionZoomCap(
+  perceivedArea: number,
+  virtualArea = 1,
+): number {
+  if (
+    !Number.isFinite(perceivedArea) ||
+    perceivedArea < 1 ||
+    !Number.isFinite(virtualArea) ||
+    virtualArea < 1
+  ) {
+    throw new Error("Invalid perceived or virtual world area");
+  }
+  return Math.min(
+    MAX_VIRTUAL_INSPECTION_ZOOM,
+    20 * Math.sqrt(perceivedArea) * Math.sqrt(virtualArea),
+  );
+}
+
+
 /** Fail closed on invalid or fractional input; old records default to 1. */
 export function assertVirtualWorldArea(area: number): asserts area is number {
   if (
