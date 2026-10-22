@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { GameType } from "@openfront/engine-api/game/GameTypes";
-import { GameConfig, GameConfigPatchSchema } from "@openfront/engine-api/Schemas";
+import {
+  GameConfig,
+  GameConfigPatchSchema,
+} from "@openfront/engine-api/Schemas";
 import { Config } from "@openfront/engine-lib/configuration/Config";
 import {
   advanceVirtualPace,
