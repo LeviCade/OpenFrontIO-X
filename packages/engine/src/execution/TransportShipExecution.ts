@@ -6,6 +6,7 @@ import {
   UnitType,
 } from "@openfront/engine-api/game/GameTypes";
 import { renderTroops } from "@openfront/engine-lib/Format";
+import { virtualTicksPerMove } from "@openfront/engine-lib/game/VirtualWorldScale";
 import { MotionPlanRecord } from "@openfront/engine-lib/game/MotionPlans";
 import {
   zInt,
@@ -75,6 +76,7 @@ export class TransportShipExecution implements Execution {
 
     this.lastMove = ticks;
     this.mg = mg;
+    this.ticksPerMove = virtualTicksPerMove(mg.config().virtualWorldArea());
     this.target = mg.owner(this.ref);
     const stagger = mg.nextShipStagger("transportShip");
     this.pathFinder = new WaterPathFinder(mg, stagger);
