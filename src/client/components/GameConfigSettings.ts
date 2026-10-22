@@ -499,9 +499,9 @@ export class GameConfigSettings extends LitElement {
                     )}
                   </div>
                   <p class="text-xs text-white/60">
-                    Area, not linear scale. Very large maps are blocked by
-                    the current safe tile budget. Giant World 10×–20× is
-                    not enabled until renderer and memory tests pass.
+                    Area, not linear scale. Very large maps are blocked by the
+                    current safe tile budget. Giant World 10×–20× is not enabled
+                    until renderer and memory tests pass.
                   </p>
                 </div>`
               : nothing}`,
