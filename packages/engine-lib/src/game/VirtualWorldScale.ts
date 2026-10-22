@@ -34,7 +34,6 @@ export function virtualInspectionZoomCap(
   );
 }
 
-
 /** Fail closed on invalid or fractional input; old records default to 1. */
 export function assertVirtualWorldArea(area: number): asserts area is number {
   if (
