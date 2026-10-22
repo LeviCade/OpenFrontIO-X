@@ -754,12 +754,20 @@ export class EngineConfig extends Config {
       return (5 * humans) / Math.max(1, tilesOwned);
     }
     const targetTroops = 0.03 * maxTroops;
-    const excessTroops = Math.max(0, humans - targetTroops);
     const scalingFactor = 500;
-
     const steepness = 2;
-    const normalizedExcess = excessTroops / maxTroops;
-    return scalingFactor * (1 - exp(-steepness * normalizedExcess));
+    // One MIRV-impacted virtual cell represents A ordinary cells.
+    // Apply the *same* nonlinear physical-cell rule in sequence: multiplying
+    // the one-cell result by A would overestimate late-stage casualties.
+    let remaining = humans;
+    for (let i = 0; i < this.virtualWorldArea(); i++) {
+      const excessTroops = Math.max(0, remaining - targetTroops);
+      const normalizedExcess = excessTroops / maxTroops;
+      const loss = scalingFactor * (1 - exp(-steepness * normalizedExcess));
+      if (this.virtualWorldArea() === 1) return loss; // Exact legacy math.
+      remaining = Math.max(0, remaining - loss);
+    }
+    return humans - remaining;
   }
 
   shellLifetime(): number {
