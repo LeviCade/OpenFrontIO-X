@@ -280,6 +280,14 @@ export const GameConfigSchema = z.object({
   // Distinct from physical mapAreaMultiplier: same terrain, slower world scale.
   // Optional for compatibility with existing saves, clients and replays.
   virtualWorldAreaMultiplier: zb.uint({ min: 1, max: 100 }).optional(),
+  // Experimental Solo-only settings; omitted/false means original mechanics.
+  specialOptions: z
+    .object({
+      factoryMultiplier: z.boolean().optional(),
+      samMultiplier: z.boolean().optional(),
+      atomicMultiplier: z.boolean().optional(),
+    })
+    .optional(),
   doomsdayClock: DoomsdayClockConfigSchema.optional(),
   overtime: OvertimeConfigSchema.optional(),
   // Solo-only victory territory percentage (default remains the original 80%).
@@ -508,6 +516,8 @@ export const BuildUnitIntentSchema = z.object({
   tile: zb.uint(),
   rocketDirectionUp: z.boolean().optional(),
   amount: zb.uint({ min: 1, max: MAX_UPGRADE_AMOUNT }).optional(),
+  // Per-launch blast radius multiplier, not number of warheads or their price.
+  blastMultiplier: zb.uint({ min: 1, max: 8 }).optional(),
 });
 
 export const UpgradeStructureIntentSchema = z.object({
