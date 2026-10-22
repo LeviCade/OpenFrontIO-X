@@ -186,7 +186,7 @@ export class Config {
   }
 
   defensePostRange(): number {
-    return 30;
+    return Math.max(1, Math.round(30 * this.virtualWorldVisualScale()));
   }
 
   isUnitDisabled(unitType: UnitType): boolean {
@@ -446,12 +446,13 @@ export class Config {
   }
 
   samRange(level: number): number {
-    // rational growth function (level 1 = 70, level 5 just above hydro range, asymptotically approaches 150)
-    return this.maxSamRange() - 480 / (level + 5);
+    // Preserve the rational level curve, but use the same world-space scale
+    // as defaultSamRange(). Otherwise upgrades restore full-size 1× reach.
+    return this.maxSamRange() - (480 / (level + 5)) * this.virtualWorldVisualScale();
   }
 
   maxSamRange(): number {
-    return 150;
+    return 150 * this.virtualWorldVisualScale();
   }
 
   structureMinDist(): number {
