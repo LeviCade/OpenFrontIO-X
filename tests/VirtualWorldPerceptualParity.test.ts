@@ -63,9 +63,18 @@ describe("100× Virtual World geometry and troop economics", () => {
     };
     const one = config(1).attackLogic(input);
     const hundred = config(100).attackLogic(input);
-    expect(hundred.attackerTroopLoss).toBeCloseTo(one.attackerTroopLoss * 100);
-    expect(hundred.defenderTroopLoss).toBe(one.defenderTroopLoss);
-    expect(hundred.tickFraction).toBe(one.tickFraction);
+    // A physical 100× world has 100 times as many territory cells with
+    // the same total defender army. Virtual combat must aggregate those
+    // ordinary losses, NOT multiply the density cost a second time.
+    const physical = config(1).attackLogic({
+      ...input,
+      attacker: { ...input.attacker, numTiles: input.attacker.numTiles * 100 },
+      defender: { ...input.defender, numTiles: input.defender.numTiles * 100 },
+    });
+    expect(hundred.attackerTroopLoss).toBeCloseTo(physical.attackerTroopLoss * 100);
+    expect(hundred.defenderTroopLoss).toBeCloseTo(physical.defenderTroopLoss * 100);
+    expect(hundred.attackerTroopLoss).not.toBeCloseTo(one.attackerTroopLoss * 100);
+    expect(hundred.tickFraction).toBeLessThanOrEqual(one.tickFraction);
   });
 
   it("scales factory reach, train spacing, warship zones and deep zoom", () => {
