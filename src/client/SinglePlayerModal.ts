@@ -13,6 +13,7 @@ import {
   MAX_MULTIPLIED_MAP_TILES,
   type MapAreaMultiplier,
 } from "@openfront/engine-lib/game/MapMultiplier";
+import { assertVirtualWorldArea, type WorldScaleMode } from "@openfront/engine-lib/game/VirtualWorldScale";
 import { UserMeResponse } from "@openfront/shared/ApiSchemas";
 import { assetUrl } from "@openfront/shared/AssetUrls";
 import { generateID } from "@openfront/shared/SharedUtil";
@@ -103,6 +104,8 @@ type StartPreparation = {
 const DEFAULT_OPTIONS = {
   selectedMap: GameMapType.World,
   mapAreaMultiplier: 1 as MapAreaMultiplier,
+  virtualWorldAreaMultiplier: 1,
+  scaleMode: "virtual" as WorldScaleMode,
   winPercentage: 80,
   selectedDifficulty: Difficulty.Easy,
   bots: 400,
@@ -179,6 +182,8 @@ export class SinglePlayerModal extends BaseModal {
   @state() private selectedMap: GameMapType = DEFAULT_OPTIONS.selectedMap;
   @state() private mapAreaMultiplier: MapAreaMultiplier =
     DEFAULT_OPTIONS.mapAreaMultiplier;
+  @state() private virtualWorldAreaMultiplier = DEFAULT_OPTIONS.virtualWorldAreaMultiplier;
+  @state() private scaleMode: WorldScaleMode = DEFAULT_OPTIONS.scaleMode;
   @state() private winPercentage: number = DEFAULT_OPTIONS.winPercentage;
   @state() private selectedDifficulty: Difficulty =
     DEFAULT_OPTIONS.selectedDifficulty;
@@ -508,7 +513,11 @@ export class SinglePlayerModal extends BaseModal {
             .settings=${{
               map: {
                 selected: this.selectedMap,
-                multiplier: this.mapAreaMultiplier,
+                multiplier:
+                  this.scaleMode === "virtual"
+                    ? this.virtualWorldAreaMultiplier
+                    : this.mapAreaMultiplier,
+                scaleMode: this.scaleMode,
                 useRandom: this.useRandomMap,
                 showMedals: this.showAchievements,
                 mapWins: this.mapWins,
@@ -576,6 +585,7 @@ export class SinglePlayerModal extends BaseModal {
             }}
             @map-selected=${this.handleConfigMapSelected}
             @map-multiplier-selected=${this.handleConfigMapMultiplierSelected}
+            @map-scale-mode-selected=${this.handleScaleModeSelected}
             @random-map-selected=${this.handleConfigRandomMapSelected}
             @difficulty-selected=${this.handleConfigDifficultySelected}
             @doomsday-clock-speed-selected=${this
@@ -647,6 +657,8 @@ export class SinglePlayerModal extends BaseModal {
       this.nations !== this.defaultNationCount ||
       this.bots !== DEFAULT_OPTIONS.bots ||
       this.mapAreaMultiplier !== DEFAULT_OPTIONS.mapAreaMultiplier ||
+      this.virtualWorldAreaMultiplier !== DEFAULT_OPTIONS.virtualWorldAreaMultiplier ||
+      this.scaleMode !== DEFAULT_OPTIONS.scaleMode ||
       this.winPercentage !== DEFAULT_OPTIONS.winPercentage ||
       this.infiniteGold !== DEFAULT_OPTIONS.infiniteGold ||
       this.infiniteTroops !== DEFAULT_OPTIONS.infiniteTroops ||
@@ -715,6 +727,8 @@ export class SinglePlayerModal extends BaseModal {
     this.starting = false;
     this.selectedMap = DEFAULT_OPTIONS.selectedMap;
     this.mapAreaMultiplier = DEFAULT_OPTIONS.mapAreaMultiplier;
+    this.virtualWorldAreaMultiplier = DEFAULT_OPTIONS.virtualWorldAreaMultiplier;
+    this.scaleMode = DEFAULT_OPTIONS.scaleMode;
     this.winPercentage = DEFAULT_OPTIONS.winPercentage;
     this.selectedDifficulty = DEFAULT_OPTIONS.selectedDifficulty;
     this.gameMode = DEFAULT_OPTIONS.gameMode;
@@ -777,8 +791,23 @@ export class SinglePlayerModal extends BaseModal {
   };
 
   private handleConfigMapMultiplierSelected = (e: Event) => {
-    const event = e as CustomEvent<{ multiplier: MapAreaMultiplier }>;
-    this.mapAreaMultiplier = event.detail.multiplier;
+    const event = e as CustomEvent<{ multiplier: number }>;
+    const value = event.detail.multiplier;
+    if (!Number.isSafeInteger(value) || value < 1) return;
+    if (this.scaleMode === "virtual") {
+      if (value > 100) return;
+      this.virtualWorldAreaMultiplier = value;
+    } else {
+      if (value > 20) return;
+      this.mapAreaMultiplier = value as MapAreaMultiplier;
+    }
+  };
+
+  private handleScaleModeSelected = (e: Event) => {
+    const event = e as CustomEvent<{ mode: WorldScaleMode }>;
+    if (event.detail.mode !== "virtual" && event.detail.mode !== "physical")
+      return;
+    this.scaleMode = event.detail.mode;
   };
 
   private handleWinPercentageChange = (e: Event) => {
@@ -1146,8 +1175,12 @@ export class SinglePlayerModal extends BaseModal {
       console.log(
         `Starting single player game with map: ${GameMapType[this.selectedMap as keyof typeof GameMapType]}${this.useRandomMap ? " (Randomly selected)" : ""}`,
       );
-      // Give a readable limit warning before allocating a giant map.
-      if (this.mapAreaMultiplier > 1) {
+      // Virtual mode keeps physical terrain at 1× for EVERY map.
+      // The physical tile safety gate still applies without exception.
+      if (this.scaleMode === "virtual") {
+        assertVirtualWorldArea(this.virtualWorldAreaMultiplier);
+      }
+      if (this.scaleMode === "physical" && this.mapAreaMultiplier > 1) {
         const manifest = await this.mapLoader
           .getMapData(this.selectedMap)
           .manifest();
@@ -1221,7 +1254,12 @@ export class SinglePlayerModal extends BaseModal {
               ],
               config: {
                 gameMap: this.selectedMap,
-                mapAreaMultiplier: this.mapAreaMultiplier,
+                mapAreaMultiplier:
+                   this.scaleMode === "physical" ? this.mapAreaMultiplier : 1,
+                 virtualWorldAreaMultiplier:
+                   this.scaleMode === "virtual"
+                     ? this.virtualWorldAreaMultiplier
+                     : 1,
                 ...(this.winPercentage !== DEFAULT_OPTIONS.winPercentage
                   ? { winPercentage: this.winPercentage }
                   : {}),
