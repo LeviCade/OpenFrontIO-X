@@ -1122,6 +1122,7 @@ describe("NationStructureBehavior.doHandleStructures — crowded-map exception",
   function makeCrowdedPlayer(): any {
     return {
       unitsOwned: () => 0, // never owns a city
+      team: () => null,
       numTilesOwned: () => 100_000,
       info: () => ({}),
     };
