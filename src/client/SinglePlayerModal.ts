@@ -182,7 +182,8 @@ export class SinglePlayerModal extends BaseModal {
   @state() private selectedMap: GameMapType = DEFAULT_OPTIONS.selectedMap;
   @state() private mapAreaMultiplier: MapAreaMultiplier =
     DEFAULT_OPTIONS.mapAreaMultiplier;
-  @state() private virtualWorldAreaMultiplier = DEFAULT_OPTIONS.virtualWorldAreaMultiplier;
+  @state() private virtualWorldAreaMultiplier: number =
+    DEFAULT_OPTIONS.virtualWorldAreaMultiplier;
   @state() private scaleMode: WorldScaleMode = DEFAULT_OPTIONS.scaleMode;
   @state() private winPercentage: number = DEFAULT_OPTIONS.winPercentage;
   @state() private selectedDifficulty: Difficulty =
