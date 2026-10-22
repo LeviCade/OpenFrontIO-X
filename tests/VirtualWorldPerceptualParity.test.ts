@@ -71,9 +71,15 @@ describe("100× Virtual World geometry and troop economics", () => {
       attacker: { ...input.attacker, numTiles: input.attacker.numTiles * 100 },
       defender: { ...input.defender, numTiles: input.defender.numTiles * 100 },
     });
-    expect(hundred.attackerTroopLoss).toBeCloseTo(physical.attackerTroopLoss * 100);
-    expect(hundred.defenderTroopLoss).toBeCloseTo(physical.defenderTroopLoss * 100);
-    expect(hundred.attackerTroopLoss).not.toBeCloseTo(one.attackerTroopLoss * 100);
+    expect(hundred.attackerTroopLoss).toBeCloseTo(
+      physical.attackerTroopLoss * 100,
+    );
+    expect(hundred.defenderTroopLoss).toBeCloseTo(
+      physical.defenderTroopLoss * 100,
+    );
+    expect(hundred.attackerTroopLoss).not.toBeCloseTo(
+      one.attackerTroopLoss * 100,
+    );
     expect(hundred.tickFraction).toBeLessThanOrEqual(one.tickFraction);
   });
 
