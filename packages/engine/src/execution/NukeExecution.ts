@@ -79,7 +79,9 @@ export class NukeExecution implements Execution {
     if (this.nuke === null) {
       throw new Error("Not initialized");
     }
-    const magnitude = this.mg.config().nukeMagnitudes(this.nuke.type(), this.blastMultiplier);
+    const magnitude = this.mg
+      .config()
+      .nukeMagnitudes(this.nuke.type(), this.blastMultiplier);
     const rand = new PseudoRandom(this.mg.ticks());
     const inner2 = magnitude.inner * magnitude.inner;
     const outer2 = magnitude.outer * magnitude.outer;
@@ -159,7 +161,9 @@ export class NukeExecution implements Execution {
       return;
     }
 
-    const magnitude = this.mg.config().nukeMagnitudes(this.nuke.type(), this.blastMultiplier);
+    const magnitude = this.mg
+      .config()
+      .nukeMagnitudes(this.nuke.type(), this.blastMultiplier);
 
     const playersToBreakAllianceWith = listNukeBreakAlliance({
       game: this.mg,
@@ -416,7 +420,10 @@ export class NukeExecution implements Execution {
     const mg = this.mg;
     const config = mg.config();
 
-    const magnitude = config.nukeMagnitudes(this.nuke.type(), this.blastMultiplier);
+    const magnitude = config.nukeMagnitudes(
+      this.nuke.type(),
+      this.blastMultiplier,
+    );
     const toDestroy = this.tilesToDestroy();
 
     // Retrieve all impacted players and the number of tiles
