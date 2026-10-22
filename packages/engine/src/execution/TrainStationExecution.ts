@@ -72,10 +72,11 @@ export class TrainStationExecution implements Execution {
       );
     // Multiplier mode makes each successful factory departure produce
     // exactly level trains, rather than stacking probability rolls.
-    const attempts = this.mg.config().gameConfig().gameType === GameType.Singleplayer &&
-    this.mg.config().gameConfig().specialOptions?.factoryMultiplier
-      ? 1
-      : this.unit!.level();
+    const attempts =
+      this.mg.config().gameConfig().gameType === GameType.Singleplayer &&
+      this.mg.config().gameConfig().specialOptions?.factoryMultiplier
+        ? 1
+        : this.unit!.level();
     for (let i = 0; i < attempts; i++) {
       if (this.random.chance(spawnRate)) {
         return true;
