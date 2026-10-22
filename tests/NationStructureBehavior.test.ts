@@ -1143,7 +1143,9 @@ describe("NationStructureBehavior.doHandleStructures — crowded-map exception",
       makeCrowdedGame({ virtualArea: 100 }),
       makeCrowdedPlayer(),
     );
-    const spy = vi.spyOn(behavior as any, "maybeSpawnStructure").mockReturnValue(true);
+    const spy = vi
+      .spyOn(behavior as any, "maybeSpawnStructure")
+      .mockReturnValue(true);
 
     expect((behavior as any).doHandleStructures()).toBe(true);
     expect(spy).toHaveBeenCalledWith(UnitType.City);
