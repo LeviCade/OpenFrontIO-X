@@ -49,7 +49,10 @@ export function extractNukeTelegraphs(
   relationSize = 0,
   motionPlans?: ReadonlyMap<number, { startTick: number }>,
   currentTick = 0,
-  magnitudeFor?: (type: string, multiplier: number) => { inner: number; outer: number },
+  magnitudeFor?: (
+    type: string,
+    multiplier: number,
+  ) => { inner: number; outer: number },
 ): NukeTelegraphData[] {
   const telegraphs: NukeTelegraphData[] = [];
   for (const u of units.values()) {
@@ -92,7 +95,10 @@ export function extractNukeTelegraphsFromIds(
   relationSize = 0,
   motionPlans?: ReadonlyMap<number, { startTick: number }>,
   currentTick = 0,
-  magnitudeFor?: (type: string, multiplier: number) => { inner: number; outer: number },
+  magnitudeFor?: (
+    type: string,
+    multiplier: number,
+  ) => { inner: number; outer: number },
 ): NukeTelegraphData[] {
   const telegraphs: NukeTelegraphData[] = [];
   for (const id of nukeIds) {
