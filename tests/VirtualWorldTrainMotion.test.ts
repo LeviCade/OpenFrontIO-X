@@ -26,7 +26,9 @@ describe("Virtual World train motion, determinism and backward compatibility", (
       speed: 2,
       spacing: 2,
     });
-    const unscaled = unpackMotionPlans(packMotionPlans([{ ...train, ticksPerMove: 1 }]));
+    const unscaled = unpackMotionPlans(
+      packMotionPlans([{ ...train, ticksPerMove: 1 }]),
+    );
     expect(unscaled[0]).toMatchObject({ ticksPerMove: 1 });
   });
 
@@ -34,9 +36,19 @@ describe("Virtual World train motion, determinism and backward compatibility", (
     // 1 record; old train record has 2+7 fixed words, 1 car and 3 path cells.
     const oldPacket = Uint32Array.from([
       1, // number of plans
-      2, 13, // kind train, word count
-      1, 1, 1, 2, 2, 1, 3, // engine, plan id, start, speed, spacing, cars, path length
-      2, 0, 1, 2, // car id, path
+      2,
+      13, // kind train, word count
+      1,
+      1,
+      1,
+      2,
+      2,
+      1,
+      3, // engine, plan id, start, speed, spacing, cars, path length
+      2,
+      0,
+      1,
+      2, // car id, path
     ]);
     expect(unpackMotionPlans(oldPacket)[0]).toMatchObject({
       kind: "train",
@@ -51,20 +63,24 @@ describe("Virtual World train motion, determinism and backward compatibility", (
     const positions = new Map([[1, 0]]);
     const units = {
       tileOf: (id: number) => positions.get(id),
-      move: (id: number, tile: number) => { positions.set(id, tile); },
+      move: (id: number, tile: number) => {
+        positions.set(id, tile);
+      },
       rest: () => {},
     };
-    r.applyRecords([{
-      kind: "train",
-      engineUnitId: 1,
-      carUnitIds: [],
-      planId: 1,
-      startTick: 1,
-      speed: 2,
-      spacing: 2,
-      ticksPerMove: 10,
-      path: Array.from({ length: 100 }, (_, i) => i),
-    }]);
+    r.applyRecords([
+      {
+        kind: "train",
+        engineUnitId: 1,
+        carUnitIds: [],
+        planId: 1,
+        startTick: 1,
+        speed: 2,
+        spacing: 2,
+        ticksPerMove: 10,
+        path: Array.from({ length: 100 }, (_, i) => i),
+      },
+    ]);
     for (let t = 1; t <= 9; t++) r.advance(t, units);
     expect(positions.get(1)).toBe(0);
     r.advance(10, units);
