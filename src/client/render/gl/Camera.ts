@@ -19,7 +19,6 @@ import { virtualInspectionZoomCap } from "@openfront/engine-lib/game/VirtualWorl
 import { renderDpr } from "./utils/Dpr";
 
 const MIN_ZOOM = 0.2;
-const MAX_ZOOM = 20;
 const DBLCLICK_MIN_ZOOM = 0.7;
 const DBLCLICK_MAX_ZOOM = 3;
 
