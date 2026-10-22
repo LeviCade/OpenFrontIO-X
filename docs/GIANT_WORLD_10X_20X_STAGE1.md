@@ -12,14 +12,14 @@ Stage 1 adds an explicitly separated second UI row, 11×–20×, and correspondi
 
 Baseline manifest: 4,108 × 1,948 = 8,002,384 logical tiles.
 
-| Area | Width × height | Logical tiles | Current engine 64.1m-tile limit |
-| --- | --- | ---: | --- |
-| 1× | 4,108 × 1,948 | 8,002,384 | Within cap |
-| 8× | 11,619 × 5,510 | 64,020,690 | Within cap (not verified GPU-safe) |
-| 9× | 12,324 × 5,844 | 72,021,456 | BLOCKED |
-| **10×** | **12,991 × 6,160** | **80,024,560** | **BLOCKED** |
-| 11× | 13,625 × 6,461 | 88,031,125 | BLOCKED |
-| **20×** | **18,372 × 8,712** | **160,056,864** | **BLOCKED** |
+| Area    | Width × height     |   Logical tiles | Current engine 64.1m-tile limit    |
+| ------- | ------------------ | --------------: | ---------------------------------- |
+| 1×      | 4,108 × 1,948      |       8,002,384 | Within cap                         |
+| 8×      | 11,619 × 5,510     |      64,020,690 | Within cap (not verified GPU-safe) |
+| 9×      | 12,324 × 5,844     |      72,021,456 | BLOCKED                            |
+| **10×** | **12,991 × 6,160** |  **80,024,560** | **BLOCKED**                        |
+| 11×     | 13,625 × 6,461     |      88,031,125 | BLOCKED                            |
+| **20×** | **18,372 × 8,712** | **160,056,864** | **BLOCKED**                        |
 
 Numbers use the actual `Math.round(sourceAxis * Math.sqrt(multiplier))` algorithm. Test them with `tests/ExtendedMapFeasibility.test.ts`.
 
@@ -27,27 +27,27 @@ Numbers use the actual `Math.round(sourceAxis * Math.sqrt(multiplier))` algorith
 
 A source audit reveals these **direct, separate full-map allocations**:
 
-| Component | Format | Bytes per logical cell |
-| --- | --- | ---: |
-| `GameMapImpl.terrain` | `Uint8Array` | 1 |
-| `GameMapImpl.state` | `Uint16Array` | 2 |
-| `GpuResources.tileTex` | GPU `R16UI` | 2 |
-| `GpuResources.trailTex` | GPU `R16UI` | 2 |
-| `GpuResources.heatTexA + heatTexB` | two GPU `R8` | 2 |
-| `TerrainPass.tex` | GPU `RGBA8` | 4 |
-| `BorderComputePass.borderTex` | GPU `RGBA8` | 4 |
-| `DefenseCoveragePass.coverageTex` | GPU `R8` | 1 |
-| **Combined minimum** | **3 CPU + 15 GPU bytes** | **18** |
+| Component                          | Format                   | Bytes per logical cell |
+| ---------------------------------- | ------------------------ | ---------------------: |
+| `GameMapImpl.terrain`              | `Uint8Array`             |                      1 |
+| `GameMapImpl.state`                | `Uint16Array`            |                      2 |
+| `GpuResources.tileTex`             | GPU `R16UI`              |                      2 |
+| `GpuResources.trailTex`            | GPU `R16UI`              |                      2 |
+| `GpuResources.heatTexA + heatTexB` | two GPU `R8`             |                      2 |
+| `TerrainPass.tex`                  | GPU `RGBA8`              |                      4 |
+| `BorderComputePass.borderTex`      | GPU `RGBA8`              |                      4 |
+| `DefenseCoveragePass.coverageTex`  | GPU `R8`                 |                      1 |
+| **Combined minimum**               | **3 CPU + 15 GPU bytes** |                 **18** |
 
 For **10×**, the core CPU floor is **240,073,680 bytes** (~229 MiB); core GPU floor is **1,200,368,400 bytes** (~1.12 GiB); total **1,440,442,080 bytes** (~1.34 GiB). For **20×**, that doubles to ~2.68 GiB combined. These counts are **not** observed RAM/VRAM measurements and do **not** include hundreds of MB of additional runtime textures, duplicated worker/client states, terrain baking scratch buffers, minimaps, bloom render targets, borders, map layers, replay keyframes, GPU driver padding, transient allocations or browser process overhead. The feasibility estimator is intentionally a **lower bound**, never a recommendation to run a map.
 
 ### Dimension constraints versus memory constraints
 
-- A single texture cannot exceed the *actual* hardware `MAX_TEXTURE_SIZE` on either axis.
+- A single texture cannot exceed the _actual_ hardware `MAX_TEXTURE_SIZE` on either axis.
 - At `MAX_TEXTURE_SIZE=8192`, even 8× Giant World's 11,619-wide full-map textures exceed the cap.
 - At `MAX_TEXTURE_SIZE=16384`, the 10× width 12,991 fits an individual dimension, **but** the per-cell memory burden remains huge. 20× width 18,372 still exceeds that GPU dimension.
 - `TextureChunkPlan.ts` presently plans halo-aware regions but is **NOT wired** into any live `GPURenderer` pass, texture upload, or shader. A hypothetical 4,096 texture-size GPU partitions 10× into 4×2 chunks; the plan alone cannot render a single pixel.
-- Do not naively allocate *all* 15-bytes/cell textures in chunks and call it solved: the **aggregate** GPU byte cost remains roughly the same unless textures are virtualized/cached at visible resolution.
+- Do not naively allocate _all_ 15-bytes/cell textures in chunks and call it solved: the **aggregate** GPU byte cost remains roughly the same unless textures are virtualized/cached at visible resolution.
 
 ## Phase 2: full-quality true 10× Giant World renderer
 
@@ -74,7 +74,7 @@ Implement a genuinely streaming/tiled renderer, in an isolated follow-on branch/
 
 - `packages/engine-lib/src/game/MapMultiplier.ts`: 1–20 area choices; unchanged 64.1m cap and source-protecting coordinate scaling.
 - `packages/engine-api/src/Schemas.ts`: accept numeric literals 1–20; old missing multiplier still means 1×.
-- `src/client/components/GameConfigSettings.ts`: explicit separate rows; the advanced row is an *experimental choice*, not a guarantee a given map/hardware is safe.
+- `src/client/components/GameConfigSettings.ts`: explicit separate rows; the advanced row is an _experimental choice_, not a guarantee a given map/hardware is safe.
 - `src/client/SinglePlayerModal.ts`: unchanged pre-start cap check rejects over-budget attempts with a readable alert.
 - `packages/engine-lib/src/game/ExtendedMapFeasibility.ts`: pure memory/texture estimate from checked source formats; **not** runtime allocation permission.
 - `tests/MapMultiplier.test.ts`, `tests/MapMultiplierIntegration.test.ts`, `tests/ExtendedMapFeasibility.test.ts`: 20× deterministic small-map tests, Zod acceptance and big-map cap/planner regression.
