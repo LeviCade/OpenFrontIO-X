@@ -14,6 +14,7 @@ import { TrainStation } from "@openfront/engine/game/TrainStation";
 import {
   virtualInspectionZoomCap,
   virtualStructurePickRadius,
+  virtualUnitPickRadius,
 } from "@openfront/engine-lib/game/VirtualWorldScale";
 
 function config(area: number): EngineConfig {
@@ -90,6 +91,14 @@ describe("100× Virtual World geometry and troop economics", () => {
     expect(virtualStructurePickRadius(10)).toBe(1);
     expect(virtualStructurePickRadius(100)).toBe(0);
     expect(() => virtualStructurePickRadius(101)).toThrow();
+  });
+
+  it("requires exact-cell ship clicks at 100× without changing 1× picking", () => {
+    expect(virtualUnitPickRadius(1)).toBe(10);
+    expect(virtualUnitPickRadius(4)).toBe(4);
+    expect(virtualUnitPickRadius(10)).toBe(2);
+    expect(virtualUnitPickRadius(100)).toBe(0);
+    expect(() => virtualUnitPickRadius(100, 0)).toThrow();
   });
 
   it("does not mistake a neighboring spatial-grid cell for a rail snap at 100×", () => {
