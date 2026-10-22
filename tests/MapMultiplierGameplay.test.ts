@@ -15,7 +15,14 @@ import { describe, expect, it } from "vitest";
  * still necessary: this only drives the actual game simulation through turns.
  */
 describe("multiplied map real game runner", () => {
-  it("initializes a 2x private game with bots and advances ticks", async () => {
+  it.each([
+    { multiplier: 2 as const, full: 91, reduced: 46 },
+    { multiplier: 20 as const, full: 286, reduced: 143 },
+  ])("initializes a $multiplier× Solo game with bots and advances ticks", async ({
+    multiplier,
+    full,
+    reduced,
+  }) => {
     const width = 64;
     const height = 64;
     const main = new Uint8Array(width * height).fill(0x80);
@@ -26,7 +33,7 @@ describe("multiplied map real game runner", () => {
       map: GameMapType.World,
       mapSize: GameMapSize.Normal,
       manifest: {
-        name: "2x synthetic game",
+        name: `${multiplier}x synthetic game`,
         map: { width, height, num_land_tiles: main.length },
         map4x: {
           width: width / 2,
@@ -48,7 +55,7 @@ describe("multiplied map real game runner", () => {
     const config: GameConfig = {
       gameMap: GameMapType.World,
       gameMapSize: GameMapSize.Normal,
-      mapAreaMultiplier: 2,
+      mapAreaMultiplier: multiplier,
       gameType: GameType.Singleplayer,
       gameMode: GameMode.FFA,
       difficulty: Difficulty.Medium,
@@ -62,7 +69,7 @@ describe("multiplied map real game runner", () => {
       randomSpawn: true,
     };
     const start: GameStartInfo = {
-      gameID: "openfront-2x-headless-smoke",
+      gameID: `openfront-${multiplier}x-headless-smoke`,
       lobbyCreatedAt: 0,
       config,
       players: [],
@@ -73,12 +80,12 @@ describe("multiplied map real game runner", () => {
       if ("updates" in update) updates++;
     });
 
-    expect([runner.game.width(), runner.game.height()]).toEqual([91, 91]);
+    expect([runner.game.width(), runner.game.height()]).toEqual([full, full]);
     expect([
       runner.game.miniMap().width(),
       runner.game.miniMap().height(),
-    ]).toEqual([46, 46]);
-    expect(runner.game.map().numLandTiles()).toBe(91 * 91);
+    ]).toEqual([reduced, reduced]);
+    expect(runner.game.map().numLandTiles()).toBe(full * full);
     for (let turnNumber = 0; turnNumber < 24; turnNumber++) {
       runner.addTurn({ turnNumber, intents: [] });
       expect(runner.executeNextTick()).toBe(true);
