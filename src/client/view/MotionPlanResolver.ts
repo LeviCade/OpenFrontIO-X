@@ -21,6 +21,7 @@ interface TrainMotionPlan {
   planId: number;
   speed: number;
   spacing: number;
+  ticksPerMove: number;
   carUnitIds: Uint32Array;
   path: Uint32Array;
   cursor: number;
@@ -91,7 +92,11 @@ export class MotionPlanResolver {
           path: asUint32(record.path),
         });
       } else {
-        if (record.speed < 1 || record.path.length < 1) continue;
+        if (
+          record.speed < 1 ||
+          (record.ticksPerMove ?? 1) < 1 ||
+          record.path.length < 1
+        ) continue;
         const existing = this.trains.get(record.engineUnitId);
         if (existing && record.planId <= existing.planId) continue;
         if (existing) this.clearTrainPlan(record.engineUnitId);
@@ -100,6 +105,7 @@ export class MotionPlanResolver {
           planId: record.planId,
           speed: record.speed,
           spacing: record.spacing,
+          ticksPerMove: record.ticksPerMove ?? 1,
           carUnitIds,
           path: asUint32(record.path),
           cursor: 0,
@@ -206,6 +212,10 @@ export class MotionPlanResolver {
 
       let didMove = false;
       for (let step = 0; step < steps; step++) {
+        const currentTick = plan.lastAdvancedTick + step + 1;
+        if ((currentTick - plan.startTick + 1) % plan.ticksPerMove !== 0) {
+          continue;
+        }
         const cursor = plan.cursor;
         if (cursor >= lastIndex) break;
         for (let i = 0; i < plan.speed && cursor + i < path.length; i++) {
