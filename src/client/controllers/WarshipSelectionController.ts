@@ -142,14 +142,19 @@ export class WarshipSelectionController implements Controller {
   private findWarshipsNearCell(clickRef: TileRef): UnitView[] {
     const myPlayer = this.game.myPlayer();
     if (!myPlayer) return [];
+    const selectionRadius = Math.max(
+      1,
+      Math.round(
+        WARSHIP_SELECTION_RADIUS * this.game.config().virtualWorldVisualScale(),
+      ),
+    );
     return this.game
       .units(UnitType.Warship)
       .filter(
         (unit) =>
           unit.isActive() &&
           unit.owner() === myPlayer &&
-          this.game.manhattanDist(unit.tile(), clickRef) <=
-            WARSHIP_SELECTION_RADIUS,
+          this.game.manhattanDist(unit.tile(), clickRef) <= selectionRadius,
       )
       .sort(
         (a, b) =>
