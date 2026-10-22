@@ -1,11 +1,18 @@
 import { describe, expect, it } from "vitest";
-import { GameType, PlayerType, UnitType } from "@openfront/engine-api/game/GameTypes";
+import {
+  GameType,
+  PlayerType,
+  UnitType,
+} from "@openfront/engine-api/game/GameTypes";
 import { GameConfig } from "@openfront/engine-api/Schemas";
 import { EngineConfig } from "@openfront/engine/configuration/EngineConfig";
 
 function config(area: number): EngineConfig {
   return new EngineConfig(
-    { gameType: GameType.Singleplayer, virtualWorldAreaMultiplier: area } as GameConfig,
+    {
+      gameType: GameType.Singleplayer,
+      virtualWorldAreaMultiplier: area,
+    } as GameConfig,
     false,
   );
 }
@@ -16,9 +23,10 @@ function player(tiles: number, cityLevels = 0, troops = 100_000) {
     type: () => PlayerType.Human,
     troops: () => troops,
     isLobbyCreator: () => false,
-    units: () => cityLevels
-      ? [{ level: () => cityLevels, isUnderConstruction: () => false }]
-      : [],
+    units: () =>
+      cityLevels
+        ? [{ level: () => cityLevels, isUnderConstruction: () => false }]
+        : [],
     unitsOwned: () => 0,
     unitsConstructed: () => 0,
   };
@@ -51,9 +59,15 @@ describe("Virtual World economic parity without baseline inflation", () => {
     const p = player(1_000, 0, 200_000);
     const one = config(1);
     const virtual100 = config(100);
-    expect(virtual100.maxTroops(p as never)).toBeGreaterThan(one.maxTroops(p as never));
-    expect(virtual100.troopIncreaseRate(p as never)).toBeGreaterThan(one.troopIncreaseRate(p as never));
-    expect(virtual100.troopIncreaseRate(p as never)).toBeLessThan(virtual100.maxTroops(p as never));
+    expect(virtual100.maxTroops(p as never)).toBeGreaterThan(
+      one.maxTroops(p as never),
+    );
+    expect(virtual100.troopIncreaseRate(p as never)).toBeGreaterThan(
+      one.troopIncreaseRate(p as never),
+    );
+    expect(virtual100.troopIncreaseRate(p as never)).toBeLessThan(
+      virtual100.maxTroops(p as never),
+    );
   });
 
   it("leaves starting troops, passive gold, train reward, and construction prices unchanged", () => {
@@ -61,11 +75,17 @@ describe("Virtual World economic parity without baseline inflation", () => {
     const start = { playerType: PlayerType.Human, isLobbyCreator: false };
     const normal = config(1);
     const hundred = config(100);
-    expect(hundred.startManpower(start as never)).toBe(normal.startManpower(start as never));
+    expect(hundred.startManpower(start as never)).toBe(
+      normal.startManpower(start as never),
+    );
     expect(hundred.startManpower(start as never)).toBe(25_000);
-    expect(hundred.goldAdditionRate(p as never)).toBe(normal.goldAdditionRate(p as never));
+    expect(hundred.goldAdditionRate(p as never)).toBe(
+      normal.goldAdditionRate(p as never),
+    );
     expect(hundred.goldAdditionRate(p as never)).toBe(100n);
-    expect(hundred.trainGold("self", 0, p as never)).toBe(normal.trainGold("self", 0, p as never));
+    expect(hundred.trainGold("self", 0, p as never)).toBe(
+      normal.trainGold("self", 0, p as never),
+    );
     expect(hundred.unitInfo(UnitType.City).cost!({} as never, p as never)).toBe(
       normal.unitInfo(UnitType.City).cost!({} as never, p as never),
     );
