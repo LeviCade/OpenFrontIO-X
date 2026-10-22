@@ -699,7 +699,8 @@ export class WarshipExecution implements Execution {
         this.warship.tile(),
         this.warship.targetUnit()!.tile(),
       ) > captureRange
-    ) return;
+    )
+      return;
     for (let i = 0; i < 2; i++) {
       const target = this.warship.targetUnit()!;
       const targetTile = target.tile();
