@@ -15,6 +15,7 @@
  *   ty = -offsetY * sy
  */
 
+import { virtualInspectionZoomCap } from "@openfront/engine-lib/game/VirtualWorldScale";
 import { renderDpr } from "./utils/Dpr";
 
 const MIN_ZOOM = 0.2;
@@ -38,13 +39,18 @@ export class Camera {
   /** True until fitMap() has been called with valid canvas dimensions. */
   private needsInitialFit = true;
 
-  constructor(mapWidth: number, mapHeight: number, areaScale = 1) {
+  constructor(
+    mapWidth: number,
+    mapHeight: number,
+    areaScale = 1,
+    virtualArea = 1,
+  ) {
     this.mapW = mapWidth;
     this.mapH = mapHeight;
     // At virtual 100×, rendered structures are one tenth their normal size.
     // Grant proportionally deeper inspection zoom without changing map tiles.
     const linearScale = Math.sqrt(Math.max(1, areaScale));
-    this.maxZoom = Math.min(200, MAX_ZOOM * linearScale);
+    this.maxZoom = virtualInspectionZoomCap(areaScale, virtualArea);
     this.focusMaxZoom = Math.min(this.maxZoom, DBLCLICK_MAX_ZOOM * linearScale);
     this.offsetX = mapWidth / 2;
     this.offsetY = mapHeight / 2;
