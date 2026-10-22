@@ -85,9 +85,21 @@ describe("Map Multiplier terrain-loader integration", () => {
     });
   });
 
+  it("loads 20x small real terrain, minimap, and nation coordinates", async () => {
+    const files = makeFiles(GameMapSize.Normal);
+    const game = await loadTerrainMap(files, 20);
+    expect([game.gameMap.width(), game.gameMap.height()]).toEqual([18, 18]);
+    expect([game.miniGameMap.width(), game.miniGameMap.height()]).toEqual([
+      9, 9,
+    ]);
+    expect(game.nations[0].coordinates).toEqual([15, 15]);
+    expect(game.additionalNations[0].coordinates).toEqual([2, 2]);
+    expect(files.manifest.map.width).toBe(4);
+  });
+
   it("parses optional area factor in old and new game patches", () => {
     expect(GameConfigPatchSchema.parse({}).mapAreaMultiplier).toBeUndefined();
-    for (const multiplier of [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]) {
+    for (const multiplier of [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 15, 20]) {
       expect(
         GameConfigPatchSchema.parse({ mapAreaMultiplier: multiplier })
           .mapAreaMultiplier,
@@ -97,7 +109,7 @@ describe("Map Multiplier terrain-loader integration", () => {
       GameConfigPatchSchema.safeParse({ mapAreaMultiplier: 0 }).success,
     ).toBe(false);
     expect(
-      GameConfigPatchSchema.safeParse({ mapAreaMultiplier: 11 }).success,
+      GameConfigPatchSchema.safeParse({ mapAreaMultiplier: 21 }).success,
     ).toBe(false);
     expect(
       GameConfigPatchSchema.safeParse({ mapAreaMultiplier: 2.5 }).success,

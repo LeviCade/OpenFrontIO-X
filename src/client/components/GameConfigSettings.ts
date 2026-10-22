@@ -470,7 +470,7 @@ export class GameConfigSettings extends LitElement {
                     role="group"
                     aria-label="Map area multiplier"
                   >
-                    ${MAP_AREA_MULTIPLIERS.map((factor) =>
+                    ${MAP_AREA_MULTIPLIERS.slice(0, 10).map((factor) =>
                       renderTextCardButton(
                         `${factor}×`,
                         settings.map.multiplier === factor,
@@ -479,6 +479,30 @@ export class GameConfigSettings extends LitElement {
                       ),
                     )}
                   </div>
+                  <div
+                    class="pt-2 text-xs font-bold uppercase tracking-wider text-white/70"
+                  >
+                    11×–20× · advanced experimental
+                  </div>
+                  <div
+                    class="grid grid-cols-5 md:grid-cols-10 gap-2"
+                    role="group"
+                    aria-label="Extended map area multiplier"
+                  >
+                    ${MAP_AREA_MULTIPLIERS.slice(10).map((factor) =>
+                      renderTextCardButton(
+                        `${factor}×`,
+                        settings.map.multiplier === factor,
+                        () => this.handleMapMultiplierSelected(factor),
+                        "p-3 text-center",
+                      ),
+                    )}
+                  </div>
+                  <p class="text-xs text-white/60">
+                    Area, not linear scale. Very large maps are blocked by the
+                    current safe tile budget. Giant World 10×–20× is not enabled
+                    until renderer and memory tests pass.
+                  </p>
                 </div>`
               : nothing}`,
           undefined,

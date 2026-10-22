@@ -60,7 +60,7 @@ describe("Map Multiplier packed terrain", () => {
     expect(scaled.metadata.num_land_tiles).toBe(0);
   });
 
-  it.each([2, 3, 4, 5, 6, 7, 8, 9, 10] as const)(
+  it.each([2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 15, 20] as const)(
     "is deterministic and bounded at %ix",
     (factor) => {
       const a = scaleTerrainGrid(terrain, metadata, factor);
@@ -70,6 +70,20 @@ describe("Map Multiplier packed terrain", () => {
       expect(a.metadata.width * a.metadata.height).toBe(a.bytes.length);
     },
   );
+
+  it("admits 20x only when its logical grid is within the unchanged tile guard", () => {
+    const source = { width: 2, height: 2, num_land_tiles: 4 };
+    const scaled = scaleTerrainGrid(new Uint8Array(4).fill(0x80), source, 20);
+    expect(scaled.metadata.width).toBe(9);
+    expect(scaled.metadata.height).toBe(9);
+    expect(scaled.bytes.length).toBe(81);
+    expect(() =>
+      scaleTerrainGrid(new Uint8Array(4).fill(0x80), source, 20, {
+        width: 12_991,
+        height: 6_160,
+      }),
+    ).toThrow("budget");
+  });
 
   it("scales coordinates and spawn rectangles within map boundaries", () => {
     const a = { width: 100, height: 50 };
@@ -86,7 +100,7 @@ describe("Map Multiplier packed terrain", () => {
   });
 
   it("rejects invalid factors, malformed bins and excessive allocations", () => {
-    expect(() => assertMapAreaMultiplier(11)).toThrow("1 to 10");
+    expect(() => assertMapAreaMultiplier(21)).toThrow("1 to 20");
     expect(() => scaleTerrainGrid(new Uint8Array(1), metadata, 2)).toThrow(
       "length",
     );
