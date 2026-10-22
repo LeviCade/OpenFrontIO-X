@@ -10,6 +10,7 @@ import {
   UnitType,
 } from "@openfront/engine-api/game/GameTypes";
 import { renderTroops } from "@openfront/engine-lib/Format";
+import { advanceVirtualPace } from "@openfront/engine-lib/game/VirtualWorldScale";
 import { PseudoRandom } from "@openfront/engine-lib/PseudoRandom";
 import {
   zInt,
@@ -35,6 +36,8 @@ import { FlatBinaryHeap } from "./utils/FlatBinaryHeap"; // adjust path if neede
 const malusForRetreat = 25;
 export class AttackExecution implements Execution {
   private active: boolean = true;
+  /** Fixed-point virtual world pacing; included in deterministic snapshots. */
+  private virtualPaceCredit = 0;
   private toConquer = new FlatBinaryHeap();
 
   private random = new PseudoRandom(123);
@@ -302,6 +305,13 @@ export class AttackExecution implements Execution {
       return;
     }
 
+    const virtualArea = this.mg.config().virtualWorldArea();
+    if (virtualArea > 1) {
+      const pace = advanceVirtualPace(virtualArea, this.virtualPaceCredit);
+      this.virtualPaceCredit = pace.credit;
+      if (!pace.move) return;
+    }
+
     const borderSize = this.attack.borderSize() + this.random.nextInt(0, 5);
     // Each tile consumes a fraction of the tick; conquer until it is spent.
     let tickBudget = 1;
@@ -516,6 +526,7 @@ export class AttackExecution implements Execution {
       targetID: this._targetID,
       sourceTile: this.sourceTile,
       removeTroops: this.removeTroops,
+      virtualPaceCredit: this.virtualPaceCredit,
     });
   }
 
@@ -542,6 +553,7 @@ export class AttackExecution implements Execution {
     this._targetID = s.targetID;
     this.sourceTile = s.sourceTile;
     this.removeTroops = s.removeTroops;
+    this.virtualPaceCredit = s.virtualPaceCredit ?? 0;
   }
 }
 
@@ -566,6 +578,8 @@ const AttackExecutionStateSchema = z.object({
   targetID: z.string().nullable(),
   sourceTile: zTile().nullable(),
   removeTroops: z.boolean(),
+  // Optional for compatibility with snapshots recorded before virtual maps.
+  virtualPaceCredit: zInt().optional(),
 });
 type AttackExecutionState = z.infer<typeof AttackExecutionStateSchema>;
 
