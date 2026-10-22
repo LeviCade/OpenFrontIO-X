@@ -1347,10 +1347,7 @@ export class ClientGameRunner {
                 existingUnit.tile(),
               );
 
-              if (
-                virtualArea > 1 &&
-                distance > pickRadius
-              ) continue;
+              if (virtualArea > 1 && distance > pickRadius) continue;
 
               upgradeUnits.push({
                 unitId: bu.canUpgrade,
