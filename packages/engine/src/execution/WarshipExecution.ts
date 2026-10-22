@@ -889,6 +889,7 @@ export class WarshipExecution implements Execution {
       activeHealingRemainder: this.activeHealingRemainder,
       lastEmittedCombat: this.lastEmittedCombat,
       virtualMoveCredit: this.virtualMoveCredit,
+      virtualMoveReady: this.virtualMoveReady,
     });
   }
 
@@ -911,6 +912,7 @@ export class WarshipExecution implements Execution {
     this.activeHealingRemainder = s.activeHealingRemainder;
     this.lastEmittedCombat = s.lastEmittedCombat;
     this.virtualMoveCredit = s.virtualMoveCredit ?? 0;
+    this.virtualMoveReady = s.virtualMoveReady ?? true;
   }
 }
 
@@ -933,6 +935,7 @@ const WarshipExecutionStateSchema = z.object({
   activeHealingRemainder: zNum(),
   lastEmittedCombat: z.boolean(),
   virtualMoveCredit: zInt().optional(),
+  virtualMoveReady: z.boolean().optional(),
 });
 type WarshipExecutionState = z.infer<typeof WarshipExecutionStateSchema>;
 
