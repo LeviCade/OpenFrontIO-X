@@ -448,7 +448,9 @@ export class Config {
   samRange(level: number): number {
     // Preserve the rational level curve, but use the same world-space scale
     // as defaultSamRange(). Otherwise upgrades restore full-size 1× reach.
-    return this.maxSamRange() - (480 / (level + 5)) * this.virtualWorldVisualScale();
+    return (
+      this.maxSamRange() - (480 / (level + 5)) * this.virtualWorldVisualScale()
+    );
   }
 
   maxSamRange(): number {
