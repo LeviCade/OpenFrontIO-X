@@ -176,7 +176,7 @@ function renderSectionHeader(
         </svg>
       </div>
       <h3 class="text-lg font-bold text-white uppercase tracking-wider">
-        ${translateText(titleKey)}
+        ${titleKey === "Special Options" ? titleKey : translateText(titleKey)}
       </h3>
       ${headerAction ? html`<div class="ml-auto">${headerAction}</div>` : null}
     </div>
