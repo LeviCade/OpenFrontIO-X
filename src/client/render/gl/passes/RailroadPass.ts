@@ -153,6 +153,7 @@ export class RailroadPass {
     effectTex: WebGLTexture,
     terrainBytes: Uint8Array,
     settings: RenderSettings,
+    private readonly virtualLineScale = 1,
   ) {
     this.mapW = mapW;
     this.mapH = mapH;
@@ -378,7 +379,7 @@ export class RailroadPass {
     gl.uniform1f(this.uRailDetailZoom, rs.railDetailZoom);
     gl.uniform1f(this.uRailAlpha, rs.railAlpha);
     gl.uniform1f(this.uRailFade, fade);
-    gl.uniform1f(this.uRailThickness, rs.railThickness);
+    gl.uniform1f(this.uRailThickness, rs.railThickness * this.virtualLineScale);
     gl.uniform1f(this.uGhostOwnerID, this.ghostOwnerID);
     gl.uniform1f(this.uLocalPlayerID, this.localPlayerID);
     gl.uniform1f(this.uHoverOwner, this.hoverOwner);

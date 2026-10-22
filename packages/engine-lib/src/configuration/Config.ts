@@ -10,6 +10,7 @@ import { PlayerLike } from "@openfront/engine-api/game/ReadViews";
 import { GameConfig } from "@openfront/engine-api/Schemas";
 import { pow } from "../DetMath";
 import { DoomsdayClockSpeed } from "../game/DoomsdayClock";
+import { virtualVisualScale } from "../game/VirtualWorldScale";
 import { assertNever } from "../Util";
 
 export interface NukeMagnitude {
@@ -159,6 +160,18 @@ export class Config {
     return this._gameConfig;
   }
 
+  /** Virtual world is Solo-only; public games and legacy replays stay 1×. */
+  virtualWorldArea(): number {
+    return this._gameConfig.gameType === GameType.Singleplayer
+      ? (this._gameConfig.virtualWorldAreaMultiplier ?? 1)
+      : 1;
+  }
+
+  /** Scale world-space sprites, structures, ranges and movement, not text. */
+  virtualWorldVisualScale(): number {
+    return virtualVisualScale(this.virtualWorldArea());
+  }
+
   cityTroopIncrease(): number {
     return 250_000;
   }
@@ -173,7 +186,7 @@ export class Config {
   }
 
   defensePostRange(): number {
-    return 30;
+    return Math.max(1, Math.round(30 * this.virtualWorldVisualScale()));
   }
 
   isUnitDisabled(unitType: UnitType): boolean {
@@ -406,15 +419,26 @@ export class Config {
   }
 
   nukeMagnitudes(unitType: UnitType): NukeMagnitude {
+    let source: NukeMagnitude;
     switch (unitType) {
       case UnitType.MIRVWarhead:
-        return { inner: 12, outer: 18 };
+        source = { inner: 12, outer: 18 };
+        break;
       case UnitType.AtomBomb:
-        return { inner: 12, outer: 30 };
+        source = { inner: 12, outer: 30 };
+        break;
       case UnitType.HydrogenBomb:
-        return { inner: 80, outer: 100 };
+        source = { inner: 80, outer: 100 };
+        break;
+      default:
+        throw new Error(`Unknown nuke type: ${unitType}`);
     }
-    throw new Error(`Unknown nuke type: ${unitType}`);
+    const scale = this.virtualWorldVisualScale();
+    if (scale === 1) return source;
+    return {
+      inner: Math.max(1, Math.round(source.inner * scale)),
+      outer: Math.max(1, Math.round(source.outer * scale)),
+    };
   }
 
   nukeAllianceBreakThreshold(): number {
@@ -422,16 +446,19 @@ export class Config {
   }
 
   samRange(level: number): number {
-    // rational growth function (level 1 = 70, level 5 just above hydro range, asymptotically approaches 150)
-    return this.maxSamRange() - 480 / (level + 5);
+    // Preserve the rational level curve, but use the same world-space scale
+    // as defaultSamRange(). Otherwise upgrades restore full-size 1× reach.
+    return (
+      this.maxSamRange() - (480 / (level + 5)) * this.virtualWorldVisualScale()
+    );
   }
 
   maxSamRange(): number {
-    return 150;
+    return 150 * this.virtualWorldVisualScale();
   }
 
   structureMinDist(): number {
-    return 15;
+    return Math.max(1, Math.round(15 * this.virtualWorldVisualScale()));
   }
 
   /** Max-health boost per veterancy level, as an integer percent of base max

@@ -259,6 +259,7 @@ export class UnitPass {
 
   // Trade-friendly detection: enemy trade ships heading to a self/allied port
   private localPlayerID = 0;
+  private readonly virtualIconScale: number;
   private friendlyOwners = new Set<number>();
   private structures: Map<number, UnitState> = new Map();
 
@@ -276,6 +277,7 @@ export class UnitPass {
     this.paletteTex = paletteTex;
     this.effectTex = effectTex;
     this.tickIntervalMs = config.msPerTick();
+    this.virtualIconScale = config.virtualWorldVisualScale();
 
     // Build unitType string → atlas column mapping
     for (let i = 0; i < header.unitTypes.length; i++) {
@@ -594,7 +596,7 @@ export class UnitPass {
     gl.uniformMatrix3fv(this.uCamera, false, cameraMatrix);
     gl.uniform1f(this.uTick, this.frameTick);
     gl.uniform1f(this.uTime, (performance.now() - this.startTime) / 1000);
-    gl.uniform1f(this.uUnitSize, us.unitSize);
+    gl.uniform1f(this.uUnitSize, us.unitSize * this.virtualIconScale);
     gl.uniform1f(this.uFlickerSpeed, us.flickerSpeed);
     gl.uniform3f(this.uAngryColor, us.angryR, us.angryG, us.angryB);
     gl.uniform1i(this.uAltView, this.altView ? 1 : 0);

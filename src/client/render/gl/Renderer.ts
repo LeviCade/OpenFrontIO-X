@@ -273,7 +273,11 @@ export class GPURenderer {
       );
     }
 
-    this.camera = new Camera(mapW, mapH);
+    this.camera = new Camera(
+      mapW,
+      mapH,
+      config.virtualWorldArea() * (config.gameConfig().mapAreaMultiplier ?? 1),
+    );
 
     // --- Terrain (static) ---
     // Bake once and let the array go — nothing below retains map-sized
@@ -563,6 +567,7 @@ export class GPURenderer {
       this.effectTex,
       terrainBytes,
       this.settings,
+      config.virtualWorldVisualScale(),
     );
 
     // --- Range circle (ghost preview radius) ---
@@ -582,6 +587,7 @@ export class GPURenderer {
       this.paletteTex,
       this.effectTex,
       this.settings,
+      config.virtualWorldVisualScale(),
     );
     this.structureLevelPass = new StructureLevelPass(gl, header, this.settings);
     this.unitPass = new UnitPass(
@@ -605,7 +611,11 @@ export class GPURenderer {
     this.worldTextPass.setMapWidth(this.mapW);
     this.selectionBoxPass = new SelectionBoxPass(gl);
     this.moveIndicatorPass = new MoveIndicatorPass(gl, this.settings);
-    this.nukeTrajectoryPass = new NukeTrajectoryPass(gl, this.settings);
+    this.nukeTrajectoryPass = new NukeTrajectoryPass(
+      gl,
+      this.settings,
+      config.virtualWorldVisualScale(),
+    );
     this.nukeTelegraphPass = new NukeTelegraphPass(gl, this.settings);
 
     // --- Scene capture target (for night composite) ---

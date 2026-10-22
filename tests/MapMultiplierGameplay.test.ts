@@ -16,11 +16,12 @@ import { describe, expect, it } from "vitest";
  */
 describe("multiplied map real game runner", () => {
   it.each([
-    { multiplier: 2 as const, full: 91, reduced: 46 },
-    { multiplier: 20 as const, full: 286, reduced: 143 },
+    { multiplier: 2 as const, virtual: 1, full: 91, reduced: 46 },
+    { multiplier: 20 as const, virtual: 1, full: 286, reduced: 143 },
+    { multiplier: 1 as const, virtual: 100, full: 64, reduced: 32 },
   ])(
-    "initializes a $multiplier× Solo game with bots and advances ticks",
-    async ({ multiplier, full, reduced }) => {
+    "initializes physical $multiplier× + virtual $virtual× Solo with bots",
+    async ({ multiplier, virtual, full, reduced }) => {
       const width = 64;
       const height = 64;
       const main = new Uint8Array(width * height).fill(0x80);
@@ -31,7 +32,7 @@ describe("multiplied map real game runner", () => {
         map: GameMapType.World,
         mapSize: GameMapSize.Normal,
         manifest: {
-          name: `${multiplier}x synthetic game`,
+          name: `${multiplier}x physical, ${virtual}x virtual synthetic game`,
           map: { width, height, num_land_tiles: main.length },
           map4x: {
             width: width / 2,
@@ -54,6 +55,7 @@ describe("multiplied map real game runner", () => {
         gameMap: GameMapType.World,
         gameMapSize: GameMapSize.Normal,
         mapAreaMultiplier: multiplier,
+        virtualWorldAreaMultiplier: virtual,
         gameType: GameType.Singleplayer,
         gameMode: GameMode.FFA,
         difficulty: Difficulty.Medium,
@@ -67,7 +69,7 @@ describe("multiplied map real game runner", () => {
         randomSpawn: true,
       };
       const start: GameStartInfo = {
-        gameID: `openfront-${multiplier}x-headless-smoke`,
+        gameID: `openfront-${multiplier}x-p-${virtual}x-v-smoke`,
         lobbyCreatedAt: 0,
         config,
         players: [],

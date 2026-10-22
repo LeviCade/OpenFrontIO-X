@@ -495,7 +495,7 @@ export class EngineConfig extends Config {
     return 300 * 10; // 5 minutes.
   }
   minDistanceBetweenPlayers(): number {
-    return 30;
+    return Math.max(2, Math.round(30 * this.virtualWorldVisualScale()));
   }
   boatMaxNumber(): number {
     if (this.isUnitDisabled(UnitType.TransportShip)) {
@@ -677,16 +677,22 @@ export class EngineConfig extends Config {
   }
 
   nukeSpeed(unitType: UnitType): number {
+    let base: number;
     switch (unitType) {
       case UnitType.AtomBomb:
       case UnitType.HydrogenBomb:
-        return 10;
+        base = 10;
+        break;
       case UnitType.MIRV:
-        return 15;
+        base = 15;
+        break;
       case UnitType.MIRVWarhead:
-        return 22;
+        base = 22;
+        break;
+      default:
+        throw new Error(`Unknown nuke type: ${unitType}`);
     }
-    throw new Error(`Unknown nuke type: ${unitType}`);
+    return Math.max(1, Math.round(base * this.virtualWorldVisualScale()));
   }
 
   mirvNormalizeTargetTicks(): number {
@@ -694,11 +700,11 @@ export class EngineConfig extends Config {
   }
 
   defaultNukeTargetableRange(): number {
-    return 150;
+    return Math.max(1, Math.round(150 * this.virtualWorldVisualScale()));
   }
 
   defaultSamRange(): number {
-    return 70;
+    return Math.max(1, Math.round(70 * this.virtualWorldVisualScale()));
   }
 
   samUpgradeDuration(): number {
