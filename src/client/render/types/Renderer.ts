@@ -107,6 +107,7 @@ export interface UnitState {
   retreating: boolean;
   targetable: boolean;
   waitTicks: number;
+  blastMultiplier?: number;
   markedForDeletion: number | false; // -1 -> false, else tick
   health: number | null;
   underConstruction: boolean;
