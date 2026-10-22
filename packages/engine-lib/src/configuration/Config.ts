@@ -452,6 +452,13 @@ export class Config {
   }
 
   samRange(level: number): number {
+    if (
+      this._gameConfig.gameType === GameType.Singleplayer &&
+      this._gameConfig.specialOptions?.samMultiplier
+    ) {
+      // Each stacked SAM adds exactly one base-level 70-cell radius.
+      return 70 * Math.max(1, level) * this.virtualWorldVisualScale();
+    }
     // Preserve the rational level curve, but use the same world-space scale
     // as defaultSamRange(). Otherwise upgrades restore full-size 1× reach.
     return (
@@ -460,11 +467,18 @@ export class Config {
   }
 
   maxSamRange(): number {
+    // SAM launches may be stacked to level 10; reserve detection range for all
+    // legal upgrades instead of leaving level 3+ nukes outside the broadphase.
+    if (
+      this._gameConfig.gameType === GameType.Singleplayer &&
+      this._gameConfig.specialOptions?.samMultiplier
+    ) return 700 * this.virtualWorldVisualScale();
     return 150 * this.virtualWorldVisualScale();
   }
 
   structureMinDist(): number {
-    return Math.max(1, Math.round(15 * this.virtualWorldVisualScale()));
+    // The nearest real cell should remain buildable on a 100× virtual grid.
+    return Math.max(1, Math.floor(15 * this.virtualWorldVisualScale()));
   }
 
   /** Max-health boost per veterancy level, as an integer percent of base max
