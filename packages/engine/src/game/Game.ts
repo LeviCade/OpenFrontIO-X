@@ -74,11 +74,13 @@ export interface UnitParamsMap {
   [UnitType.AtomBomb]: {
     targetTile?: number;
     trajectory: TrajectoryTile[];
+    blastMultiplier?: number;
   };
 
   [UnitType.HydrogenBomb]: {
     targetTile?: number;
     trajectory: TrajectoryTile[];
+    blastMultiplier?: number;
   };
 
   [UnitType.MIRV]: {
@@ -89,6 +91,7 @@ export interface UnitParamsMap {
   [UnitType.MIRVWarhead]: {
     targetTile?: number;
     trajectory: TrajectoryTile[];
+    blastMultiplier?: number;
   };
 
   [UnitType.TradeShip]: {
