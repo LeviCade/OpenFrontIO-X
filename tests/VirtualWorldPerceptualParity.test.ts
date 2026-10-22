@@ -11,7 +11,10 @@ import { RailNetworkImpl } from "@openfront/engine/game/RailNetworkImpl";
 import { Railroad } from "@openfront/engine/game/Railroad";
 import { RailSpatialGrid } from "@openfront/engine/game/RailroadSpatialGrid";
 import { TrainStation } from "@openfront/engine/game/TrainStation";
-import { virtualInspectionZoomCap } from "@openfront/engine-lib/game/VirtualWorldScale";
+import {
+  virtualInspectionZoomCap,
+  virtualStructurePickRadius,
+} from "@openfront/engine-lib/game/VirtualWorldScale";
 
 function config(area: number): EngineConfig {
   return new EngineConfig(
@@ -81,6 +84,14 @@ describe("100× Virtual World geometry and troop economics", () => {
     expect(virtualInspectionZoomCap(1, 1)).toBe(20);
     expect(virtualInspectionZoomCap(20, 1)).toBeCloseTo(20 * Math.sqrt(20));
     expect(virtualInspectionZoomCap(100, 100)).toBe(1000);
+  });
+
+  it("shrinks building selection independently of building-placement spacing", () => {
+    expect(virtualStructurePickRadius(1)).toBe(15);
+    expect(virtualStructurePickRadius(4)).toBe(2);
+    expect(virtualStructurePickRadius(10)).toBe(1);
+    expect(virtualStructurePickRadius(100)).toBe(0);
+    expect(() => virtualStructurePickRadius(101)).toThrow();
   });
 
   it("does not mistake a neighboring spatial-grid cell for a rail snap at 100×", () => {
