@@ -32,7 +32,7 @@
     "perf:client-tick": "npx tsx tests/perf/client/ClientTickPerf.ts",
     "test:coverage": "vitest run --coverage",
     "format": "oxfmt",
-    "format:check": "oxfmt --check",
+    "format:check": "oxfmt --check || (oxfmt && git diff -- packages/engine-lib/src/configuration/Config.ts packages/engine/src/configuration/EngineConfig.ts packages/engine/src/execution/AttackExecution.ts packages/engine/src/execution/TrainExecution.ts packages/engine/src/execution/utils/AiAttackBehavior.ts src/client/view/MotionPlanResolver.ts tests/VirtualWorldEconomicParity.test.ts tests/VirtualWorldPerceptualParity.test.ts tests/VirtualWorldTrainMotion.test.ts && exit 1)",
     "format:map-generator": "cd map-generator && go fmt .",
     "lint": "npm run lint:oxlint && npm run lint:eslint",
     "lint:fix": "npm run lint:oxlint:fix && npm run lint:eslint:fix",
