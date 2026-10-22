@@ -590,9 +590,15 @@ export class SinglePlayerModal extends BaseModal {
               },
               specialOptions: {
                 toggles: [
-                  { labelKey: "Factory Multiplier", checked: this.factoryMultiplier },
+                  {
+                    labelKey: "Factory Multiplier",
+                    checked: this.factoryMultiplier,
+                  },
                   { labelKey: "SAM Multiplier", checked: this.samMultiplier },
-                  { labelKey: "Atomic Multiplier", checked: this.atomicMultiplier },
+                  {
+                    labelKey: "Atomic Multiplier",
+                    checked: this.atomicMultiplier,
+                  },
                 ],
               },
               unitTypes: {
@@ -612,7 +618,8 @@ export class SinglePlayerModal extends BaseModal {
             @bots-changed=${this.handleBotsChange}
             @nations-changed=${this.handleNationsChange}
             @option-toggle-changed=${this.handleConfigOptionToggleChanged}
-            @special-option-toggle-changed=${this.handleSpecialOptionToggleChanged}
+            @special-option-toggle-changed=${this
+              .handleSpecialOptionToggleChanged}
             @unit-toggle-changed=${this.handleConfigUnitToggleChanged}
           ></game-config-settings>
           <div
@@ -915,10 +922,12 @@ export class SinglePlayerModal extends BaseModal {
   };
 
   private handleSpecialOptionToggleChanged = (e: Event) => {
-    const { labelKey, checked } = (e as CustomEvent<{
-      labelKey: string;
-      checked: boolean;
-    }>).detail;
+    const { labelKey, checked } = (
+      e as CustomEvent<{
+        labelKey: string;
+        checked: boolean;
+      }>
+    ).detail;
     switch (labelKey) {
       case "Factory Multiplier":
         this.factoryMultiplier = checked;
