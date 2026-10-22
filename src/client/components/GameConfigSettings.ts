@@ -9,10 +9,7 @@ import {
   UnitType,
 } from "@openfront/engine-api/game/GameTypes";
 import { TeamCountConfig } from "@openfront/engine-api/Schemas";
-import {
-  MAP_AREA_MULTIPLIERS,
-  MapAreaMultiplier,
-} from "@openfront/engine-lib/game/MapMultiplier";
+import type { WorldScaleMode } from "@openfront/engine-lib/game/VirtualWorldScale";
 import {
   DOOMSDAY_CLOCK_SPEEDS,
   DoomsdayClockSpeed,
@@ -197,7 +194,8 @@ export interface ToggleOptionConfig {
 export interface GameConfigSettingsData {
   map: {
     selected: GameMapType;
-    multiplier?: MapAreaMultiplier;
+    multiplier?: number;
+    scaleMode?: WorldScaleMode;
     useRandom: boolean;
     randomMapDivider?: boolean;
     showMedals?: boolean;
@@ -279,8 +277,19 @@ export class GameConfigSettings extends LitElement {
     this.emit("random-map-selected", {});
   };
 
-  private handleMapMultiplierSelected = (multiplier: MapAreaMultiplier) => {
+  private handleMapMultiplierInput = (event: Event) => {
+    const input = event.currentTarget as HTMLInputElement;
+    const multiplier = Number(input.value);
+    const max = this.settings?.map.scaleMode === "physical" ? 20 : 100;
+    if (!Number.isSafeInteger(multiplier) || multiplier < 1 || multiplier > max) {
+      input.value = String(this.settings?.map.multiplier ?? 1);
+      return;
+    }
     this.emit("map-multiplier-selected", { multiplier });
+  };
+
+  private handleScaleModeSelected = (mode: WorldScaleMode) => {
+    this.emit("map-scale-mode-selected", { mode });
   };
 
   private handleDifficultySelect = (difficulty: Difficulty) => {
@@ -459,49 +468,43 @@ export class GameConfigSettings extends LitElement {
               .searchQuery=${this.mapSearchQuery}
             ></map-picker>
             ${settings.map.multiplier !== undefined
-              ? html`<div class="mt-4 space-y-2">
-                  <div
-                    class="text-xs font-bold uppercase tracking-wider text-white/70"
-                  >
-                    Map area multiplier (experimental)
+              ? html`<div class="mt-4 space-y-3">
+                  <div class="text-xs font-bold uppercase tracking-wider text-white/70">
+                    World size · experimental
                   </div>
-                  <div
-                    class="grid grid-cols-5 md:grid-cols-10 gap-2"
-                    role="group"
-                    aria-label="Map area multiplier"
-                  >
-                    ${MAP_AREA_MULTIPLIERS.slice(0, 10).map((factor) =>
-                      renderTextCardButton(
-                        `${factor}×`,
-                        settings.map.multiplier === factor,
-                        () => this.handleMapMultiplierSelected(factor),
-                        "p-3 text-center",
-                      ),
+                  <div class="grid grid-cols-2 gap-2" role="group" aria-label="World scale mode">
+                    ${renderTextCardButton(
+                      "Virtual · default",
+                      (settings.map.scaleMode ?? "virtual") === "virtual",
+                      () => this.handleScaleModeSelected("virtual"),
+                      "p-3 text-center",
+                    )}
+                    ${renderTextCardButton(
+                      "Physical · GPU intensive",
+                      settings.map.scaleMode === "physical",
+                      () => this.handleScaleModeSelected("physical"),
+                      "p-3 text-center",
                     )}
                   </div>
-                  <div
-                    class="pt-2 text-xs font-bold uppercase tracking-wider text-white/70"
-                  >
-                    11×–20× · advanced experimental
-                  </div>
-                  <div
-                    class="grid grid-cols-5 md:grid-cols-10 gap-2"
-                    role="group"
-                    aria-label="Extended map area multiplier"
-                  >
-                    ${MAP_AREA_MULTIPLIERS.slice(10).map((factor) =>
-                      renderTextCardButton(
-                        `${factor}×`,
-                        settings.map.multiplier === factor,
-                        () => this.handleMapMultiplierSelected(factor),
-                        "p-3 text-center",
-                      ),
-                    )}
-                  </div>
+                  <label class="flex items-center gap-3 text-white/80 text-sm">
+                    <span>Area multiplier</span>
+                    <input
+                      type="number"
+                      min="1"
+                      max=${settings.map.scaleMode === "physical" ? 20 : 100}
+                      step="1"
+                      inputmode="numeric"
+                      .value=${String(settings.map.multiplier)}
+                      @change=${this.handleMapMultiplierInput}
+                      aria-label="World area multiplier"
+                      class="w-28 rounded-lg border border-white/20 bg-white/10 p-2 text-center text-white font-bold"
+                    />
+                    <span>×</span>
+                  </label>
                   <p class="text-xs text-white/60">
-                    Area, not linear scale. Very large maps are blocked by the
-                    current safe tile budget. Giant World 10×–20× is not enabled
-                    until renderer and memory tests pass.
+                    ${settings.map.scaleMode === "physical"
+                      ? "Physical mode allocates more map tiles. Maximum 20×; large maps may be blocked by the 64.1 million tile safety budget."
+                      : "Virtual mode supports 1×–100× on the original terrain grid. Gameplay scaling is experimental; tiny features remain limited by the underlying tile resolution."}
                   </p>
                 </div>`
               : nothing}`,
