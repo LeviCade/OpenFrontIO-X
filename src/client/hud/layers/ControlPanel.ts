@@ -1,5 +1,10 @@
 import { TileRef } from "@openfront/engine-api/game/GameMap";
-import { GameMode, GameType, Gold, UnitType } from "@openfront/engine-api/game/GameTypes";
+import {
+  GameMode,
+  GameType,
+  Gold,
+  UnitType,
+} from "@openfront/engine-api/game/GameTypes";
 import { GameUpdateType } from "@openfront/engine-api/game/GameUpdates";
 import { ClientID } from "@openfront/engine-api/Schemas";
 import { Config } from "@openfront/engine-lib/configuration/Config";
@@ -702,7 +707,9 @@ export class ControlPanel extends LitElement implements Controller {
                   );
                   this.requestUpdate();
                 }}
-              >+ Radius</button>
+              >
+                + Radius
+              </button>
               <button
                 class="px-3 py-1 rounded border border-white/50"
                 @click=${() => {
@@ -710,7 +717,9 @@ export class ControlPanel extends LitElement implements Controller {
                   this.uiState.blastMultiplier = 1;
                   this.requestUpdate();
                 }}
-              >Discard</button>
+              >
+                Discard
+              </button>
             </div>`
           : ""}
         <div class="lg:hidden">${this.renderMobile()}</div>
