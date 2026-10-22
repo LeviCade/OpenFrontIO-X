@@ -108,6 +108,9 @@ const DEFAULT_OPTIONS = {
   selectedMap: GameMapType.World,
   mapAreaMultiplier: 1 as MapAreaMultiplier,
   virtualWorldAreaMultiplier: 1,
+  factoryMultiplier: false,
+  samMultiplier: false,
+  atomicMultiplier: false,
   scaleMode: "virtual" as WorldScaleMode,
   winPercentage: 80,
   selectedDifficulty: Difficulty.Easy,
@@ -188,6 +191,9 @@ export class SinglePlayerModal extends BaseModal {
   @state() private virtualWorldAreaMultiplier: number =
     DEFAULT_OPTIONS.virtualWorldAreaMultiplier;
   @state() private scaleMode: WorldScaleMode = DEFAULT_OPTIONS.scaleMode;
+  @state() private factoryMultiplier = DEFAULT_OPTIONS.factoryMultiplier;
+  @state() private samMultiplier = DEFAULT_OPTIONS.samMultiplier;
+  @state() private atomicMultiplier = DEFAULT_OPTIONS.atomicMultiplier;
   @state() private winPercentage: number = DEFAULT_OPTIONS.winPercentage;
   @state() private selectedDifficulty: Difficulty =
     DEFAULT_OPTIONS.selectedDifficulty;
@@ -582,6 +588,13 @@ export class SinglePlayerModal extends BaseModal {
                 ],
                 inputCards,
               },
+              specialOptions: {
+                toggles: [
+                  { labelKey: "Factory Multiplier", checked: this.factoryMultiplier },
+                  { labelKey: "SAM Multiplier", checked: this.samMultiplier },
+                  { labelKey: "Atomic Multiplier", checked: this.atomicMultiplier },
+                ],
+              },
               unitTypes: {
                 titleKey: "game_settings.disable_units",
                 disabledUnits: this.disabledUnits,
@@ -599,6 +612,7 @@ export class SinglePlayerModal extends BaseModal {
             @bots-changed=${this.handleBotsChange}
             @nations-changed=${this.handleNationsChange}
             @option-toggle-changed=${this.handleConfigOptionToggleChanged}
+            @special-option-toggle-changed=${this.handleSpecialOptionToggleChanged}
             @unit-toggle-changed=${this.handleConfigUnitToggleChanged}
           ></game-config-settings>
           <div
@@ -665,6 +679,9 @@ export class SinglePlayerModal extends BaseModal {
         DEFAULT_OPTIONS.virtualWorldAreaMultiplier ||
       this.scaleMode !== DEFAULT_OPTIONS.scaleMode ||
       this.winPercentage !== DEFAULT_OPTIONS.winPercentage ||
+      this.factoryMultiplier ||
+      this.samMultiplier ||
+      this.atomicMultiplier ||
       this.infiniteGold !== DEFAULT_OPTIONS.infiniteGold ||
       this.infiniteTroops !== DEFAULT_OPTIONS.infiniteTroops ||
       this.compactMap !== DEFAULT_OPTIONS.compactMap ||
@@ -736,6 +753,9 @@ export class SinglePlayerModal extends BaseModal {
       DEFAULT_OPTIONS.virtualWorldAreaMultiplier;
     this.scaleMode = DEFAULT_OPTIONS.scaleMode;
     this.winPercentage = DEFAULT_OPTIONS.winPercentage;
+    this.factoryMultiplier = DEFAULT_OPTIONS.factoryMultiplier;
+    this.samMultiplier = DEFAULT_OPTIONS.samMultiplier;
+    this.atomicMultiplier = DEFAULT_OPTIONS.atomicMultiplier;
     this.selectedDifficulty = DEFAULT_OPTIONS.selectedDifficulty;
     this.gameMode = DEFAULT_OPTIONS.gameMode;
     this.useRandomMap = DEFAULT_OPTIONS.useRandomMap;
@@ -890,6 +910,24 @@ export class SinglePlayerModal extends BaseModal {
         this.doomsdayClock = checked;
         break;
       default:
+        break;
+    }
+  };
+
+  private handleSpecialOptionToggleChanged = (e: Event) => {
+    const { labelKey, checked } = (e as CustomEvent<{
+      labelKey: string;
+      checked: boolean;
+    }>).detail;
+    switch (labelKey) {
+      case "Factory Multiplier":
+        this.factoryMultiplier = checked;
+        break;
+      case "SAM Multiplier":
+        this.samMultiplier = checked;
+        break;
+      case "Atomic Multiplier":
+        this.atomicMultiplier = checked;
         break;
     }
   };
@@ -1266,6 +1304,11 @@ export class SinglePlayerModal extends BaseModal {
                   this.scaleMode === "virtual"
                     ? this.virtualWorldAreaMultiplier
                     : 1,
+                specialOptions: {
+                  factoryMultiplier: this.factoryMultiplier,
+                  samMultiplier: this.samMultiplier,
+                  atomicMultiplier: this.atomicMultiplier,
+                },
                 ...(this.winPercentage !== DEFAULT_OPTIONS.winPercentage
                   ? { winPercentage: this.winPercentage }
                   : {}),
