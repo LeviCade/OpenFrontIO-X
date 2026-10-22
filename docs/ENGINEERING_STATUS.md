@@ -1,5 +1,24 @@
 # OpenFrontIO-X engineering status
 
+## PR #6 100× PERCEPTUAL PARITY — MAC FEEDBACK AND ENGINEERING (2026-10-22)
+
+**Draft [PR #6](https://github.com/LeviCade/OpenFrontIO-X/pull/6)** stacked on draft PR #5. The user's detached Mac PR #5 worktree remains at `9e4d0dee`; this new branch is separate. Neither main nor original upstream is touched.
+
+**Physical Mac evidence (reported by user):** Giant World in Virtual 100× mode started and ran using Node 24.22.0, npm 12.1.0 and Vite 8.0.16 at localhost:9000. The user reports slow intended conquest but almost unchanged troop losses, max zoom far too shallow, oversized factory/rail reach and selection radius. There are no measured FPS, RAM, GPU data or completed-win/replay evidence yet. `npm run start:client` starts only Vite, so the repeated `/api/singleplayer/.../heartbeat` and WebSocket `ECONNREFUSED` proxy errors reflect missing local backend routes, not proof of a crash. The dev-server process was explicitly stopped by Control+C.
+
+**PR #6 source repairs (must be independently verified at newest head):**
+
+- A physical terrain tile representing A perceived virtual cells charges A times its ordinary attacker conquest cost, while defender's per-tile troop debit stays unchanged. This is a first model of aggregate cost, **not balanced 100× economy parity**.
+- `TransformHandler` no longer blocks input zoom at 20× while WebGL Camera allows deeper levels; both use the same capped virtual inspection calculation (up to 1000× at A=100). Missing game-config mocks still use a safe 1× default.
+- Factory/train station reach, minimum separation and railroad snap follow inverse linear scale. Rail snapping also verifies exact rail-tile proximity, preventing coarse spatial-grid false positives. Existing 1× behavior is unchanged.
+- Warship patrol, target, docking, and repair radius plus click hit radius scale down. Visual selection boxes and structure-level numbers scale with rendered icons.
+- WebGL defense-post coverage circles now read the gameplay radius. FX sprite atlas world dimensions, nuke shockwaves/debris, SAM shockwaves and custom explosion radii follow the same virtual world scale.
+- Regression tests added for combat loss, 1×/100× range behavior, virtual zoom cap and exact rail snap.
+
+**Not accepted:** Mac gameplay on the newest PR #6 build, exact hit testing for all city/factory/port interactions, rail and train motion, full AI/economy/nuclear tactics, long-run replay determinism or performance, and true sub-tile territory geometry. Keep **DRAFT**. The separate GitHub milestone governance policy remains unsatisfied, not disabled.
+
+**Next local validation:** in the existing `OpenFrontIO-X-pr3` repository run `git fetch origin` then create a separate detached worktree `../OpenFrontIO-X-virtual-pr6` at `origin/feature/virtual-world-perceptual-parity-stage2`; use Node 24/npm 12, `npm run inst`, `npm run start:client`. Compare Virtual 1×/10×/100×, then run sustained Giant World Solo and real win, Keep Playing and replay checks. No existing worktree or storage should be replaced.
+
 ## PR #5 VIRTUAL WORLD + HYBRID PLANNER — 2026-10-22
 
 **Branch:** `feature/virtual-world-1-100-stage1`, [draft PR #5](https://github.com/LeviCade/OpenFrontIO-X/pull/5), stacked on draft PR #4. Not merged; original OpenFront, main, and the owner's existing Mac worktrees are untouched.
