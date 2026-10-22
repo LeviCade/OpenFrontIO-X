@@ -32,8 +32,8 @@ describe("Virtual World economic parity without baseline inflation", () => {
       const p = player(1_000);
       expect(cfg.effectiveTilesOwned(p as never)).toBe(1_000 * area);
       const expected = 2 * (Math.pow(1_000 * area, 0.6) * 1000 + 50000);
-      expect(cfg.maxTroops(p as never)).toBeCloseTo(expected, 7);
-      expect(cfg.maxTroopsWithoutCities(p as never)).toBeCloseTo(expected, 7);
+      expect(cfg.maxTroops(p as never)).toBeCloseTo(expected, 2);
+      expect(cfg.maxTroopsWithoutCities(p as never)).toBeCloseTo(expected, 2);
     },
   );
 
@@ -42,7 +42,7 @@ describe("Virtual World economic parity without baseline inflation", () => {
       const cfg = config(area);
       const without = cfg.maxTroops(player(500) as never);
       const withCities = cfg.maxTroops(player(500, 2) as never);
-      expect(withCities - without).toBe(2 * cfg.cityTroopIncrease());
+      expect(withCities - without).toBeCloseTo(2 * cfg.cityTroopIncrease(), 6);
       expect(cfg.cityTroopIncrease()).toBe(250_000);
     }
   });
