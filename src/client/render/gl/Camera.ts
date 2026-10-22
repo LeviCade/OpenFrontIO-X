@@ -29,6 +29,8 @@ export class Camera {
 
   private mapW: number;
   private mapH: number;
+  private readonly maxZoom: number;
+  private readonly focusMaxZoom: number;
   private canvasW = 1;
   private canvasH = 1;
   private mat = new Float32Array(9);
@@ -36,9 +38,14 @@ export class Camera {
   /** True until fitMap() has been called with valid canvas dimensions. */
   private needsInitialFit = true;
 
-  constructor(mapWidth: number, mapHeight: number) {
+  constructor(mapWidth: number, mapHeight: number, areaScale = 1) {
     this.mapW = mapWidth;
     this.mapH = mapHeight;
+    // At virtual 100×, rendered structures are one tenth their normal size.
+    // Grant proportionally deeper inspection zoom without changing map tiles.
+    const linearScale = Math.sqrt(Math.max(1, areaScale));
+    this.maxZoom = Math.min(200, MAX_ZOOM * linearScale);
+    this.focusMaxZoom = Math.min(this.maxZoom, DBLCLICK_MAX_ZOOM * linearScale);
     this.offsetX = mapWidth / 2;
     this.offsetY = mapHeight / 2;
     this.zoom = 1;
@@ -82,7 +89,7 @@ export class Camera {
     const sy = this.canvasH / bboxH;
     this.zoom = Math.max(
       DBLCLICK_MIN_ZOOM,
-      Math.min(DBLCLICK_MAX_ZOOM, Math.min(sx, sy) / padding),
+      Math.min(this.focusMaxZoom, Math.min(sx, sy) / padding),
     );
     this.clampOffset();
     this.dirty = true;
@@ -117,7 +124,7 @@ export class Camera {
   zoomBy(factor: number): void {
     this.zoom = Math.max(
       this.minZoom(),
-      Math.min(MAX_ZOOM, this.zoom * factor),
+      Math.min(this.maxZoom, this.zoom * factor),
     );
     this.clampOffset();
     this.dirty = true;
@@ -125,7 +132,7 @@ export class Camera {
 
   /** Set absolute zoom level. */
   zoomTo(level: number): void {
-    this.zoom = Math.max(this.minZoom(), Math.min(MAX_ZOOM, level));
+    this.zoom = Math.max(this.minZoom(), Math.min(this.maxZoom, level));
     this.clampOffset();
     this.dirty = true;
   }
@@ -138,7 +145,7 @@ export class Camera {
     const worldBefore = this.screenToWorld(screenX, screenY);
     this.zoom = Math.max(
       this.minZoom(),
-      Math.min(MAX_ZOOM, this.zoom * factor),
+      Math.min(this.maxZoom, this.zoom * factor),
     );
     const worldAfter = this.screenToWorld(screenX, screenY);
     this.offsetX += worldBefore.x - worldAfter.x;
