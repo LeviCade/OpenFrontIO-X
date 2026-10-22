@@ -467,7 +467,7 @@ export class BuildPreviewController implements Controller {
       case UnitType.HydrogenBomb:
         rangeRadius = this.game.config().nukeMagnitudes(
           u.type,
-          this.game.config().gameConfig().specialOptions?.atomicMultiplier
+          this.game.config?.()?.gameConfig?.()?.specialOptions?.atomicMultiplier
             ? this.uiState.blastMultiplier
             : 1,
         ).outer;
@@ -492,7 +492,7 @@ export class BuildPreviewController implements Controller {
 
     const isNuke = u.type === UnitType.AtomBomb;
     const atomicRadius =
-      this.game.config().gameConfig().specialOptions?.atomicMultiplier &&
+      this.game.config?.()?.gameConfig?.()?.specialOptions?.atomicMultiplier &&
       (u.type === UnitType.AtomBomb || u.type === UnitType.HydrogenBomb);
     const amount = atomicRadius
       ? 1
@@ -578,7 +578,7 @@ export class BuildPreviewController implements Controller {
 
       const isNuke = unitType === UnitType.AtomBomb;
       const atomicRadius =
-        this.game.config().gameConfig().specialOptions?.atomicMultiplier &&
+        this.game.config?.()?.gameConfig?.()?.specialOptions?.atomicMultiplier &&
         (unitType === UnitType.AtomBomb ||
           unitType === UnitType.HydrogenBomb);
       const rocketDirectionUp =
