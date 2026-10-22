@@ -384,6 +384,24 @@ export class BuildMenu extends LitElement implements Controller {
   }
 
   public sendBuildOrUpgrade(buildableUnit: BuildableUnit, tile: TileRef): void {
+    const atomic =
+      this.game.config().gameConfig().specialOptions?.atomicMultiplier &&
+      (buildableUnit.type === UnitType.AtomBomb ||
+        buildableUnit.type === UnitType.HydrogenBomb);
+    if (atomic) {
+      if (this.uiState.ghostStructure === buildableUnit.type) {
+        this.uiState.blastMultiplier = Math.min(
+          8,
+          this.uiState.blastMultiplier + 1,
+        );
+      } else {
+        this.uiState.ghostStructure = buildableUnit.type;
+        this.uiState.blastMultiplier = 1;
+      }
+      this.uiState.upgradeMultiplier = 1;
+      this.hideMenu();
+      return;
+    }
     if (buildableUnit.canUpgrade !== false) {
       this.eventBus.emit(
         new SendUpgradeStructureIntentEvent(
