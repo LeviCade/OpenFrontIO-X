@@ -267,8 +267,13 @@ export class EngineConfig extends Config {
 
   tradeShipGold(dist: number, player: PlayerLike): Gold {
     // Sigmoid: concave start, sharp S-curve middle, linear end - heavily punishes trades under range debuff.
+    // Physical-map equivalent route length: the boat travels fewer logical
+    // cells over sqrt(A) times as many ticks in Virtual mode.
+    const perceivedDist = dist * Math.sqrt(this.virtualWorldArea());
     const debuff = this.tradeShipShortRangeDebuff();
-    const baseGold = 75_000 / (1 + exp(-0.03 * (dist - debuff))) + 50 * dist;
+    const baseGold =
+      75_000 / (1 + exp(-0.03 * (perceivedDist - debuff))) +
+      50 * perceivedDist;
     return BigInt(Math.floor(baseGold * this.goldMultiplierFor(player)));
   }
 
@@ -567,12 +572,13 @@ export class EngineConfig extends Config {
 
     // Big territories are cheaper and faster to attack from and into, so
     // late games stay dynamic. The attacker's bonus is the stronger one.
+    const area = this.virtualWorldArea();
     const largeAttackerBonus = largeTerritoryBonus(
-      attacker.numTiles,
+      attacker.numTiles * area,
       LARGE_ATTACKER_DEPTH,
     );
     const largeDefenderBonus = largeTerritoryBonus(
-      defender.numTiles,
+      defender.numTiles * area,
       LARGE_DEFENDER_DEPTH,
     );
 
@@ -592,7 +598,8 @@ export class EngineConfig extends Config {
       traitorLossMod *
       within(troopRatio, CHEAPEST_TROOP_RATIO, 2) *
       (ATTACKER_LOSS_BASE * largeAttackerBonus * largeDefenderBonus +
-        ATTACKER_LOSS_PER_DENSITY * defenderTroopLoss);
+        // Each virtual cell contains A ordinary cells; density is troops / (N * A).
+        ATTACKER_LOSS_PER_DENSITY * (defenderTroopLoss / area));
 
     // Speed: a tile's cost in tick-fractions grows with how outnumbered the
     // attack is. Floored at 0.82 below parity (overwhelming stacks land ~18%
@@ -602,14 +609,13 @@ export class EngineConfig extends Config {
       (within(troopRatio, 0.82, 7.5) * within(troopRatio / 20, 1, 50)) /
       SPEED_COST_DIVISOR;
     const largeAttackerSpeedBonus = largeTerritoryBonus(
-      attacker.numTiles,
+      attacker.numTiles * area,
       LARGE_ATTACKER_SPEED_DEPTH,
     );
     return {
-      // The simulated tile covers A virtual tiles. Defender troops-per-tile
-      // already represents that entire area's garrison, so only charge the
-      // A-fold aggregate attacker cost. Preserve unchanged 1× equations.
-      attackerTroopLoss: attackerTroopLoss * this.virtualWorldArea(),
+      // Sum A ordinary-tile losses: base cost grows with area, while troop
+      // density is divided by A before aggregating. Do not charge density A times.
+      attackerTroopLoss: attackerTroopLoss * area,
       defenderTroopLoss,
       tickFraction:
         (speedCost *
