@@ -63,8 +63,7 @@ export function estimateExtendedMap(
     combinedCoreBytesLowerBound:
       tiles * (CPU_CORE_BYTES_PER_TILE + GPU_CORE_BYTES_PER_TILE),
     withinExistingSafetyBudget: tiles <= MAX_MULTIPLIED_MAP_TILES,
-    requiresGpuTiling:
-      width > maxTextureSize || height > maxTextureSize,
+    requiresGpuTiling: width > maxTextureSize || height > maxTextureSize,
     texturePlan,
   };
 }
