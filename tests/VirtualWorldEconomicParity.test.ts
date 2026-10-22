@@ -102,16 +102,20 @@ describe("Virtual World economic parity without baseline inflation", () => {
     const type = UnitType.MIRVWarhead;
     let remaining = humans;
     for (let i = 0; i < 100; i++) {
-      remaining -= normal.nukeDeathFactor(type, remaining, 50_000 - i, maxTroops);
+      remaining -= normal.nukeDeathFactor(
+        type,
+        remaining,
+        50_000 - i,
+        maxTroops,
+      );
     }
-    expect(virtual100.nukeDeathFactor(type, humans, 500, maxTroops)).toBeCloseTo(
-      humans - remaining,
-      6,
-    );
+    expect(
+      virtual100.nukeDeathFactor(type, humans, 500, maxTroops),
+    ).toBeCloseTo(humans - remaining, 6);
     // Regular warhead aggregation already uses the physical-cell fraction.
-    expect(virtual100.nukeDeathFactor(UnitType.AtomBomb, humans, 500, maxTroops)).toBe(
-      normal.nukeDeathFactor(UnitType.AtomBomb, humans, 500, maxTroops),
-    );
+    expect(
+      virtual100.nukeDeathFactor(UnitType.AtomBomb, humans, 500, maxTroops),
+    ).toBe(normal.nukeDeathFactor(UnitType.AtomBomb, humans, 500, maxTroops));
   });
 
   it("awards the same gold for an equally long perceived trade voyage", () => {
