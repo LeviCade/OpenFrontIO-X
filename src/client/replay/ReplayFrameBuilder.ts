@@ -52,6 +52,10 @@ import { RailroadEventKind } from "./codec/ReplayTypes";
 export interface ReplayRules {
   allianceDuration: number;
   doomsdayClockWarnTicks: number;
+  nukeMagnitudeFor?: (
+    type: string,
+    multiplier: number,
+  ) => { inner: number; outer: number };
 }
 
 type Mutable<T> = { -readonly [K in keyof T]: T[K] };
@@ -239,6 +243,7 @@ export class ReplayFrameBuilder {
       fd.relationSize,
       this.deliveredPlans(f),
       f.tick,
+      this.rules.nukeMagnitudeFor,
     );
     fd.attackRings = []; // local player only
     fd.structuresDirty = this.structuresChanged(f.units);
