@@ -87,6 +87,17 @@ class SAMTargetingSystem {
     }
   }
 
+  private broadphaseRange(): number {
+    const cfg = this.mg.config();
+    const level = this.sam.level();
+    const upgradingTo = this.sam.samLauncherState()?.targetLevel ?? level;
+    return Math.max(
+      cfg.maxSamRange(),
+      cfg.samRange(level),
+      cfg.samRange(upgradingTo),
+    );
+  }
+
   private tickToReach(currentTile: TileRef, tile: TileRef): number {
     return Math.ceil(
       this.mg.manhattanDist(currentTile, tile) / this.missileSpeed,
@@ -130,7 +141,7 @@ class SAMTargetingSystem {
     const curIdx = unit.trajectoryIndex();
     const waitTicks = unit.nukeState().waitTicks ?? 0;
     const maxIdx = trajectory.length - 2;
-    const maxSamRangeSq = this.mg.config().maxSamRange() ** 2;
+    const maxSamRangeSq = this.broadphaseRange() ** 2;
     let minDistSq = Infinity;
     let closestTile = samTile;
     let incSteps = 0;
@@ -251,7 +262,7 @@ class SAMTargetingSystem {
 
   public getValidTargets(ticks: number): Target[] {
     const samTile = this.sam.tile();
-    const detectionRange = this.mg.config().maxSamRange() * 4;
+    const detectionRange = this.broadphaseRange() * 4;
     const nukes = this.mg.nearbyUnits(
       samTile,
       detectionRange,
