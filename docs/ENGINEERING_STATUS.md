@@ -1,5 +1,19 @@
 # OpenFrontIO-X engineering status
 
+## PR #5 VIRTUAL WORLD + HYBRID PLANNER — 2026-10-22
+
+**Branch:** `feature/virtual-world-1-100-stage1`, [draft PR #5](https://github.com/LeviCade/OpenFrontIO-X/pull/5), stacked on draft PR #4. Not merged; original OpenFront, main, and the owner's existing Mac worktrees are untouched.
+
+**Verified pre-checkpoint source:** `781719755a279b79048bfdb088a6fd291d117601`. [Core CI run 39845903380](https://github.com/LeviCade/OpenFrontIO-X/actions/runs/39845903380) completed with **8/8 successful jobs**: build, lint, format, generated maps, three test shards and aggregate test gate. The separate [PR governance run 39845903226](https://github.com/LeviCade/OpenFrontIO-X/actions/runs/39845903226) failed **Has Milestone**. This is a missing PR milestone, not a code/test failure. Assign a valid repository milestone as part of later merge governance; keep the PR draft for now.
+
+**Implemented experimental first slice:** Solo Virtual 1–100× numeric selector (default mode) alongside Physical 1–20× with unchanged 64.1M-cell cap; backwards-compatible serialized virtual multiplier; proportional sprite/structure/railroad/trajectory rendering; scaled starting territory, discrete deterministic attack pacing, ship pacing, selected nuclear range/blast adjustments, and deeper bounded camera zoom. Virtual mode retains original physical terrain dimensions. See [stage-one engineering report](VIRTUAL_WORLD_1_TO_100_STAGE1.md).
+
+**Optional hybrid idea — planner only:** `HybridWorldResolution.ts` computes the least integer physical area `P = ceil(A*(minFootprint/originalFootprint)^2)` and the residual `A/P`. At perceived A=100 and a four-tile original spawn radius, P=7 is the minimum integer physical area needed for at least one actual tile of spawn radius. The feasibility planner tests physical multiplier, global tile budget and maximum GPU axis; it does **not** allocate maps, select a mode, verify GPU memory, or support fractional residual scaling in the engine yet.
+
+**Not verified:** actual Mac/GPU 10× and 100× gameplay, complete proportional ranges/effects/hit targets/economy/AI, per-tile movement smoothness, long match performance, win → Keep Playing → exit → replay deterministic fidelity, or hybrid runtime allocation. Do not claim true physical 10× Giant World works; it remains capped.
+
+**Next acceptance:** on an isolated PR #5 Mac worktree with Node 24/npm 12, run Solo 1×, 10× and 100× on small and Giant maps; inspect motion, sprites, nuke effects, deep zoom, CPU/RAM/FPS, and offline replay determinism. Then audit unscaled gameplay/range systems. Preserve draft status and stacking until actual gameplay gates pass. The current documentation-only checkpoint commit requires its **own** final-head CI verification rather than inheriting the previous run.
+
 ## PR #3 — CONNECTIVITY RESUMED AND EARLY-FLUSH UPLOAD BUG FIXED (2026-10-19)
 
 **Validated previously published head:** `a18c1d82b4b2cf303e0aa24894e395048f9949d0` passed all eight core jobs on [CI run 39315729226](https://github.com/LeviCade/OpenFrontIO-X/actions/runs/39315729226), all three benchmarks on [39315727742](https://github.com/LeviCade/OpenFrontIO-X/actions/runs/39315727742) and real Chromium on [39315727486](https://github.com/LeviCade/OpenFrontIO-X/actions/runs/39315727486). Governance PR check [39315727610](https://github.com/LeviCade/OpenFrontIO-X/actions/runs/39315727610) separately fails because PR lacks an assigned milestone. PR #1/#2/#3 remain draft/unmerged; official upstream and owner's Mac untouched.
