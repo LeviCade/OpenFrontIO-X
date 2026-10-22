@@ -477,12 +477,8 @@ export class Config {
   }
 
   maxSamRange(): number {
-    // SAM launches may be stacked to level 10; reserve detection range for all
-    // legal upgrades instead of leaving level 3+ nukes outside the broadphase.
-    if (
-      this._gameConfig.gameType === GameType.Singleplayer &&
-      this._gameConfig.specialOptions?.samMultiplier
-    ) return 700 * this.virtualWorldVisualScale();
+    // Legacy maximum; level-linear special SAMs use the actual launcher's
+    // current/upgrade radius for their broadphase instead of a global cap.
     return 150 * this.virtualWorldVisualScale();
   }
 
