@@ -1,6 +1,7 @@
 import { TileRef } from "@openfront/engine-api/game/GameMap";
 import { MessageType, UnitType } from "@openfront/engine-api/game/GameTypes";
 import { renderNumber } from "@openfront/engine-lib/Format";
+import { virtualTicksPerMove } from "@openfront/engine-lib/game/VirtualWorldScale";
 import {
   zInt,
   zPlayerRef,
@@ -31,6 +32,8 @@ export class TradeShipExecution implements Execution {
   private wasCaptured = false;
   private pathFinder: WaterPathFinder;
   private tilesTraveled = 0;
+  private ticksPerMove = 1;
+  private lastMove = 0;
   private motionPlanId = 1;
   private motionPlanDst: TileRef | null = null;
 
@@ -42,6 +45,8 @@ export class TradeShipExecution implements Execution {
 
   init(mg: Game, ticks: number): void {
     this.mg = mg;
+    this.ticksPerMove = virtualTicksPerMove(mg.config().virtualWorldArea());
+    this.lastMove = ticks;
     const stagger = mg.nextShipStagger("tradeShip");
     this.pathFinder = new WaterPathFinder(mg, stagger, true); // memoized: port tile to port tile repeats
   }
@@ -140,6 +145,9 @@ export class TradeShipExecution implements Execution {
       return;
     }
 
+    // Keep event/owner checks responsive every tick, but ocean travel paced.
+    if (ticks - this.lastMove < this.ticksPerMove) return;
+    this.lastMove = ticks;
     const dst = this._dstPort.tile();
     const result = this.pathFinder.next(curTile, dst);
 
@@ -154,8 +162,8 @@ export class TradeShipExecution implements Execution {
             kind: "grid",
             unitId: this.tradeShip.id(),
             planId: this.motionPlanId,
-            startTick: ticks + 1,
-            ticksPerStep: 1,
+            startTick: ticks + this.ticksPerMove,
+            ticksPerStep: this.ticksPerMove,
             path,
           });
           this.motionPlanDst = dst;
@@ -245,6 +253,8 @@ export class TradeShipExecution implements Execution {
           ? null
           : waterPathFinderState(this.pathFinder),
       tilesTraveled: this.tilesTraveled,
+      ticksPerMove: this.ticksPerMove,
+      lastMove: this.lastMove,
       motionPlanId: this.motionPlanId,
       motionPlanDst: this.motionPlanDst,
       origOwner: w.player(this.origOwner),
@@ -262,6 +272,8 @@ export class TradeShipExecution implements Execution {
       this.pathFinder = restoreWaterPathFinder(r.game, s.pathFinder);
     }
     this.tilesTraveled = s.tilesTraveled;
+    this.ticksPerMove = s.ticksPerMove ?? 1;
+    this.lastMove = s.lastMove ?? 0;
     this.motionPlanId = s.motionPlanId;
     this.motionPlanDst = s.motionPlanDst;
     this.origOwner = r.player(s.origOwner);
@@ -278,6 +290,8 @@ const TradeShipExecutionStateSchema = z.object({
   /** Null before init(). */
   pathFinder: WaterPathFinderSchema.nullable(),
   tilesTraveled: zInt(),
+  ticksPerMove: zInt().optional(),
+  lastMove: zInt().optional(),
   motionPlanId: zInt(),
   motionPlanDst: zTile().nullable(),
   origOwner: zPlayerRef(),
