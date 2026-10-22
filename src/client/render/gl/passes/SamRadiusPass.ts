@@ -18,7 +18,7 @@ import { UT_SAM_LAUNCHER } from "../../types";
 import { DynamicInstanceBuffer } from "../DynamicBuffer";
 import type { RenderSettings } from "../RenderSettings";
 import { createProgram } from "../utils/GlUtils";
- 
+
 import fragSrc from "../shaders/sam-radius/sam-radius.frag.glsl?raw";
 import vertSrc from "../shaders/sam-radius/sam-radius.vert.glsl?raw";
 
