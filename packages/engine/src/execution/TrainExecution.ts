@@ -140,7 +140,8 @@ export class TrainExecution implements Execution {
     if (
       ticks < this.firstMoveTick ||
       (ticks - this.firstMoveTick) % this.ticksPerMove !== 0
-    ) return;
+    )
+      return;
 
     const tile = this.getNextTile();
     if (tile) {
