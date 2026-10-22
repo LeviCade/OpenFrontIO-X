@@ -272,8 +272,7 @@ export class EngineConfig extends Config {
     const perceivedDist = dist * Math.sqrt(this.virtualWorldArea());
     const debuff = this.tradeShipShortRangeDebuff();
     const baseGold =
-      75_000 / (1 + exp(-0.03 * (perceivedDist - debuff))) +
-      50 * perceivedDist;
+      75_000 / (1 + exp(-0.03 * (perceivedDist - debuff))) + 50 * perceivedDist;
     return BigInt(Math.floor(baseGold * this.goldMultiplierFor(player)));
   }
 
