@@ -416,6 +416,8 @@ export const UNIT_FIELDS: readonly FieldDef<UnitFields>[] = [
     ["samUpgradeTargetLevel", maybe(F64, null)],
     ["samUpgradeDuration", maybe(F64, null)],
   ),
+  // Append only, preserving the field-mask indices of existing replay packets.
+  field(["blastMultiplier", maybe(U8, undefined)]),
 ];
 
 for (const [name, schema] of [
