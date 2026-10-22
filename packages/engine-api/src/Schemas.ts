@@ -279,7 +279,7 @@ export const GameConfigSchema = z.object({
     .optional(),
   // Distinct from physical mapAreaMultiplier: same terrain, slower world scale.
   // Optional for compatibility with existing saves, clients and replays.
-  virtualWorldAreaMultiplier: z.number().int().min(1).max(100).optional(),
+  virtualWorldAreaMultiplier: zb.uint({ min: 1, max: 100 }).optional(),
   doomsdayClock: DoomsdayClockConfigSchema.optional(),
   overtime: OvertimeConfigSchema.optional(),
   // Solo-only victory territory percentage (default remains the original 80%).
