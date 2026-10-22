@@ -20,9 +20,11 @@ describe("Virtual World 1×–100×, independent of physical terrain tiles", () 
     "rejects invalid virtual area %s",
     (area) => {
       expect(() => assertVirtualWorldArea(area)).toThrow();
-      expect(GameConfigPatchSchema.safeParse({
-        virtualWorldAreaMultiplier: area,
-      }).success).toBe(false);
+      expect(
+        GameConfigPatchSchema.safeParse({
+          virtualWorldAreaMultiplier: area,
+        }).success,
+      ).toBe(false);
     },
   );
 
@@ -33,8 +35,10 @@ describe("Virtual World 1×–100×, independent of physical terrain tiles", () 
     });
     expect(config.mapAreaMultiplier).toBe(1);
     expect(config.virtualWorldAreaMultiplier).toBe(100);
-    expect(GameConfigPatchSchema.parse({ mapAreaMultiplier: 1 })
-      .virtualWorldAreaMultiplier).toBeUndefined();
+    expect(
+      GameConfigPatchSchema.parse({ mapAreaMultiplier: 1 })
+        .virtualWorldAreaMultiplier,
+    ).toBeUndefined();
   });
 
   it("has one-tile minimum spawn and slows grid travel at 100×", () => {

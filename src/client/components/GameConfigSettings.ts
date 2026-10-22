@@ -281,7 +281,11 @@ export class GameConfigSettings extends LitElement {
     const input = event.currentTarget as HTMLInputElement;
     const multiplier = Number(input.value);
     const max = this.settings?.map.scaleMode === "physical" ? 20 : 100;
-    if (!Number.isSafeInteger(multiplier) || multiplier < 1 || multiplier > max) {
+    if (
+      !Number.isSafeInteger(multiplier) ||
+      multiplier < 1 ||
+      multiplier > max
+    ) {
       input.value = String(this.settings?.map.multiplier ?? 1);
       return;
     }
@@ -469,10 +473,16 @@ export class GameConfigSettings extends LitElement {
             ></map-picker>
             ${settings.map.multiplier !== undefined
               ? html`<div class="mt-4 space-y-3">
-                  <div class="text-xs font-bold uppercase tracking-wider text-white/70">
+                  <div
+                    class="text-xs font-bold uppercase tracking-wider text-white/70"
+                  >
                     World size · experimental
                   </div>
-                  <div class="grid grid-cols-2 gap-2" role="group" aria-label="World scale mode">
+                  <div
+                    class="grid grid-cols-2 gap-2"
+                    role="group"
+                    aria-label="World scale mode"
+                  >
                     ${renderTextCardButton(
                       "Virtual · default",
                       (settings.map.scaleMode ?? "virtual") === "virtual",

@@ -66,7 +66,11 @@ export class NukeTrajectoryPass {
   private visible = false;
   private data: NukeTrajectoryData | null = null;
 
-  constructor(gl: WebGL2RenderingContext, settings: RenderSettings, private readonly virtualLineScale = 1) {
+  constructor(
+    gl: WebGL2RenderingContext,
+    settings: RenderSettings,
+    private readonly virtualLineScale = 1,
+  ) {
     this.gl = gl;
     this.settings = settings;
 
@@ -249,7 +253,8 @@ export class NukeTrajectoryPass {
 
     // Derived pixel dimensions
     const lineHalfPx = (s.lineWidth * this.virtualLineScale) / 2;
-    const outlineHalfPx = ((s.lineWidth + s.outlineWidth) * this.virtualLineScale) / 2;
+    const outlineHalfPx =
+      ((s.lineWidth + s.outlineWidth) * this.virtualLineScale) / 2;
     const quadHalfPx = outlineHalfPx + 1.0; // AA padding
 
     // --- Draw trajectory line ---

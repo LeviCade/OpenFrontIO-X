@@ -9,10 +9,12 @@ export type WorldScaleMode = "virtual" | "physical";
 export const MAX_VIRTUAL_WORLD_AREA = 100;
 
 /** Fail closed on invalid or fractional input; old records default to 1. */
-export function assertVirtualWorldArea(
-  area: number,
-): asserts area is number {
-  if (!Number.isSafeInteger(area) || area < 1 || area > MAX_VIRTUAL_WORLD_AREA) {
+export function assertVirtualWorldArea(area: number): asserts area is number {
+  if (
+    !Number.isSafeInteger(area) ||
+    area < 1 ||
+    area > MAX_VIRTUAL_WORLD_AREA
+  ) {
     throw new Error("Virtual world area must be an integer from 1 to 100");
   }
 }

@@ -13,7 +13,10 @@ import {
   MAX_MULTIPLIED_MAP_TILES,
   type MapAreaMultiplier,
 } from "@openfront/engine-lib/game/MapMultiplier";
-import { assertVirtualWorldArea, type WorldScaleMode } from "@openfront/engine-lib/game/VirtualWorldScale";
+import {
+  assertVirtualWorldArea,
+  type WorldScaleMode,
+} from "@openfront/engine-lib/game/VirtualWorldScale";
 import { UserMeResponse } from "@openfront/shared/ApiSchemas";
 import { assetUrl } from "@openfront/shared/AssetUrls";
 import { generateID } from "@openfront/shared/SharedUtil";
@@ -658,7 +661,8 @@ export class SinglePlayerModal extends BaseModal {
       this.nations !== this.defaultNationCount ||
       this.bots !== DEFAULT_OPTIONS.bots ||
       this.mapAreaMultiplier !== DEFAULT_OPTIONS.mapAreaMultiplier ||
-      this.virtualWorldAreaMultiplier !== DEFAULT_OPTIONS.virtualWorldAreaMultiplier ||
+      this.virtualWorldAreaMultiplier !==
+        DEFAULT_OPTIONS.virtualWorldAreaMultiplier ||
       this.scaleMode !== DEFAULT_OPTIONS.scaleMode ||
       this.winPercentage !== DEFAULT_OPTIONS.winPercentage ||
       this.infiniteGold !== DEFAULT_OPTIONS.infiniteGold ||
@@ -728,7 +732,8 @@ export class SinglePlayerModal extends BaseModal {
     this.starting = false;
     this.selectedMap = DEFAULT_OPTIONS.selectedMap;
     this.mapAreaMultiplier = DEFAULT_OPTIONS.mapAreaMultiplier;
-    this.virtualWorldAreaMultiplier = DEFAULT_OPTIONS.virtualWorldAreaMultiplier;
+    this.virtualWorldAreaMultiplier =
+      DEFAULT_OPTIONS.virtualWorldAreaMultiplier;
     this.scaleMode = DEFAULT_OPTIONS.scaleMode;
     this.winPercentage = DEFAULT_OPTIONS.winPercentage;
     this.selectedDifficulty = DEFAULT_OPTIONS.selectedDifficulty;
@@ -1256,11 +1261,11 @@ export class SinglePlayerModal extends BaseModal {
               config: {
                 gameMap: this.selectedMap,
                 mapAreaMultiplier:
-                   this.scaleMode === "physical" ? this.mapAreaMultiplier : 1,
-                 virtualWorldAreaMultiplier:
-                   this.scaleMode === "virtual"
-                     ? this.virtualWorldAreaMultiplier
-                     : 1,
+                  this.scaleMode === "physical" ? this.mapAreaMultiplier : 1,
+                virtualWorldAreaMultiplier:
+                  this.scaleMode === "virtual"
+                    ? this.virtualWorldAreaMultiplier
+                    : 1,
                 ...(this.winPercentage !== DEFAULT_OPTIONS.winPercentage
                   ? { winPercentage: this.winPercentage }
                   : {}),
