@@ -570,7 +570,8 @@ export class InputHandler {
 
           if (matchedBuild !== null) {
             const atomic =
-              this.gameView.config?.()?.gameConfig?.()?.specialOptions?.atomicMultiplier &&
+              this.gameView.config?.()?.gameConfig?.()?.specialOptions
+                ?.atomicMultiplier &&
               (matchedBuild === UnitType.AtomBomb ||
                 matchedBuild === UnitType.HydrogenBomb);
             if (atomic && e.shiftKey) {
@@ -1355,7 +1356,8 @@ export class InputHandler {
       ghostStructure !== null
     ) {
       const atomic =
-        this.gameView.config?.()?.gameConfig?.()?.specialOptions?.atomicMultiplier &&
+        this.gameView.config?.()?.gameConfig?.()?.specialOptions
+          ?.atomicMultiplier &&
         (ghostStructure === UnitType.AtomBomb ||
           ghostStructure === UnitType.HydrogenBomb);
       if (atomic) {
