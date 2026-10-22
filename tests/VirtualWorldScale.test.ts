@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { GameConfigPatchSchema } from "@openfront/engine-api/Schemas";
+import { GameType } from "@openfront/engine-api/game/GameTypes";
+import { GameConfig, GameConfigPatchSchema } from "@openfront/engine-api/Schemas";
+import { Config } from "@openfront/engine-lib/configuration/Config";
 import {
   advanceVirtualPace,
   assertVirtualWorldArea,
@@ -47,6 +49,29 @@ describe("Virtual World 1×–100×, independent of physical terrain tiles", () 
     expect(virtualTicksPerMove(1)).toBe(1);
     expect(virtualTicksPerMove(100)).toBe(10);
     expect(virtualVisualScale(100)).toBeCloseTo(0.1);
+  });
+
+  it("scales defensive gameplay ranges at 100× and preserves 1× rules", () => {
+    const makeConfig = (area: number) =>
+      new Config(
+        {
+          gameType: GameType.Singleplayer,
+          virtualWorldAreaMultiplier: area,
+        } as GameConfig,
+        false,
+      );
+    const normal = makeConfig(1);
+    const virtual100 = makeConfig(100);
+
+    expect(normal.defensePostRange()).toBe(30);
+    expect(virtual100.defensePostRange()).toBe(3);
+
+    expect(normal.samRange(1)).toBe(70);
+    expect(normal.samRange(5)).toBe(102);
+    expect(normal.maxSamRange()).toBe(150);
+    expect(virtual100.samRange(1)).toBeCloseTo(7);
+    expect(virtual100.samRange(5)).toBeCloseTo(10.2);
+    expect(virtual100.maxSamRange()).toBe(15);
   });
 
   it("is deterministic with fixed-point fractional attack credit", () => {
