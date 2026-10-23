@@ -94,6 +94,21 @@ export class StationManagerImpl implements StationManager {
   }
 }
 
+/** Prevent an optional ocean bridge from spanning more water than a factory
+ * can reach. Inspect consecutive water cells, not just endpoint proximity. */
+export function bridgeWaterSpanWithinRange(
+  path: readonly TileRef[],
+  isWater: (tile: TileRef) => boolean,
+  maxWaterTiles: number,
+): boolean {
+  let span = 0;
+  for (const tile of path) {
+    span = isWater(tile) ? span + 1 : 0;
+    if (span > maxWaterTiles) return false;
+  }
+  return true;
+}
+
 export interface RailPathFinderService {
   findTilePath(from: TileRef, to: TileRef): TileRef[];
   findStationsPath(from: TrainStation, to: TrainStation): TrainStation[];
@@ -112,13 +127,13 @@ class RailPathFinderServiceImpl implements RailPathFinderService {
 
     // No unbounded ocean-spanning rails. The entire continuous open-water
     // bridge must fit inside one normal factory's station radius.
-    const maxWaterSpan = cfg.trainStationMaxRange();
-    let waterSpan = 0;
-    for (const t of path) {
-      waterSpan = this.game.isWater(t) ? waterSpan + 1 : 0;
-      if (waterSpan > maxWaterSpan) return [];
-    }
-    return path;
+    return bridgeWaterSpanWithinRange(
+      path,
+      (t) => this.game.isWater(t),
+      cfg.trainStationMaxRange(),
+    )
+      ? path
+      : [];
   }
 
   findStationsPath(from: TrainStation, to: TrainStation): TrainStation[] {
