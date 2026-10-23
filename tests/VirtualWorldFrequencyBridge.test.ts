@@ -1,5 +1,5 @@
-import { GameMap } from "@openfront/engine-api/game/GameMap";
-import { GameType, UnitType } from "@openfront/engine-api/game/GameTypes";
+import type { GameMap } from "@openfront/engine-api/game/GameMap";
+import { GameType } from "@openfront/engine-api/game/GameTypes";
 import { TrainStationExecution, factorySpawnDenominator, factorySpawnCooldown } from "@openfront/engine/execution/TrainStationExecution";
 import { bridgeWaterSpanWithinRange } from "@openfront/engine/game/RailNetworkImpl";
 import { AStarRail } from "@openfront/engine/pathfinding/algorithms/AStar.Rail";
