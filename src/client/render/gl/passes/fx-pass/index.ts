@@ -70,7 +70,7 @@ export class FxPass {
     const y = (unit.pos - x) / this.mapW;
 
     const baseNukeRadius = nukeExplosionRadius(this.settings.fx, typeName);
-    const multiplier = Math.max(1, Math.min(8, unit.blastMultiplier ?? 1));
+    const multiplier = Math.max(1, Math.min(100, unit.blastMultiplier ?? 1));
     const nukeRadius =
       baseNukeRadius === undefined
         ? undefined
