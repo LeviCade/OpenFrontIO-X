@@ -391,7 +391,7 @@ export class BuildMenu extends LitElement implements Controller {
     if (atomic) {
       if (this.uiState.ghostStructure === buildableUnit.type) {
         this.uiState.blastMultiplier = Math.min(
-          8,
+          100,
           this.uiState.blastMultiplier + 1,
         );
       } else {
