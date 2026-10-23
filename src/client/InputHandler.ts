@@ -1364,7 +1364,7 @@ export class InputHandler {
         // The number of missiles is NOT the blast radius; a repeated weapon
         // key raises one warhead's radius, up to the safe 8× Solo limit.
         this.uiState.blastMultiplier = Math.min(
-          8,
+          100,
           this.uiState.blastMultiplier + 1,
         );
         this.uiState.upgradeMultiplier = 1;
