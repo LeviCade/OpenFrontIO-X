@@ -108,7 +108,7 @@ describe("InputHandler AutoUpgrade", () => {
         ghostStructure: null,
         rocketDirectionUp: true,
         upgradeMultiplier: 1,
-          blastMultiplier: 1,
+        blastMultiplier: 1,
       },
       mockCanvas,
       eventBus,
