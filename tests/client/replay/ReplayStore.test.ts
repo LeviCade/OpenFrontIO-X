@@ -88,6 +88,7 @@ test("nuke impacts and dead units are kept packed and gzipped", async () => {
       tick: 31,
       unitId: 812,
       unitType: "Atom Bomb",
+      blastMultiplier: 3,
       ownerSmallID: 3,
       pos: 2101,
       reachedTarget: true,
