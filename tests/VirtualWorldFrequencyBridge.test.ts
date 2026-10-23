@@ -92,6 +92,9 @@ describe("Factory Multiplier changes frequency, not train payload", () => {
     exec.spawnTrain(station, 10);
     expect(addExecution).toHaveBeenCalledTimes(1);
     exec.spawnTrain(station, 15);
+    expect(addExecution).toHaveBeenCalledTimes(1);
+    // With the default ten-tick cooldown, the second train cannot depart until tick 20.
+    exec.spawnTrain(station, 20);
     expect(addExecution).toHaveBeenCalledTimes(2);
     expect(chance).toHaveBeenCalledWith(100);
   });
