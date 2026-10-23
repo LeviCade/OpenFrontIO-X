@@ -103,7 +103,22 @@ class RailPathFinderServiceImpl implements RailPathFinderService {
   constructor(private game: Game) {}
 
   findTilePath(from: TileRef, to: TileRef): TileRef[] {
-    return PathFinding.Rail(this.game).findPath(from, to) ?? [];
+    const path = PathFinding.Rail(this.game).findPath(from, to) ?? [];
+    const cfg = this.game.config();
+    if (
+      cfg.gameConfig().gameType !== GameType.Singleplayer ||
+      !cfg.gameConfig().specialOptions?.extendedRailBridges
+    ) return path;
+
+    // No unbounded ocean-spanning rails. The entire continuous open-water
+    // bridge must fit inside one normal factory's station radius.
+    const maxWaterSpan = cfg.trainStationMaxRange();
+    let waterSpan = 0;
+    for (const t of path) {
+      waterSpan = this.game.isWater(t) ? waterSpan + 1 : 0;
+      if (waterSpan > maxWaterSpan) return [];
+    }
+    return path;
   }
 
   findStationsPath(from: TrainStation, to: TrainStation): TrainStation[] {
