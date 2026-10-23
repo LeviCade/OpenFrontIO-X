@@ -129,7 +129,7 @@ export class ConstructionExecution implements Execution {
           config.specialOptions?.atomicMultiplier &&
           Number.isSafeInteger(this.blastMultiplier) &&
           (this.blastMultiplier ?? 0) >= 1 &&
-          (this.blastMultiplier ?? 0) <= 8
+          (this.blastMultiplier ?? 0) <= 100
             ? this.blastMultiplier
             : 1;
         for (let i = 0; i < count; i++) {
