@@ -1,4 +1,5 @@
 import { GameMap, TileRef } from "@openfront/engine-api/game/GameMap";
+import { GameType } from "@openfront/engine-api/game/GameTypes";
 import { Game } from "../game/Game";
 import { TrainStation } from "../game/TrainStation";
 import { AStarRail } from "./algorithms/AStar.Rail";
