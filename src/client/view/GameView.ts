@@ -599,6 +599,9 @@ export class GameView implements GameLike {
         unitType: u.unitType,
         pos: u.pos,
         reachedTarget: u.reachedTarget,
+        ...(u.nukeState?.blastMultiplier && u.nukeState.blastMultiplier > 1
+          ? { blastMultiplier: u.nukeState.blastMultiplier }
+          : {}),
         ownerSmallID: u.ownerID,
       });
     }
