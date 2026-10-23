@@ -143,6 +143,9 @@ export class EventCollector {
         ownerSmallID: u.ownerID,
         pos: u.pos,
         reachedTarget: u.reachedTarget,
+        ...(u.nukeState?.blastMultiplier && u.nukeState.blastMultiplier > 1
+          ? { blastMultiplier: u.nukeState.blastMultiplier }
+          : {}),
       });
     }
   }
