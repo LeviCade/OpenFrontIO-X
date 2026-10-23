@@ -517,7 +517,7 @@ export const BuildUnitIntentSchema = z.object({
   rocketDirectionUp: z.boolean().optional(),
   amount: zb.uint({ min: 1, max: MAX_UPGRADE_AMOUNT }).optional(),
   // Per-launch blast radius multiplier, not number of warheads or their price.
-  blastMultiplier: zb.uint({ min: 1, max: 8 }).optional(),
+  blastMultiplier: zb.uint({ min: 1, max: 100 }).optional(),
 });
 
 export const UpgradeStructureIntentSchema = z.object({
