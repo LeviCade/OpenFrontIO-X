@@ -49,6 +49,10 @@ export function extractNukeTelegraphs(
   relationSize = 0,
   motionPlans?: ReadonlyMap<number, { startTick: number }>,
   currentTick = 0,
+  magnitudeFor?: (
+    type: string,
+    multiplier: number,
+  ) => { inner: number; outer: number },
 ): NukeTelegraphData[] {
   const telegraphs: NukeTelegraphData[] = [];
   for (const u of units.values()) {
@@ -57,7 +61,10 @@ export function extractNukeTelegraphs(
     const plan = motionPlans?.get(u.id);
     if (plan && plan.startTick > currentTick) continue;
 
-    const mag = NUKE_MAGNITUDES[u.unitType];
+    const mag = NUKE_MAGNITUDES[u.unitType]
+      ? (magnitudeFor?.(u.unitType, u.blastMultiplier ?? 1) ??
+        NUKE_MAGNITUDES[u.unitType])
+      : undefined;
     if (!mag) continue;
     telegraphs.push({
       x: u.targetTile % mapW,
@@ -88,6 +95,10 @@ export function extractNukeTelegraphsFromIds(
   relationSize = 0,
   motionPlans?: ReadonlyMap<number, { startTick: number }>,
   currentTick = 0,
+  magnitudeFor?: (
+    type: string,
+    multiplier: number,
+  ) => { inner: number; outer: number },
 ): NukeTelegraphData[] {
   const telegraphs: NukeTelegraphData[] = [];
   for (const id of nukeIds) {
@@ -97,7 +108,10 @@ export function extractNukeTelegraphsFromIds(
     const plan = motionPlans?.get(u.id);
     if (plan && plan.startTick > currentTick) continue;
 
-    const mag = NUKE_MAGNITUDES[u.unitType];
+    const mag = NUKE_MAGNITUDES[u.unitType]
+      ? (magnitudeFor?.(u.unitType, u.blastMultiplier ?? 1) ??
+        NUKE_MAGNITUDES[u.unitType])
+      : undefined;
     if (!mag) continue;
     telegraphs.push({
       x: u.targetTile % mapW,

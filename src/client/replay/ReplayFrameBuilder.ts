@@ -52,6 +52,10 @@ import { RailroadEventKind } from "./codec/ReplayTypes";
 export interface ReplayRules {
   allianceDuration: number;
   doomsdayClockWarnTicks: number;
+  nukeMagnitudeFor?: (
+    type: string,
+    multiplier: number,
+  ) => { inner: number; outer: number };
 }
 
 type Mutable<T> = { -readonly [K in keyof T]: T[K] };
@@ -146,6 +150,9 @@ export class ReplayFrameBuilder {
         unitType: d.unitType,
         pos: d.pos,
         reachedTarget: d.reachedTarget,
+        ...(d.blastMultiplier && d.blastMultiplier > 1
+          ? { blastMultiplier: d.blastMultiplier }
+          : {}),
         ownerSmallID: d.ownerSmallID,
       });
     }
@@ -239,6 +246,7 @@ export class ReplayFrameBuilder {
       fd.relationSize,
       this.deliveredPlans(f),
       f.tick,
+      this.rules.nukeMagnitudeFor,
     );
     fd.attackRings = []; // local player only
     fd.structuresDirty = this.structuresChanged(f.units);

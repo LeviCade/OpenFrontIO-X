@@ -556,6 +556,8 @@ export class GameView implements GameLike {
       f.relationSize,
       this.motion.gridPlans(),
       gu.tick,
+      (type, multiplier) =>
+        this._config.nukeMagnitudes(type as UnitType, multiplier),
     );
     f.attackRings = this._myPlayer
       ? extractAttackRings(
@@ -597,6 +599,9 @@ export class GameView implements GameLike {
         unitType: u.unitType,
         pos: u.pos,
         reachedTarget: u.reachedTarget,
+        ...(u.nukeState?.blastMultiplier && u.nukeState.blastMultiplier > 1
+          ? { blastMultiplier: u.nukeState.blastMultiplier }
+          : {}),
         ownerSmallID: u.ownerID,
       });
     }

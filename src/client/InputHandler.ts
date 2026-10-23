@@ -569,7 +569,17 @@ export class InputHandler {
           const matchedBuild = this.resolveBuildKeybind(e.code, e.shiftKey);
 
           if (matchedBuild !== null) {
-            this.setGhostStructure(matchedBuild);
+            const atomic =
+              this.gameView.config?.()?.gameConfig?.()?.specialOptions
+                ?.atomicMultiplier &&
+              (matchedBuild === UnitType.AtomBomb ||
+                matchedBuild === UnitType.HydrogenBomb);
+            if (atomic && e.shiftKey) {
+              // Shift+the same weapon hotkey discards the pending blast.
+              this.setGhostStructure(null);
+            } else {
+              this.setGhostStructure(matchedBuild);
+            }
           }
         },
         () => this.canUseBuildKeybinds(),
@@ -1345,10 +1355,26 @@ export class InputHandler {
       this.uiState.ghostStructure === ghostStructure &&
       ghostStructure !== null
     ) {
-      this.uiState.upgradeMultiplier =
-        this.uiState.upgradeMultiplier === 1 ? 5 : 1;
+      const atomic =
+        this.gameView.config?.()?.gameConfig?.()?.specialOptions
+          ?.atomicMultiplier &&
+        (ghostStructure === UnitType.AtomBomb ||
+          ghostStructure === UnitType.HydrogenBomb);
+      if (atomic) {
+        // The number of missiles is NOT the blast radius; a repeated weapon
+        // key raises one warhead's radius, up to the safe 8× Solo limit.
+        this.uiState.blastMultiplier = Math.min(
+          100,
+          this.uiState.blastMultiplier + 1,
+        );
+        this.uiState.upgradeMultiplier = 1;
+      } else {
+        this.uiState.upgradeMultiplier =
+          this.uiState.upgradeMultiplier === 1 ? 5 : 1;
+      }
     } else {
       this.uiState.upgradeMultiplier = 1;
+      this.uiState.blastMultiplier = 1;
       this.uiState.ghostStructure = ghostStructure;
     }
   }

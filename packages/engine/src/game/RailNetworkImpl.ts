@@ -1,5 +1,5 @@
 import { TileRef } from "@openfront/engine-api/game/GameMap";
-import { UnitType } from "@openfront/engine-api/game/GameTypes";
+import { GameType, UnitType } from "@openfront/engine-api/game/GameTypes";
 import { GameUpdateType } from "@openfront/engine-api/game/GameUpdates";
 import {
   snapshotType,
@@ -94,6 +94,21 @@ export class StationManagerImpl implements StationManager {
   }
 }
 
+/** Prevent an optional ocean bridge from spanning more water than a factory
+ * can reach. Inspect consecutive water cells, not just endpoint proximity. */
+export function bridgeWaterSpanWithinRange(
+  path: readonly TileRef[],
+  isWater: (tile: TileRef) => boolean,
+  maxWaterTiles: number,
+): boolean {
+  let span = 0;
+  for (const tile of path) {
+    span = isWater(tile) ? span + 1 : 0;
+    if (span > maxWaterTiles) return false;
+  }
+  return true;
+}
+
 export interface RailPathFinderService {
   findTilePath(from: TileRef, to: TileRef): TileRef[];
   findStationsPath(from: TrainStation, to: TrainStation): TrainStation[];
@@ -103,7 +118,23 @@ class RailPathFinderServiceImpl implements RailPathFinderService {
   constructor(private game: Game) {}
 
   findTilePath(from: TileRef, to: TileRef): TileRef[] {
-    return PathFinding.Rail(this.game).findPath(from, to) ?? [];
+    const path = PathFinding.Rail(this.game).findPath(from, to) ?? [];
+    const cfg = this.game.config();
+    if (
+      cfg.gameConfig().gameType !== GameType.Singleplayer ||
+      !cfg.gameConfig().specialOptions?.extendedRailBridges
+    )
+      return path;
+
+    // No unbounded ocean-spanning rails. The entire continuous open-water
+    // bridge must fit inside one normal factory's station radius.
+    return bridgeWaterSpanWithinRange(
+      path,
+      (t) => this.game.isWater(t),
+      cfg.trainStationMaxRange(),
+    )
+      ? path
+      : [];
   }
 
   findStationsPath(from: TrainStation, to: TrainStation): TrainStation[] {

@@ -1,4 +1,5 @@
 import { GameMap, TileRef } from "@openfront/engine-api/game/GameMap";
+import { GameType } from "@openfront/engine-api/game/GameTypes";
 import { Game } from "../game/Game";
 import { TrainStation } from "../game/TrainStation";
 import { AStarRail } from "./algorithms/AStar.Rail";
@@ -180,7 +181,11 @@ export class PathFinding {
 
   static Rail(game: Game): SteppingPathFinder<TileRef> {
     const miniMap = game.miniMap();
-    const pf = new AStarRail(miniMap);
+    const cfg = game.config().gameConfig();
+    const allowExtendedWater =
+      cfg.gameType === GameType.Singleplayer &&
+      cfg.specialOptions?.extendedRailBridges === true;
+    const pf = new AStarRail(miniMap, allowExtendedWater);
 
     return PathFinderBuilder.create(pf)
       .wrap((pf) => new MiniMapTransformer(pf, game.map(), miniMap))

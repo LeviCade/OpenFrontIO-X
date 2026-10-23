@@ -57,6 +57,7 @@ export function unitStateFromUpdate(u: UnitUpdate): UnitState {
       u.warshipState?.state === "retreating",
     targetable: u.targetable,
     waitTicks: u.nukeState?.waitTicks ?? 0,
+    blastMultiplier: u.nukeState?.blastMultiplier ?? 1,
     markedForDeletion: u.markedForDeletion,
     health: u.health ?? null,
     underConstruction: u.underConstruction ?? false,
@@ -91,6 +92,7 @@ export function applyUnitUpdateInPlace(target: UnitState, u: UnitUpdate): void {
     u.warshipState?.state === "retreating";
   target.targetable = u.targetable;
   target.waitTicks = u.nukeState?.waitTicks ?? 0;
+  target.blastMultiplier = u.nukeState?.blastMultiplier ?? 1;
   target.markedForDeletion = u.markedForDeletion;
   target.health = u.health ?? null;
   target.underConstruction = u.underConstruction ?? false;

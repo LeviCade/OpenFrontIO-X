@@ -18,7 +18,6 @@ import { UT_SAM_LAUNCHER } from "../../types";
 import { DynamicInstanceBuffer } from "../DynamicBuffer";
 import type { RenderSettings } from "../RenderSettings";
 import { createProgram } from "../utils/GlUtils";
-import { samRange } from "../utils/NukeTrajectory";
 
 import fragSrc from "../shaders/sam-radius/sam-radius.frag.glsl?raw";
 import vertSrc from "../shaders/sam-radius/sam-radius.vert.glsl?raw";
@@ -188,6 +187,8 @@ export class SAMRadiusPass {
     gl: WebGL2RenderingContext,
     mapW: number,
     settings: RenderSettings,
+    private readonly getSamRange: (level: number) => number = (level) =>
+      150 - 480 / (level + 5),
   ) {
     this.gl = gl;
     this.mapW = mapW;
@@ -418,7 +419,7 @@ export class SAMRadiusPass {
     ) {
       const elapsed = continuousTick - startTick;
       const progress = Math.max(0, Math.min(1, elapsed / duration));
-      const targetRadius = samRange(u.samUpgradeTargetLevel ?? 0);
+      const targetRadius = this.getSamRange(u.samUpgradeTargetLevel ?? 0);
       const startRange = u.samUpgradeStartRange ?? 0;
       const currentRadius = startRange + (targetRadius - startRange) * progress;
 
@@ -451,7 +452,7 @@ export class SAMRadiusPass {
       circles.push({
         x,
         y,
-        radius: samRange(u.level),
+        radius: this.getSamRange(u.level),
         r: color[0],
         g: color[1],
         b: color[2],
@@ -464,7 +465,7 @@ export class SAMRadiusPass {
         circles.push({
           x,
           y,
-          radius: samRange(u.level),
+          radius: this.getSamRange(u.level),
           r: color[0],
           g: color[1],
           b: color[2],

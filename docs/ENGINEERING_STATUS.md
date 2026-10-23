@@ -1,5 +1,23 @@
 # OpenFrontIO-X engineering status
 
+## PR #8 RESUMED AFTER CHAT ARCHIVE — 2026-10-23 UTC
+
+**Active:** [Draft PR #8](https://github.com/LeviCade/OpenFrontIO-X/pull/8) `feature/virtual-world-special-options-stage4`, stacked on PR #7, NOT merged. Do not modify main, previous branches/worktrees, or official OpenFront. User archives recovered after prior session reached length limit.
+
+**Current product changes:** Solo Special Options: factory stacking increases departure _frequency_ and preserves one ordinary train per departure; SAM stacking multiplies protected disk _area_; Atomic/Hydrogen stacking multiplies blast _area_ 1–100× with N-times price per single launch and no extra silo requirement; opt-in Long Rail Bridges spans water up to factory station radius. All options default OFF. This describes committed implementation, **not browser/gameplay acceptance**.
+
+**Recovery diagnostics:** On historical head `c295303e`, [CI 39892285318](https://github.com/LeviCade/OpenFrontIO-X/actions/runs/39892285318) failed two new test assertions, formatting and generated-map cleanliness; build, lint and shard 2/3 passed. The first test expected a second train at tick 15 after a tick-10 departure despite unchanged 10-tick cooldown. Second test expected only three special-option keys after adding `extendedRailBridges`.
+
+**Repairs committed:**
+
+- `8c3eaa8`: default 10-tick cooldown regression test now checks second departure at tick 20, with explicit assertion at tick 15.
+- `1152949`: Special Options parser test expects fourth `extendedRailBridges` key.
+- [`3a2b215`](https://github.com/LeviCade/OpenFrontIO-X/commit/3a2b21559e52be260af32637e7d804fb0eb3b2f2): CI-compatible `oxfmt` applied to 11 files and temporary formatter workflow self-removed; format check and git diff check passed in formatter job.
+
+**Final validation state at this documentation commit:** Full CI on repaired head NOT YET VERIFIED; no claim of all-green. Separate `🧼 PR` governance check requires a milestone. No browser Solo test, map performance, long rail bridge runtime, nuclear pricing/FX live match or replay acceptance yet. Keep DRAFT and avoid merging.
+
+**Next:** Verify 8/8 core CI on the newest documentation commit. Fix any remaining failures on PR #8, then Mac Solo Virtual Giant 1×/10×/100× acceptance of factory expected spawn intervals, SAM actual interception and overlay, area-based bomb cost/radius and one-silo usage, rail bridges across water, FPS/memory and complete replay. Prior Mac worktrees remain unchanged.
+
 ## PR #6 100× PERCEPTUAL PARITY — MAC FEEDBACK AND ENGINEERING (2026-10-22)
 
 **Draft [PR #6](https://github.com/LeviCade/OpenFrontIO-X/pull/6)** stacked on draft PR #5. The user's detached Mac PR #5 worktree remains at `9e4d0dee`; this new branch is separate. Neither main nor original upstream is touched.

@@ -214,3 +214,15 @@ See `docs/MAP_MULTIPLIER_TEST_PLAN.md`. Start by checking `git remote -v` for **
 - [Fix `5ac62b0`](https://github.com/LeviCade/OpenFrontIO-X/commit/5ac62b00059dd0d381f3b36b072e3085aba8b417): align error expectation and mutate metadata, config, stored chunks and hashes consistently to reach simulated unauthorized backend. Keep new stricter source integrity validation intact.
 - [One-shot formatter 39319538605](https://github.com/LeviCade/OpenFrontIO-X/actions/runs/39319538605) **SUCCESS**: Node 24/npm 12 `npm run format` plus `npm run format:check`, `git diff --check`, self-deletion of contents-write temporary workflow; pushed `2dfc38fdd639984bef61e5c5783eb87bc90b0075` ONLY to PR3. No temporary privileged workflow remains from this patch.
 - This app-authored documentation checkpoint is the intended trigger for new official CI checks on the formatted source. Do not mark these latest edits as full CI passed until actual jobs finish. Prior tested Green baseline on `a18c1d82` remains historical.
+
+## 2026-10-23 UTC: PR #8 chat-length recovery, test fixes, CI revalidation
+
+Recovered both full OpenFrontIO-X chat archives. Rechecked [draft PR #8](https://github.com/LeviCade/OpenFrontIO-X/pull/8) in the owner repository. Active `feature/virtual-world-special-options-stage4` remains stacked on PR #7 and unmerged. Original upstream and earlier branches/worktrees were not modified.
+
+Archived last implementation head `c295303e` includes: opt-in factory dispatch-frequency boost, area-based SAM protection, atomic/hydrogen area multiplier 1–100 with full proportional cost and one missile, and optional extended-water railway bridges. Earlier source-only claims are not browser-tested acceptance.
+
+Newly observed GitHub [CI run 39892285318](https://github.com/LeviCade/OpenFrontIO-X/actions/runs/39892285318) failed: format check found 11 paths, generated-map job ran `npm run format` and detected that diff, test shard 1 failed at `tests/VirtualWorldFrequencyBridge.test.ts:95` (incorrect expectation that ten-tick cooldown allowed second train five ticks later), shard 3 failed at `tests/VirtualWorldSpecialOptions.test.ts:44` (missing expected `extendedRailBridges: true`). Build, lint, test shard 2 passed. Distinct governance/milestone check remains unsuccessful.
+
+Repaired with `8c3eaa8` and `1152949`. Because sandbox lacked Node24 and GitHub network DNS, created temporary branch-only self-deleting GitHub formatter workflow. It ran project's `npm run format`, `npm run format:check`, and `git diff --check`, published commit [`3a2b215`](https://github.com/LeviCade/OpenFrontIO-X/commit/3a2b21559e52be260af32637e7d804fb0eb3b2f2), changed exactly 11 formatting files and removed itself. All updates remain inside owner repo. Full 8/8 CI not asserted on final head until run completes.
+
+Next validation: automated CI on latest documentation head; then actual Mac Solo 1×/10×/100× Giant matches and preserved replay, with train, nuke area/cost, SAM protection, water crossing and performance observations. No PR merges.

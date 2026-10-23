@@ -8,7 +8,8 @@
  *   each tile list a varuint count and ascending varuint gaps (a blast is
  *   a disc, so the gaps are mostly 1).
  * Dead units: varuint count × (varuint tick, varuint unitId, short string
- *   unitType, varuint ownerSmallID, varuint pos, u8 reachedTarget).
+ *   unitType, varuint ownerSmallID, varuint pos, u8 reachedTarget,
+ *   u8 blastMultiplier (1 = normal blast).
  *
  * Tile lists come back sorted. Their order never mattered.
  */
@@ -38,6 +39,7 @@ export function packEvents(events: PackedEventLists): Uint8Array {
     w.writeVarUint(d.ownerSmallID);
     w.writeVarUint(d.pos);
     w.writeU8(d.reachedTarget ? 1 : 0);
+    w.writeU8(d.blastMultiplier ?? 1);
   }
   return w.finish();
 }
@@ -52,14 +54,18 @@ export function unpackEvents(bytes: Uint8Array): PackedEventLists {
   }
   const deadUnitEvents: PackedEventLists["deadUnitEvents"] = [];
   for (let n = r.readVarUint(); n > 0; n--) {
-    deadUnitEvents.push({
+    const dead = {
       tick: r.readVarUint(),
       unitId: r.readVarUint(),
       unitType: r.readShortString(),
       ownerSmallID: r.readVarUint(),
       pos: r.readVarUint(),
       reachedTarget: r.readU8() === 1,
-    });
+    };
+    const blastMultiplier = r.readU8();
+    deadUnitEvents.push(
+      blastMultiplier > 1 ? { ...dead, blastMultiplier } : dead,
+    );
   }
   return { nukeImpacts, deadUnitEvents };
 }

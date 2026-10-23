@@ -249,7 +249,15 @@ export class BuildPreviewController implements Controller {
         targetingAlly = wouldNukeBreakAlliance({
           game: this.game,
           targetTile: tileRef,
-          magnitude: this.game.config().nukeMagnitudes(nukeType),
+          magnitude: this.game
+            .config()
+            .nukeMagnitudes(
+              nukeType,
+              this.game.config?.()?.gameConfig?.()?.specialOptions
+                ?.atomicMultiplier
+                ? this.uiState.blastMultiplier
+                : 1,
+            ),
           allySmallIds: this.connectedAllySmallIds,
           threshold: this.game.config().nukeAllianceBreakThreshold(),
         });
@@ -465,7 +473,15 @@ export class BuildPreviewController implements Controller {
       }
       case UnitType.AtomBomb:
       case UnitType.HydrogenBomb:
-        rangeRadius = this.game.config().nukeMagnitudes(u.type).outer;
+        rangeRadius = this.game
+          .config()
+          .nukeMagnitudes(
+            u.type,
+            this.game.config?.()?.gameConfig?.()?.specialOptions
+              ?.atomicMultiplier
+              ? this.uiState.blastMultiplier
+              : 1,
+          ).outer;
         break;
       case UnitType.Factory:
         rangeRadius = this.game.config().trainStationMaxRange();
@@ -486,16 +502,24 @@ export class BuildPreviewController implements Controller {
     }
 
     const isNuke = u.type === UnitType.AtomBomb;
-    const multiplier =
-      u.canUpgrade !== false || isNuke
+    const atomicRadius =
+      this.game.config?.()?.gameConfig?.()?.specialOptions?.atomicMultiplier &&
+      (u.type === UnitType.AtomBomb || u.type === UnitType.HydrogenBomb);
+    const amount = atomicRadius
+      ? 1
+      : u.canUpgrade !== false || isNuke
         ? (this.uiState.upgradeMultiplier ?? 1)
         : 1;
-    const cost = bulkCost(u, multiplier);
+    const multiplier = atomicRadius ? this.uiState.blastMultiplier : amount;
+    // Radius stacking enlarges one warhead, not its purchase count.
+    const cost =
+      bulkCost(u, amount) *
+      BigInt(atomicRadius ? this.uiState.blastMultiplier : 1);
     // Drives the red cost label: gold short of the bulk total, or (for
     // bombs) fewer loaded silo tubes than the selected amount.
     let canAfford = myPlayer.gold() >= cost;
     if (isNuke) {
-      canAfford &&= myPlayer.readyMissileCount() >= multiplier;
+      canAfford &&= myPlayer.readyMissileCount() >= amount;
     }
     return {
       ghostType: u.type,
@@ -566,6 +590,10 @@ export class BuildPreviewController implements Controller {
       }
 
       const isNuke = unitType === UnitType.AtomBomb;
+      const atomicRadius =
+        this.game.config?.()?.gameConfig?.()?.specialOptions
+          ?.atomicMultiplier &&
+        (unitType === UnitType.AtomBomb || unitType === UnitType.HydrogenBomb);
       const rocketDirectionUp =
         unitType === UnitType.AtomBomb || unitType === UnitType.HydrogenBomb
           ? this.uiState.rocketDirectionUp
@@ -575,9 +603,13 @@ export class BuildPreviewController implements Controller {
           unitType,
           targetTile,
           rocketDirectionUp,
-          isNuke ? this.uiState.upgradeMultiplier || 1 : undefined,
+          !atomicRadius && isNuke
+            ? this.uiState.upgradeMultiplier || 1
+            : undefined,
+          atomicRadius ? this.uiState.blastMultiplier : undefined,
         ),
       );
+      if (atomicRadius) this.uiState.blastMultiplier = 1;
       if (!shouldPreserveGhostAfterBuild(unitType)) {
         this.removeGhostStructure();
       }
@@ -621,7 +653,15 @@ export class BuildPreviewController implements Controller {
         : listNukeBreakAlliance({
             game: this.game,
             targetTile: tile,
-            magnitude: this.game.config().nukeMagnitudes(unitType),
+            magnitude: this.game
+              .config()
+              .nukeMagnitudes(
+                unitType,
+                this.game.config?.()?.gameConfig?.()?.specialOptions
+                  ?.atomicMultiplier
+                  ? this.uiState.blastMultiplier
+                  : 1,
+              ),
             threshold: this.game.config().nukeAllianceBreakThreshold(),
           });
 

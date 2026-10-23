@@ -424,7 +424,7 @@ export class Config {
     return Math.min(player.troops() + toAdd, max) - player.troops();
   }
 
-  nukeMagnitudes(unitType: UnitType): NukeMagnitude {
+  nukeMagnitudes(unitType: UnitType, blastMultiplier = 1): NukeMagnitude {
     let source: NukeMagnitude;
     switch (unitType) {
       case UnitType.MIRVWarhead:
@@ -440,10 +440,22 @@ export class Config {
         throw new Error(`Unknown nuke type: ${unitType}`);
     }
     const scale = this.virtualWorldVisualScale();
-    if (scale === 1) return source;
+    const multiplier =
+      this._gameConfig.gameType === GameType.Singleplayer &&
+      this._gameConfig.specialOptions?.atomicMultiplier &&
+      (unitType === UnitType.AtomBomb || unitType === UnitType.HydrogenBomb) &&
+      Number.isSafeInteger(blastMultiplier) &&
+      blastMultiplier >= 1 &&
+      blastMultiplier <= 100
+        ? blastMultiplier
+        : 1;
+    if (scale === 1 && multiplier === 1) return source;
+    // Multiplying circular area N-fold multiplies radius by sqrt(N).
+    // Round only after combining virtual-world and blast-area scales.
+    const radiusScale = scale * Math.sqrt(multiplier);
     return {
-      inner: Math.max(1, Math.round(source.inner * scale)),
-      outer: Math.max(1, Math.round(source.outer * scale)),
+      inner: Math.max(1, Math.round(source.inner * radiusScale)),
+      outer: Math.max(1, Math.round(source.outer * radiusScale)),
     };
   }
 
@@ -452,6 +464,16 @@ export class Config {
   }
 
   samRange(level: number): number {
+    if (
+      this._gameConfig.gameType === GameType.Singleplayer &&
+      this._gameConfig.specialOptions?.samMultiplier
+    ) {
+      // Each stack level multiplies protected CIRCLE AREA, not radius.
+      // Rasterized tiles approximate the continuous circle boundary.
+      return (
+        70 * Math.sqrt(Math.max(1, level)) * this.virtualWorldVisualScale()
+      );
+    }
     // Preserve the rational level curve, but use the same world-space scale
     // as defaultSamRange(). Otherwise upgrades restore full-size 1× reach.
     return (
@@ -460,11 +482,14 @@ export class Config {
   }
 
   maxSamRange(): number {
+    // Legacy maximum; level-linear special SAMs use the actual launcher's
+    // current/upgrade radius for their broadphase instead of a global cap.
     return 150 * this.virtualWorldVisualScale();
   }
 
   structureMinDist(): number {
-    return Math.max(1, Math.round(15 * this.virtualWorldVisualScale()));
+    // The nearest real cell should remain buildable on a 100× virtual grid.
+    return Math.max(1, Math.floor(15 * this.virtualWorldVisualScale()));
   }
 
   /** Max-health boost per veterancy level, as an integer percent of base max

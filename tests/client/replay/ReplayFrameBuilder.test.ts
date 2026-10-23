@@ -43,7 +43,14 @@ const MAPS = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
   "../../testdata/maps",
 );
-const RULES = { allianceDuration: 100, doomsdayClockWarnTicks: 150 };
+// The live test view uses stubConfig with a zero-size nuke marker.
+// Replay should use that same configuration, just like the real viewer does.
+const RULES = {
+  allianceDuration: 100,
+  doomsdayClockWarnTicks: 150,
+  nukeMagnitudeFor: (type: string, multiplier: number) =>
+    stubConfig().nukeMagnitudes(type as UnitType, multiplier),
+};
 
 /** A fresh copy of a test map for the live GameView (it mutates its map). */
 async function loadMap(mapName: string): Promise<TerrainMapData> {

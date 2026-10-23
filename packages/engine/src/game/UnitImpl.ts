@@ -85,6 +85,8 @@ export class UnitImpl implements Unit {
         waitTicks: 0,
         trajectoryIndex: 0,
         targetedBySam: false,
+        blastMultiplier:
+          "blastMultiplier" in params ? (params.blastMultiplier ?? 1) : 1,
       };
     }
     this._troops = "troops" in params ? (params.troops ?? 0) : 0;
@@ -523,13 +525,15 @@ export class UnitImpl implements Unit {
     if (
       merged.targetedBySam === this._nukeState.targetedBySam &&
       merged.trajectoryIndex === this._nukeState.trajectoryIndex &&
-      merged.waitTicks === this._nukeState.waitTicks
+      merged.waitTicks === this._nukeState.waitTicks &&
+      merged.blastMultiplier === this._nukeState.blastMultiplier
     )
       return;
     this._nukeState = {
       targetedBySam: merged.targetedBySam,
       trajectoryIndex: merged.trajectoryIndex,
       waitTicks: merged.waitTicks,
+      blastMultiplier: merged.blastMultiplier,
       trajectory: this._nukeState.trajectory,
     };
     this.mg.addUpdate(this.toUpdate());
@@ -832,6 +836,7 @@ export class UnitImpl implements Unit {
             trajectoryIndex: nuke.trajectoryIndex,
             targetedBySam: nuke.targetedBySam,
             waitTicks: nuke.waitTicks,
+            blastMultiplier: nuke.blastMultiplier ?? 1,
           }
         : null,
       reachedTarget: this._reachedTarget,
@@ -887,6 +892,7 @@ export class UnitImpl implements Unit {
           trajectoryIndex: nuke.trajectoryIndex,
           targetedBySam: nuke.targetedBySam,
           waitTicks: nuke.waitTicks,
+          blastMultiplier: nuke.blastMultiplier ?? 1,
         }
       : undefined;
     this._reachedTarget = s.reachedTarget;
@@ -944,6 +950,7 @@ export const UnitSnapshot = snapshotType({
         trajectoryIndex: zInt(),
         targetedBySam: z.boolean(),
         waitTicks: zInt(),
+        blastMultiplier: zInt().optional(),
       })
       .nullable(),
     reachedTarget: z.boolean(),

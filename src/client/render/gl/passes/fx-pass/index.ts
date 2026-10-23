@@ -70,14 +70,23 @@ export class FxPass {
     const y = (unit.pos - x) / this.mapW;
 
     const baseNukeRadius = nukeExplosionRadius(this.settings.fx, typeName);
+    const multiplier = Math.max(1, Math.min(100, unit.blastMultiplier ?? 1));
     const nukeRadius =
       baseNukeRadius === undefined
         ? undefined
-        : baseNukeRadius * this.config.virtualWorldVisualScale();
+        : baseNukeRadius *
+          this.config.virtualWorldVisualScale() *
+          Math.sqrt(multiplier);
     if (nukeRadius !== undefined) {
       if (unit.reachedTarget) {
         this.spritePass.spawnFxForUnit(unit, now);
-        this.shockwavePass.pushNukeShockwave(x, y, nukeRadius, unit.explosion);
+        this.shockwavePass.pushNukeShockwave(
+          x,
+          y,
+          nukeRadius,
+          unit.explosion,
+          multiplier,
+        );
       } else {
         // SAM interception: sprite pass handles the SAM explosion sprite
         this.spritePass.spawnFxForUnit(unit, now);

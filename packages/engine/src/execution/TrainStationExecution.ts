@@ -1,4 +1,4 @@
-import { UnitType } from "@openfront/engine-api/game/GameTypes";
+import { GameType, UnitType } from "@openfront/engine-api/game/GameTypes";
 import { PseudoRandom } from "@openfront/engine-lib/PseudoRandom";
 import {
   zInt,
@@ -15,6 +15,19 @@ import type {
   SnapshotWriter,
 } from "../snapshot/SnapshotContext";
 import { TrainExecution } from "./TrainExecution";
+
+/** Rate denominator and cooldown both shrink with stacked factory levels.
+ * This changes departure frequency, never the value of an individual train. */
+export function factorySpawnDenominator(
+  baseRate: number,
+  level: number,
+): number {
+  return Math.max(1, Math.ceil(baseRate / Math.max(1, level)));
+}
+
+export function factorySpawnCooldown(baseTicks: number, level: number): number {
+  return Math.max(1, Math.ceil(baseTicks / Math.max(1, level)));
+}
 
 export class TrainStationExecution implements Execution {
   private mg: Game;
@@ -70,7 +83,16 @@ export class TrainStationExecution implements Execution {
         this.unit.owner().unitCount(UnitType.Factory),
         this.mg.unitCount(UnitType.Train),
       );
-    for (let i = 0; i < this.unit!.level(); i++) {
+    const special =
+      this.mg.config().gameConfig().gameType === GameType.Singleplayer &&
+      this.mg.config().gameConfig().specialOptions?.factoryMultiplier;
+    if (special) {
+      return this.random.chance(
+        factorySpawnDenominator(spawnRate, this.unit.level()),
+      );
+    }
+    // Original game: level independent trials, minimum 10-tick cooldown.
+    for (let i = 0; i < this.unit.level(); i++) {
       if (this.random.chance(spawnRate)) {
         return true;
       }
@@ -82,7 +104,13 @@ export class TrainStationExecution implements Execution {
     if (this.mg === undefined) throw new Error("Not initialized");
     if (!this.spawnTrains) return;
     if (this.random === undefined) throw new Error("Not initialized");
-    if (currentTick < this.lastSpawnTick + this.ticksCooldown) return;
+    const special =
+      this.mg.config().gameConfig().gameType === GameType.Singleplayer &&
+      this.mg.config().gameConfig().specialOptions?.factoryMultiplier;
+    const cooldown = special
+      ? factorySpawnCooldown(this.ticksCooldown, this.unit.level())
+      : this.ticksCooldown;
+    if (currentTick < this.lastSpawnTick + cooldown) return;
     const cluster = station.getCluster();
     if (cluster === null) {
       return;
@@ -101,6 +129,8 @@ export class TrainStationExecution implements Execution {
     if (destination === null) return;
     if (destination === station) return;
 
+    // Always exactly one train per successful departure. Stacking changes
+    // how often this code fires, not the train's value or passenger count.
     this.mg.addExecution(
       new TrainExecution(
         this.mg.railNetwork(),

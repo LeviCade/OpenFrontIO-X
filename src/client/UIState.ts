@@ -5,4 +5,5 @@ export interface UIState {
   ghostStructure: PlayerBuildableUnitType | null;
   rocketDirectionUp: boolean;
   upgradeMultiplier: number;
+  blastMultiplier: number;
 }

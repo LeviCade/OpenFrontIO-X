@@ -1,5 +1,7 @@
 import { TileRef } from "@openfront/engine-api/game/GameMap";
 import {
+  GameMode,
+  GameType,
   MessageType,
   Structures,
   TerraNullius,
@@ -52,6 +54,7 @@ export class NukeExecution implements Execution {
     private speed: number = -1,
     private waitTicks = 0,
     private rocketDirectionUp: boolean = true,
+    private blastMultiplier: number = 1,
   ) {}
 
   init(mg: Game, ticks: number): void {
@@ -76,7 +79,9 @@ export class NukeExecution implements Execution {
     if (this.nuke === null) {
       throw new Error("Not initialized");
     }
-    const magnitude = this.mg.config().nukeMagnitudes(this.nuke.type());
+    const magnitude = this.mg
+      .config()
+      .nukeMagnitudes(this.nuke.type(), this.blastMultiplier);
     const rand = new PseudoRandom(this.mg.ticks());
     const inner2 = magnitude.inner * magnitude.inner;
     const outer2 = magnitude.outer * magnitude.outer;
@@ -156,7 +161,9 @@ export class NukeExecution implements Execution {
       return;
     }
 
-    const magnitude = this.mg.config().nukeMagnitudes(this.nuke.type());
+    const magnitude = this.mg
+      .config()
+      .nukeMagnitudes(this.nuke.type(), this.blastMultiplier);
 
     const playersToBreakAllianceWith = listNukeBreakAlliance({
       game: this.mg,
@@ -200,6 +207,47 @@ export class NukeExecution implements Execution {
 
   tick(ticks: number): void {
     if (this.nuke === null) {
+      const cfg = this.mg.config();
+      // nukeSpawn's legacy teammate check sees only the default radius.
+      // A multiplied Solo launch must apply the same no-friendly-fire rule
+      // to the enlarged radius before deducting gold or acquiring a silo.
+      if (
+        cfg.gameConfig().gameType === GameType.Singleplayer &&
+        cfg.gameConfig().gameMode === GameMode.Team &&
+        this.blastMultiplier > 1 &&
+        (this.nukeType === UnitType.AtomBomb ||
+          this.nukeType === UnitType.HydrogenBomb) &&
+        this.mg.anyUnitNearby(
+          this.dst,
+          cfg.nukeMagnitudes(this.nukeType, this.blastMultiplier).outer,
+          Structures.types,
+          (u) => u.owner().isPlayer() && this.player.isOnSameTeam(u.owner()),
+        )
+      ) {
+        this.active = false;
+        return;
+      }
+      const areaLevel =
+        cfg.gameConfig().gameType === GameType.Singleplayer &&
+        cfg.gameConfig().specialOptions?.atomicMultiplier &&
+        (this.nukeType === UnitType.AtomBomb ||
+          this.nukeType === UnitType.HydrogenBomb) &&
+        Number.isSafeInteger(this.blastMultiplier) &&
+        this.blastMultiplier >= 1 &&
+        this.blastMultiplier <= 100
+          ? this.blastMultiplier
+          : 1;
+      // The original buildUnit call purchases exactly one missile. Preflight
+      // the entire area-weighted price, then deduct only the additional
+      // (N-1) copies of that same missile price after the launch succeeds.
+      const baseCost = this.mg
+        .unitInfo(this.nukeType)
+        .cost(this.mg, this.player);
+      const extraCost = baseCost * BigInt(areaLevel - 1);
+      if (this.player.gold() < baseCost + extraCost) {
+        this.active = false;
+        return;
+      }
       const spawn = this.player.canBuild(this.nukeType, this.dst);
       if (spawn === false) {
         console.warn(`cannot build Nuke`);
@@ -228,7 +276,9 @@ export class NukeExecution implements Execution {
       this.nuke = this.player.buildUnit(this.nukeType, this.src, {
         targetTile: this.dst,
         trajectory: this.getTrajectory(this.dst),
+        blastMultiplier: areaLevel,
       });
+      if (extraCost > 0n) this.player.removeGold(extraCost);
       this.nuke.updateNukeState({ waitTicks: this.waitTicks });
       this.recordMotionPlan(ticks);
       if (this.nuke.type() !== UnitType.MIRVWarhead) {
@@ -392,7 +442,10 @@ export class NukeExecution implements Execution {
     const mg = this.mg;
     const config = mg.config();
 
-    const magnitude = config.nukeMagnitudes(this.nuke.type());
+    const magnitude = config.nukeMagnitudes(
+      this.nuke.type(),
+      this.blastMultiplier,
+    );
     const toDestroy = this.tilesToDestroy();
 
     // Retrieve all impacted players and the number of tiles
@@ -561,6 +614,7 @@ export class NukeExecution implements Execution {
       speed: this.speed,
       waitTicks: this.waitTicks,
       rocketDirectionUp: this.rocketDirectionUp,
+      blastMultiplier: this.blastMultiplier,
     });
   }
 
@@ -578,6 +632,7 @@ export class NukeExecution implements Execution {
     this.speed = s.speed;
     this.waitTicks = s.waitTicks;
     this.rocketDirectionUp = s.rocketDirectionUp;
+    this.blastMultiplier = s.blastMultiplier ?? 1;
   }
 }
 
@@ -593,6 +648,7 @@ const NukeStateSchema = z.object({
   speed: zNum(),
   waitTicks: zInt(),
   rocketDirectionUp: z.boolean(),
+  blastMultiplier: zInt().optional(),
 });
 type NukeState = z.infer<typeof NukeStateSchema>;
 

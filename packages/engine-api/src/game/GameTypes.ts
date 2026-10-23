@@ -38,6 +38,7 @@ export type NukeState = {
   trajectoryIndex: number;
   targetedBySam: boolean;
   waitTicks: number;
+  blastMultiplier?: number;
 };
 
 export type SamLauncherState = {

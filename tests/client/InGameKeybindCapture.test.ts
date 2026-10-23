@@ -40,6 +40,7 @@ describe("keybind capture over a live game", () => {
         ghostStructure: null,
         rocketDirectionUp: true,
         upgradeMultiplier: 1,
+        blastMultiplier: 1,
       },
       document.createElement("canvas"),
       eventBus,
