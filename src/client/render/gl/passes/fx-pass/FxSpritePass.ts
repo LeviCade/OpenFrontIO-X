@@ -358,7 +358,8 @@ export class FxSpritePass {
     const nukeRadius =
       baseNukeRadius === undefined
         ? undefined
-        : baseNukeRadius * this.config.virtualWorldVisualScale();
+        : baseNukeRadius * this.config.virtualWorldVisualScale() *
+          Math.max(1, Math.min(8, unit.blastMultiplier ?? 1));
     if (nukeRadius !== undefined) {
       if (unit.reachedTarget) {
         this.spawnNukeSprites(x, y, nukeRadius, now, unit.pos);
