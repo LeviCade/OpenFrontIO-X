@@ -191,7 +191,8 @@ export class SinglePlayerModal extends BaseModal {
   @state() private virtualWorldAreaMultiplier: number =
     DEFAULT_OPTIONS.virtualWorldAreaMultiplier;
   @state() private scaleMode: WorldScaleMode = DEFAULT_OPTIONS.scaleMode;
-  @state() private factoryMultiplier: boolean = DEFAULT_OPTIONS.factoryMultiplier;
+  @state() private factoryMultiplier: boolean =
+    DEFAULT_OPTIONS.factoryMultiplier;
   @state() private samMultiplier: boolean = DEFAULT_OPTIONS.samMultiplier;
   @state() private atomicMultiplier: boolean = DEFAULT_OPTIONS.atomicMultiplier;
   @state() private winPercentage: number = DEFAULT_OPTIONS.winPercentage;
