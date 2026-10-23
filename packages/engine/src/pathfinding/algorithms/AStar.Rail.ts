@@ -6,8 +6,8 @@ import { AStar, AStarAdapter } from "./AStar";
 export class AStarRail implements PathFinder<number> {
   private readonly aStar: AStar;
 
-  constructor(gameMap: GameMap) {
-    const adapter = new RailAdapter(gameMap);
+  constructor(gameMap: GameMap, allowExtendedWater = false) {
+    const adapter = new RailAdapter(gameMap, allowExtendedWater);
     this.aStar = new AStar({ adapter });
   }
 
@@ -28,7 +28,10 @@ class RailAdapter implements AStarAdapter {
   private readonly heuristicWeight = 2;
   private readonly directionChangePenalty = 3;
 
-  constructor(gameMap: GameMap) {
+  constructor(
+    gameMap: GameMap,
+    private readonly allowExtendedWater: boolean,
+  ) {
     this.gameMap = gameMap;
     this.width = gameMap.width();
     this.height = gameMap.height();
@@ -86,7 +89,13 @@ class RailAdapter implements AStarAdapter {
     if (isImpassable) return false;
     const toWater = this.gameMap.isWater(to);
     if (!toWater) return true;
-    return fromShoreline || this.gameMap.isShoreline(to);
+    // Opt-in long bridges can traverse open water between two reachable
+    // stations; the RailNetwork service separately enforces max span.
+    return (
+      this.allowExtendedWater ||
+      fromShoreline ||
+      this.gameMap.isShoreline(to)
+    );
   }
 
   cost(from: number, to: number, prev?: number): number {
