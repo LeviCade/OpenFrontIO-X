@@ -209,7 +209,7 @@ export class FxShockwavePass {
       // with the bomb's blast radius.
       maxRadius:
         params?.maxRadius !== undefined
-          ? params.maxRadius * this.virtualVisualScale * blastMultiplier
+          ? params.maxRadius * this.virtualVisualScale * Math.sqrt(blastMultiplier)
           : nukeRadius * fx.nukeShockwaveRadiusFactor,
       // Cosmetic type → its style; no cosmetic → classic ring (the original
       // nuke look).
