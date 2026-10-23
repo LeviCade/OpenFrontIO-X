@@ -700,20 +700,20 @@ export class ControlPanel extends LitElement implements Controller {
               class="flex items-center justify-between gap-2 p-2 mb-2 rounded-lg border border-purple-400/60 bg-purple-900/40 text-white text-xs"
             >
               <span class="font-bold"
-                >Atomic blast · ${this.uiState.blastMultiplier}× radius</span
+                >Atomic blast · ${this.uiState.blastMultiplier}× area</span
               >
               <button
                 class="px-3 py-1 rounded border border-purple-300"
-                ?disabled=${this.uiState.blastMultiplier >= 8}
+                ?disabled=${this.uiState.blastMultiplier >= 100}
                 @click=${() => {
                   this.uiState.blastMultiplier = Math.min(
-                    8,
+                    100,
                     this.uiState.blastMultiplier + 1,
                   );
                   this.requestUpdate();
                 }}
               >
-                + Radius
+                + Area
               </button>
               <button
                 class="px-3 py-1 rounded border border-white/50"
