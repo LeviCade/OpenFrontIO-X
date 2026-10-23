@@ -465,12 +465,15 @@ export class BuildPreviewController implements Controller {
       }
       case UnitType.AtomBomb:
       case UnitType.HydrogenBomb:
-        rangeRadius = this.game.config().nukeMagnitudes(
-          u.type,
-          this.game.config?.()?.gameConfig?.()?.specialOptions?.atomicMultiplier
-            ? this.uiState.blastMultiplier
-            : 1,
-        ).outer;
+        rangeRadius = this.game
+          .config()
+          .nukeMagnitudes(
+            u.type,
+            this.game.config?.()?.gameConfig?.()?.specialOptions
+              ?.atomicMultiplier
+              ? this.uiState.blastMultiplier
+              : 1,
+          ).outer;
         break;
       case UnitType.Factory:
         rangeRadius = this.game.config().trainStationMaxRange();
@@ -578,9 +581,9 @@ export class BuildPreviewController implements Controller {
 
       const isNuke = unitType === UnitType.AtomBomb;
       const atomicRadius =
-        this.game.config?.()?.gameConfig?.()?.specialOptions?.atomicMultiplier &&
-        (unitType === UnitType.AtomBomb ||
-          unitType === UnitType.HydrogenBomb);
+        this.game.config?.()?.gameConfig?.()?.specialOptions
+          ?.atomicMultiplier &&
+        (unitType === UnitType.AtomBomb || unitType === UnitType.HydrogenBomb);
       const rocketDirectionUp =
         unitType === UnitType.AtomBomb || unitType === UnitType.HydrogenBomb
           ? this.uiState.rocketDirectionUp
