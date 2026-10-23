@@ -45,6 +45,7 @@ describe("Special Options opt-in and Virtual World coverage geometry", () => {
       factoryMultiplier: true,
       samMultiplier: true,
       atomicMultiplier: true,
+      extendedRailBridges: true,
     });
     const intent = {
       type: "build_unit",
