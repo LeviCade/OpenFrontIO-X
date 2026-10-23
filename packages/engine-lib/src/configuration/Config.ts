@@ -446,14 +446,16 @@ export class Config {
       (unitType === UnitType.AtomBomb || unitType === UnitType.HydrogenBomb) &&
       Number.isSafeInteger(blastMultiplier) &&
       blastMultiplier >= 1 &&
-      blastMultiplier <= 8
+      blastMultiplier <= 100
         ? blastMultiplier
         : 1;
     if (scale === 1 && multiplier === 1) return source;
-    // Quantize only once: radius N× is exactly N times the base cell radius.
+    // Multiplying circular area N-fold multiplies radius by sqrt(N).
+    // Round only after combining virtual-world and blast-area scales.
+    const radiusScale = scale * Math.sqrt(multiplier);
     return {
-      inner: Math.max(1, Math.round(source.inner * scale)) * multiplier,
-      outer: Math.max(1, Math.round(source.outer * scale)) * multiplier,
+      inner: Math.max(1, Math.round(source.inner * radiusScale)),
+      outer: Math.max(1, Math.round(source.outer * radiusScale)),
     };
   }
 
@@ -466,8 +468,10 @@ export class Config {
       this._gameConfig.gameType === GameType.Singleplayer &&
       this._gameConfig.specialOptions?.samMultiplier
     ) {
-      // Each stacked SAM adds exactly one base-level 70-cell radius.
-      return 70 * Math.max(1, level) * this.virtualWorldVisualScale();
+      // Each stack level multiplies protected CIRCLE AREA, not radius.
+      // Rasterized tiles approximate the continuous circle boundary.
+      return 70 * Math.sqrt(Math.max(1, level)) *
+        this.virtualWorldVisualScale();
     }
     // Preserve the rational level curve, but use the same world-space scale
     // as defaultSamRange(). Otherwise upgrades restore full-size 1× reach.
