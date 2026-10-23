@@ -54,7 +54,11 @@ describe("Special Options opt-in and Virtual World coverage geometry", () => {
     };
     expect(BuildUnitIntentSchema.parse(intent).blastMultiplier).toBe(4);
     expect(
-      BuildUnitIntentSchema.safeParse({ ...intent, blastMultiplier: 9 })
+      BuildUnitIntentSchema.parse({ ...intent, blastMultiplier: 100 })
+        .blastMultiplier,
+    ).toBe(100);
+    expect(
+      BuildUnitIntentSchema.safeParse({ ...intent, blastMultiplier: 101 })
         .success,
     ).toBe(false);
     expect(
@@ -125,6 +129,7 @@ describe("Special Options opt-in and Virtual World coverage geometry", () => {
       factoryMultiplier: true,
       samMultiplier: true,
       atomicMultiplier: true,
+      extendedRailBridges: true,
     });
     const input = {
       type: () => PlayerType.Human,
