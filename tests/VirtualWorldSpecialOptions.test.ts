@@ -1,26 +1,68 @@
 import { describe, expect, it } from "vitest";
-import { GameType, UnitType, PlayerType } from "@openfront/engine-api/game/GameTypes";
-import { GameConfig, GameConfigPatchSchema, BuildUnitIntentSchema } from "@openfront/engine-api/Schemas";
+import {
+  GameType,
+  UnitType,
+  PlayerType,
+} from "@openfront/engine-api/game/GameTypes";
+import {
+  GameConfig,
+  GameConfigPatchSchema,
+  BuildUnitIntentSchema,
+} from "@openfront/engine-api/Schemas";
 import { EngineConfig } from "@openfront/engine/configuration/EngineConfig";
 import { extractNukeTelegraphs } from "../src/client/render/frame/derive/NukeTelegraphs";
 
-const cfg = (area: number, specialOptions: { factoryMultiplier?: boolean; samMultiplier?: boolean; atomicMultiplier?: boolean } = {}) =>
-  new EngineConfig({
-    gameType: GameType.Singleplayer,
-    virtualWorldAreaMultiplier: area,
-    specialOptions,
-  } as GameConfig, false);
+const cfg = (
+  area: number,
+  specialOptions: {
+    factoryMultiplier?: boolean;
+    samMultiplier?: boolean;
+    atomicMultiplier?: boolean;
+  } = {},
+) =>
+  new EngineConfig(
+    {
+      gameType: GameType.Singleplayer,
+      virtualWorldAreaMultiplier: area,
+      specialOptions,
+    } as GameConfig,
+    false,
+  );
 
 describe("Special Options opt-in and Virtual World coverage geometry", () => {
   it("validates independent factory/SAM/atomic toggles and bounded blast intents", () => {
-    expect(GameConfigPatchSchema.parse({
-      specialOptions: { factoryMultiplier: true, samMultiplier: true, atomicMultiplier: true },
-    }).specialOptions).toEqual({ factoryMultiplier: true, samMultiplier: true, atomicMultiplier: true });
-    const intent = { type: "build_unit", unit: UnitType.AtomBomb, tile: 5, blastMultiplier: 4 };
+    expect(
+      GameConfigPatchSchema.parse({
+        specialOptions: {
+          factoryMultiplier: true,
+          samMultiplier: true,
+          atomicMultiplier: true,
+        },
+      }).specialOptions,
+    ).toEqual({
+      factoryMultiplier: true,
+      samMultiplier: true,
+      atomicMultiplier: true,
+    });
+    const intent = {
+      type: "build_unit",
+      unit: UnitType.AtomBomb,
+      tile: 5,
+      blastMultiplier: 4,
+    };
     expect(BuildUnitIntentSchema.parse(intent).blastMultiplier).toBe(4);
-    expect(BuildUnitIntentSchema.safeParse({ ...intent, blastMultiplier: 9 }).success).toBe(false);
-    expect(BuildUnitIntentSchema.safeParse({ ...intent, blastMultiplier: 0 }).success).toBe(false);
-    expect(BuildUnitIntentSchema.safeParse({ ...intent, blastMultiplier: 1.5 }).success).toBe(false);
+    expect(
+      BuildUnitIntentSchema.safeParse({ ...intent, blastMultiplier: 9 })
+        .success,
+    ).toBe(false);
+    expect(
+      BuildUnitIntentSchema.safeParse({ ...intent, blastMultiplier: 0 })
+        .success,
+    ).toBe(false);
+    expect(
+      BuildUnitIntentSchema.safeParse({ ...intent, blastMultiplier: 1.5 })
+        .success,
+    ).toBe(false);
   });
 
   it("preserves 1× and disabled SAM curves, while stacked SAMs add exact base radius", () => {
