@@ -227,6 +227,25 @@ export class NukeExecution implements Execution {
         this.active = false;
         return;
       }
+      const areaLevel =
+        cfg.gameConfig().gameType === GameType.Singleplayer &&
+        cfg.gameConfig().specialOptions?.atomicMultiplier &&
+        (this.nukeType === UnitType.AtomBomb ||
+          this.nukeType === UnitType.HydrogenBomb) &&
+        Number.isSafeInteger(this.blastMultiplier) &&
+        this.blastMultiplier >= 1 &&
+        this.blastMultiplier <= 100
+          ? this.blastMultiplier
+          : 1;
+      // The original buildUnit call purchases exactly one missile. Preflight
+      // the entire area-weighted price, then deduct only the additional
+      // (N-1) copies of that same missile price after the launch succeeds.
+      const baseCost = this.mg.unitInfo(this.nukeType).cost(this.mg, this.player);
+      const extraCost = baseCost * BigInt(areaLevel - 1);
+      if (this.player.gold() < baseCost + extraCost) {
+        this.active = false;
+        return;
+      }
       const spawn = this.player.canBuild(this.nukeType, this.dst);
       if (spawn === false) {
         console.warn(`cannot build Nuke`);
@@ -255,8 +274,9 @@ export class NukeExecution implements Execution {
       this.nuke = this.player.buildUnit(this.nukeType, this.src, {
         targetTile: this.dst,
         trajectory: this.getTrajectory(this.dst),
-        blastMultiplier: this.blastMultiplier,
+        blastMultiplier: areaLevel,
       });
+      if (extraCost > 0n) this.player.removeGold(extraCost);
       this.nuke.updateNukeState({ waitTicks: this.waitTicks });
       this.recordMotionPlan(ticks);
       if (this.nuke.type() !== UnitType.MIRVWarhead) {
