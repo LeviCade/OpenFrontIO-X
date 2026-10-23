@@ -74,7 +74,8 @@ export class FxPass {
     const nukeRadius =
       baseNukeRadius === undefined
         ? undefined
-        : baseNukeRadius * this.config.virtualWorldVisualScale() * multiplier;
+        : baseNukeRadius * this.config.virtualWorldVisualScale() *
+          Math.sqrt(multiplier);
     if (nukeRadius !== undefined) {
       if (unit.reachedTarget) {
         this.spritePass.spawnFxForUnit(unit, now);
