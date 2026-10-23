@@ -132,6 +132,8 @@ export interface DeadUnitFx {
   unitType: string;
   pos: number;
   reachedTarget: boolean;
+  /** Experimental single-warhead visual area modifier. Defaults to 1. */
+  blastMultiplier?: number;
   /** Firing player's smallID — resolves their nuke-explosion cosmetic. */
   ownerSmallID: number;
   /**
