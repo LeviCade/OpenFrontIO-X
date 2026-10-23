@@ -180,7 +180,11 @@ export class PathFinding {
 
   static Rail(game: Game): SteppingPathFinder<TileRef> {
     const miniMap = game.miniMap();
-    const pf = new AStarRail(miniMap);
+    const cfg = game.config().gameConfig();
+    const allowExtendedWater =
+      cfg.gameType === GameType.Singleplayer &&
+      cfg.specialOptions?.extendedRailBridges === true;
+    const pf = new AStarRail(miniMap, allowExtendedWater);
 
     return PathFinderBuilder.create(pf)
       .wrap((pf) => new MiniMapTransformer(pf, game.map(), miniMap))
