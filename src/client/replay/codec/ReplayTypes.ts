@@ -95,6 +95,7 @@ export interface ConstructionStartEvent {
 }
 
 export interface DeadUnitEvent {
+  blastMultiplier?: number;
   tick: number;
   unitId: number;
   unitType: string;
