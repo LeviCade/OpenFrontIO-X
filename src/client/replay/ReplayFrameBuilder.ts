@@ -150,6 +150,9 @@ export class ReplayFrameBuilder {
         unitType: d.unitType,
         pos: d.pos,
         reachedTarget: d.reachedTarget,
+        ...(d.blastMultiplier && d.blastMultiplier > 1
+          ? { blastMultiplier: d.blastMultiplier }
+          : {}),
         ownerSmallID: d.ownerSmallID,
       });
     }
