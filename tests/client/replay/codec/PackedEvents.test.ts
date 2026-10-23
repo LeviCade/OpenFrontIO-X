@@ -14,6 +14,7 @@ test("nuke impacts and dead units round-trip, tiles sorted", () => {
         tick: 301,
         unitId: 90_000,
         unitType: "Hydrogen Bomb",
+        blastMultiplier: 4,
         ownerSmallID: 511,
         pos: 3_999_999,
         reachedTarget: true,
