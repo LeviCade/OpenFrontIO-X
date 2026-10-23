@@ -109,6 +109,7 @@ const DEFAULT_OPTIONS = {
   mapAreaMultiplier: 1 as MapAreaMultiplier,
   virtualWorldAreaMultiplier: 1,
   factoryMultiplier: false,
+  extendedRailBridges: false,
   samMultiplier: false,
   atomicMultiplier: false,
   scaleMode: "virtual" as WorldScaleMode,
@@ -193,6 +194,8 @@ export class SinglePlayerModal extends BaseModal {
   @state() private scaleMode: WorldScaleMode = DEFAULT_OPTIONS.scaleMode;
   @state() private factoryMultiplier: boolean =
     DEFAULT_OPTIONS.factoryMultiplier;
+  @state() private extendedRailBridges: boolean =
+    DEFAULT_OPTIONS.extendedRailBridges;
   @state() private samMultiplier: boolean = DEFAULT_OPTIONS.samMultiplier;
   @state() private atomicMultiplier: boolean = DEFAULT_OPTIONS.atomicMultiplier;
   @state() private winPercentage: number = DEFAULT_OPTIONS.winPercentage;
@@ -595,6 +598,10 @@ export class SinglePlayerModal extends BaseModal {
                     labelKey: "Factory Multiplier",
                     checked: this.factoryMultiplier,
                   },
+                  {
+                    labelKey: "Long Rail Bridges",
+                    checked: this.extendedRailBridges,
+                  },
                   { labelKey: "SAM Multiplier", checked: this.samMultiplier },
                   {
                     labelKey: "Atomic Multiplier",
@@ -688,6 +695,7 @@ export class SinglePlayerModal extends BaseModal {
       this.scaleMode !== DEFAULT_OPTIONS.scaleMode ||
       this.winPercentage !== DEFAULT_OPTIONS.winPercentage ||
       this.factoryMultiplier ||
+      this.extendedRailBridges ||
       this.samMultiplier ||
       this.atomicMultiplier ||
       this.infiniteGold !== DEFAULT_OPTIONS.infiniteGold ||
@@ -762,6 +770,7 @@ export class SinglePlayerModal extends BaseModal {
     this.scaleMode = DEFAULT_OPTIONS.scaleMode;
     this.winPercentage = DEFAULT_OPTIONS.winPercentage;
     this.factoryMultiplier = DEFAULT_OPTIONS.factoryMultiplier;
+    this.extendedRailBridges = DEFAULT_OPTIONS.extendedRailBridges;
     this.samMultiplier = DEFAULT_OPTIONS.samMultiplier;
     this.atomicMultiplier = DEFAULT_OPTIONS.atomicMultiplier;
     this.selectedDifficulty = DEFAULT_OPTIONS.selectedDifficulty;
@@ -932,6 +941,9 @@ export class SinglePlayerModal extends BaseModal {
     switch (labelKey) {
       case "Factory Multiplier":
         this.factoryMultiplier = checked;
+        break;
+      case "Long Rail Bridges":
+        this.extendedRailBridges = checked;
         break;
       case "SAM Multiplier":
         this.samMultiplier = checked;
@@ -1316,6 +1328,7 @@ export class SinglePlayerModal extends BaseModal {
                     : 1,
                 specialOptions: {
                   factoryMultiplier: this.factoryMultiplier,
+                  extendedRailBridges: this.extendedRailBridges,
                   samMultiplier: this.samMultiplier,
                   atomicMultiplier: this.atomicMultiplier,
                 },
