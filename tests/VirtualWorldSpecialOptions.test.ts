@@ -18,6 +18,7 @@ const cfg = (
     factoryMultiplier?: boolean;
     samMultiplier?: boolean;
     atomicMultiplier?: boolean;
+    extendedRailBridges?: boolean;
   } = {},
 ) =>
   new EngineConfig(
@@ -37,6 +38,7 @@ describe("Special Options opt-in and Virtual World coverage geometry", () => {
           factoryMultiplier: true,
           samMultiplier: true,
           atomicMultiplier: true,
+          extendedRailBridges: true,
         },
       }).specialOptions,
     ).toEqual({
@@ -70,13 +72,13 @@ describe("Special Options opt-in and Virtual World coverage geometry", () => {
     expect(cfg(1).samRange(2)).toBeCloseTo(150 - 480 / 7);
     const stacked = cfg(1, { samMultiplier: true });
     expect(stacked.samRange(1)).toBe(70);
-    expect(stacked.samRange(2)).toBe(140);
-    expect(stacked.samRange(3)).toBe(210);
-    expect(stacked.samRange(4)).toBe(280);
+    expect(stacked.samRange(2)).toBeCloseTo(70 * Math.sqrt(2));
+    expect(stacked.samRange(3)).toBeCloseTo(70 * Math.sqrt(3));
+    expect(stacked.samRange(4)).toBe(140);
     const scaled = cfg(100, { samMultiplier: true });
     expect(scaled.samRange(1)).toBe(7);
-    expect(scaled.samRange(2)).toBe(14);
-    expect(scaled.samRange(4)).toBe(28);
+    expect(scaled.samRange(2)).toBeCloseTo(7 * Math.sqrt(2));
+    expect(scaled.samRange(4)).toBe(14);
   });
 
   it("uses realistic per-cell placement spacing at high virtual area", () => {
@@ -96,12 +98,12 @@ describe("Special Options opt-in and Virtual World coverage geometry", () => {
       outer: 3,
     });
     expect(special.nukeMagnitudes(UnitType.AtomBomb, 4)).toEqual({
-      inner: 4,
-      outer: 12,
+      inner: 2,
+      outer: 6,
     });
     expect(special.nukeMagnitudes(UnitType.HydrogenBomb, 4)).toEqual({
-      inner: 32,
-      outer: 40,
+      inner: 16,
+      outer: 20,
     });
     expect(normal.nukeMagnitudes(UnitType.AtomBomb, 4)).toEqual(
       normal.nukeMagnitudes(UnitType.AtomBomb),
@@ -114,7 +116,7 @@ describe("Special Options opt-in and Virtual World coverage geometry", () => {
         UnitType.HydrogenBomb,
         2,
       ).outer,
-    ).toBe(200);
+    ).toBe(141);
   });
 
   it("does not alter starting manpower, income, or per-building price", () => {
@@ -168,8 +170,8 @@ describe("Special Options opt-in and Virtual World coverage geometry", () => {
     );
     expect(result).toHaveLength(1);
     expect(result[0]).toMatchObject({
-      innerRadius: 4,
-      outerRadius: 12,
+      innerRadius: 2,
+      outerRadius: 6,
       x: 5,
       y: 5,
     });
