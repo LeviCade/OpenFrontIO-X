@@ -240,7 +240,9 @@ export class NukeExecution implements Execution {
       // The original buildUnit call purchases exactly one missile. Preflight
       // the entire area-weighted price, then deduct only the additional
       // (N-1) copies of that same missile price after the launch succeeds.
-      const baseCost = this.mg.unitInfo(this.nukeType).cost(this.mg, this.player);
+      const baseCost = this.mg
+        .unitInfo(this.nukeType)
+        .cost(this.mg, this.player);
       const extraCost = baseCost * BigInt(areaLevel - 1);
       if (this.player.gold() < baseCost + extraCost) {
         this.active = false;

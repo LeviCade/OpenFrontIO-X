@@ -1,6 +1,10 @@
 import type { GameMap } from "@openfront/engine-api/game/GameMap";
 import { GameType } from "@openfront/engine-api/game/GameTypes";
-import { TrainStationExecution, factorySpawnDenominator, factorySpawnCooldown } from "@openfront/engine/execution/TrainStationExecution";
+import {
+  TrainStationExecution,
+  factorySpawnDenominator,
+  factorySpawnCooldown,
+} from "@openfront/engine/execution/TrainStationExecution";
 import { bridgeWaterSpanWithinRange } from "@openfront/engine/game/RailNetworkImpl";
 import { AStarRail } from "@openfront/engine/pathfinding/algorithms/AStar.Rail";
 import { describe, expect, it, vi } from "vitest";
@@ -57,9 +61,12 @@ describe("Factory Multiplier changes frequency, not train payload", () => {
     exec.spawnTrain(station, 10);
     expect(addExecution).toHaveBeenCalledTimes(2);
     // No extra wagons/cargo/earnings are minted by factory stacking.
-    expect(addExecution.mock.calls.every((call) =>
-      call.length === 1 && call[0].constructor.name === "TrainExecution"
-    )).toBe(true);
+    expect(
+      addExecution.mock.calls.every(
+        (call) =>
+          call.length === 1 && call[0].constructor.name === "TrainExecution",
+      ),
+    ).toBe(true);
   });
 
   it("retains 10-tick cooldown and normal trials when the option is off", () => {
@@ -71,7 +78,10 @@ describe("Factory Multiplier changes frequency, not train payload", () => {
     const addExecution = vi.fn();
     const game = {
       config: () => ({
-        gameConfig: () => ({ gameType: GameType.Singleplayer, specialOptions: {} }),
+        gameConfig: () => ({
+          gameType: GameType.Singleplayer,
+          specialOptions: {},
+        }),
         trainSpawnRate: () => 100,
       }),
       unitCount: () => 0,
@@ -118,8 +128,12 @@ describe("Optional Long Rail Bridges", () => {
 
   it("permits a water span up to factory radius, never beyond it", () => {
     const bridge = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
-    expect(bridgeWaterSpanWithinRange(bridge, (tile) => map.isWater(tile), 6)).toBe(true);
-    expect(bridgeWaterSpanWithinRange(bridge, (tile) => map.isWater(tile), 5)).toBe(false);
+    expect(
+      bridgeWaterSpanWithinRange(bridge, (tile) => map.isWater(tile), 6),
+    ).toBe(true);
+    expect(
+      bridgeWaterSpanWithinRange(bridge, (tile) => map.isWater(tile), 5),
+    ).toBe(false);
     expect(bridgeWaterSpanWithinRange([], () => true, 6)).toBe(true);
   });
 });

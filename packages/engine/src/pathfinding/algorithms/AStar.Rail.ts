@@ -92,9 +92,7 @@ class RailAdapter implements AStarAdapter {
     // Opt-in long bridges can traverse open water between two reachable
     // stations; the RailNetwork service separately enforces max span.
     return (
-      this.allowExtendedWater ||
-      fromShoreline ||
-      this.gameMap.isShoreline(to)
+      this.allowExtendedWater || fromShoreline || this.gameMap.isShoreline(to)
     );
   }
 

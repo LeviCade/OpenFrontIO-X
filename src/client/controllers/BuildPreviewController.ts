@@ -249,12 +249,15 @@ export class BuildPreviewController implements Controller {
         targetingAlly = wouldNukeBreakAlliance({
           game: this.game,
           targetTile: tileRef,
-          magnitude: this.game.config().nukeMagnitudes(
-            nukeType,
-            this.game.config?.()?.gameConfig?.()?.specialOptions?.atomicMultiplier
-              ? this.uiState.blastMultiplier
-              : 1,
-          ),
+          magnitude: this.game
+            .config()
+            .nukeMagnitudes(
+              nukeType,
+              this.game.config?.()?.gameConfig?.()?.specialOptions
+                ?.atomicMultiplier
+                ? this.uiState.blastMultiplier
+                : 1,
+            ),
           allySmallIds: this.connectedAllySmallIds,
           threshold: this.game.config().nukeAllianceBreakThreshold(),
         });
@@ -509,7 +512,8 @@ export class BuildPreviewController implements Controller {
         : 1;
     const multiplier = atomicRadius ? this.uiState.blastMultiplier : amount;
     // Radius stacking enlarges one warhead, not its purchase count.
-    const cost = bulkCost(u, amount) *
+    const cost =
+      bulkCost(u, amount) *
       BigInt(atomicRadius ? this.uiState.blastMultiplier : 1);
     // Drives the red cost label: gold short of the bulk total, or (for
     // bombs) fewer loaded silo tubes than the selected amount.
@@ -649,12 +653,15 @@ export class BuildPreviewController implements Controller {
         : listNukeBreakAlliance({
             game: this.game,
             targetTile: tile,
-            magnitude: this.game.config().nukeMagnitudes(
-              unitType,
-              this.game.config?.()?.gameConfig?.()?.specialOptions?.atomicMultiplier
-                ? this.uiState.blastMultiplier
-                : 1,
-            ),
+            magnitude: this.game
+              .config()
+              .nukeMagnitudes(
+                unitType,
+                this.game.config?.()?.gameConfig?.()?.specialOptions
+                  ?.atomicMultiplier
+                  ? this.uiState.blastMultiplier
+                  : 1,
+              ),
             threshold: this.game.config().nukeAllianceBreakThreshold(),
           });
 

@@ -470,8 +470,9 @@ export class Config {
     ) {
       // Each stack level multiplies protected CIRCLE AREA, not radius.
       // Rasterized tiles approximate the continuous circle boundary.
-      return 70 * Math.sqrt(Math.max(1, level)) *
-        this.virtualWorldVisualScale();
+      return (
+        70 * Math.sqrt(Math.max(1, level)) * this.virtualWorldVisualScale()
+      );
     }
     // Preserve the rational level curve, but use the same world-space scale
     // as defaultSamRange(). Otherwise upgrades restore full-size 1× reach.

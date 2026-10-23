@@ -18,7 +18,10 @@ import { TrainExecution } from "./TrainExecution";
 
 /** Rate denominator and cooldown both shrink with stacked factory levels.
  * This changes departure frequency, never the value of an individual train. */
-export function factorySpawnDenominator(baseRate: number, level: number): number {
+export function factorySpawnDenominator(
+  baseRate: number,
+  level: number,
+): number {
   return Math.max(1, Math.ceil(baseRate / Math.max(1, level)));
 }
 

@@ -123,7 +123,8 @@ class RailPathFinderServiceImpl implements RailPathFinderService {
     if (
       cfg.gameConfig().gameType !== GameType.Singleplayer ||
       !cfg.gameConfig().specialOptions?.extendedRailBridges
-    ) return path;
+    )
+      return path;
 
     // No unbounded ocean-spanning rails. The entire continuous open-water
     // bridge must fit inside one normal factory's station radius.
