@@ -284,6 +284,7 @@ export const GameConfigSchema = z.object({
   specialOptions: z
     .object({
       factoryMultiplier: z.boolean().optional(),
+      extendedRailBridges: z.boolean().optional(),
       samMultiplier: z.boolean().optional(),
       atomicMultiplier: z.boolean().optional(),
     })
