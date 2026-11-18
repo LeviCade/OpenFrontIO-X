@@ -1,9 +1,16 @@
 # Repository CI routing policy
 
-**Current repository visibility: PUBLIC (audited November 10, 2026).**
+**Current repository visibility: PUBLIC. Owner policy updated November 17, 2026.**
 
-**PUBLIC repository → GitHub-hosted CI ONLY for every job**, including PRs, all branches, tests, builds, releases, deployments and matrices. Do not use `skybot-ci-ephemeral` or any owner-operated Skybot self-hosted runner while this repository is public. The public workflows inspected on November 10 already used GitHub-hosted `ubuntu-latest` and matched this rule. Preserve existing application tests and publish semantics.
+- **Standard free-compatible public workloads:** GitHub-hosted runners.
+- **Public workloads requiring paid hosted capacity or a specialized capability/resource class unavailable on the free offering:** an explicitly authorized Skybot profile may be used after exact-repository public admission and arbitrary-code isolation acceptance.
+- **Private visibility:** all jobs use owner-operated Skybot compute only.
 
-For **any LeviCade repository that becomes PRIVATE**, the owner's opposite rule applies immediately: **private CI runs only on owned Skybot-CI hardware for all jobs and events, including normal pull requests**, never on GitHub-hosted machines. Do not treat private PRs as a special paid-hosted exception. Native Mac availability is an implementation feature gate, not a global CI routing policy. Do not silently change execution providers on a visibility transition; review/migrate workflow YAML accordingly.
+This is per-job routing, not an automatic fallback. GitHub Actions does not transfer a queued or failed hosted job to Skybot; the workflow must explicitly select an approved runner profile.
 
-Canonical policy: [Skybot-CI visibility-only routing](https://github.com/LeviCade/Skybot-CI/blob/main/docs/PRIVATE_PUBLIC_CI_POLICY.md).
+The current Skybot controller does NOT yet implement public-repository admission. Do not add self-hosted Skybot labels or enable public Skybot jobs until the controller, hardware/capability, and public-code isolation gates in [Skybot-CI #238](https://github.com/LeviCade/Skybot-CI/issues/238) and [#239](https://github.com/LeviCade/Skybot-CI/issues/239) pass.
+
+Keep existing free-compatible public workflows on GitHub-hosted runners. Do not move the whole repository to Skybot for uniformity. Public code, including fork PR code, is untrusted; never run it on the persistent development runner or expose host mounts, host sockets, controller credentials, signing keys or private secrets.
+
+Canonical policy: [Skybot-CI compute routing](https://github.com/LeviCade/Skybot-CI/blob/main/docs/PRIVATE_PUBLIC_CI_POLICY.md).
+Practical guide: [Skybot-CI runner choices](https://github.com/LeviCade/Skybot-CI/blob/main/docs/CI_RUNNER_CHOICES.md).
