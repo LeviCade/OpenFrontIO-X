@@ -1,5 +1,6 @@
 # Temporary cross-repository Skybot GPU acceptance on an isolated review branch.
 # Post-upgrade public canary: GPU startup-counter fix ce19a71244c0953b076b9faedf06bfda450de664.
+# GPU queue turnover / two-repository burst acceptance: public.
 # No application code, secrets, deployments, or production branches are changed.
 name: Skybot GPU cross-repository acceptance (public)
 on:
