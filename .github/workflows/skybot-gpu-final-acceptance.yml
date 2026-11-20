@@ -1,4 +1,5 @@
 # Temporary cross-repository Skybot GPU acceptance on an isolated review branch.
+# Post-upgrade public canary: GPU startup-counter fix ce19a71244c0953b076b9faedf06bfda450de664.
 # No application code, secrets, deployments, or production branches are changed.
 name: Skybot GPU cross-repository acceptance (public)
 on:
@@ -8,7 +9,7 @@ on:
 permissions:
   contents: read
 concurrency:
-  group: skybot-gpu-final-acceptance-public
+  group: skybot-gpu-final-acceptance-public-post-upgrade-ce19a712
   cancel-in-progress: false
 jobs:
   gpu-routing:
