@@ -1,0 +1,35 @@
+# Temporary cross-repository Skybot GPU acceptance on an isolated review branch.
+# No application code, secrets, deployments, or production branches are changed.
+name: Skybot GPU cross-repository acceptance (public)
+on:
+  push:
+    branches:
+      - ci/skybot-gpu-final-acceptance-20261120
+permissions:
+  contents: read
+concurrency:
+  group: skybot-gpu-final-acceptance-public
+  cancel-in-progress: false
+jobs:
+  gpu-routing:
+    if: ${{ github.repository == 'LeviCade/OpenFrontIO-X' && github.ref == 'refs/heads/ci/skybot-gpu-final-acceptance-20261120' }}
+    runs-on: skybot-ci-gpu
+    timeout-minutes: 12
+    steps:
+      - name: Verify genuine disposable GPU KVM worker
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(id -u)" -ne 0
+          test "$(systemd-detect-virt --vm)" = kvm
+          test "$RUNNER_OS" = Linux
+          test "$RUNNER_ARCH" = X64
+          test -n "${RUNNER_NAME:-}"
+          test ! -S /run/libvirt/libvirt-sock
+          test ! -S /var/run/docker.sock
+          test -d /dev/dri
+          test -n "$(find /dev/dri -maxdepth 1 -type c -name 'renderD*' -print -quit)"
+          echo "SKYBOT_CROSS_REPO_GPU_DISPOSABLE_IDENTITY=PASS"
+          echo "SKYBOT_CROSS_REPO_KIND=public"
+          echo "SKYBOT_CROSS_REPO_LABEL=skybot-ci-gpu"
+          echo "SKYBOT_CROSS_REPO_RUNNER=$RUNNER_NAME"
